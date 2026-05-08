@@ -1,0 +1,38 @@
+{
+  "envelope_version": "1.0",
+  "message_id": "01926e3a-2c8a-7b04-b3a1-1cf0a7a6d5e4",
+  "thread_id":  "01926e3a-2c8a-7b04-b3a1-1cf0a7a6d5e4",
+  "parent_id":  null,
+  "from": { "eidolon": "atlas",   "version": "1.4.2"  },
+  "to":   { "eidolon": "spectra", "version": "4.2.11" },
+  "performative": "PROPOSE",
+  "edge_origin": "roster",
+  "objective": "Stub envelope with deliberately over-budget context_delta.",
+  "artifact": {
+    "kind": "scout-report",
+    "schema_version": "1.0",
+    "path": "scout-report.md",
+    "sha256": "19f4e4215581f7329862c3610cdbdb0d3620638f36afea20a721c578f9c2ca0d",
+    "size_bytes": 483
+  },
+  "context_delta": {
+    "token_budget": 200,
+    "tokens_used": 5000,
+    "input_handles": ["mission.md"],
+    "summary": "Stub fixture; tokens_used (5000) deliberately exceeds token_budget (200) to trip D-1."
+  },
+  "constraints": { "trust_level": "standard" },
+  "expected_response": { "performative": "ACKNOWLEDGE" },
+  "confidence": 0.5,
+  "assumptions": ["This fixture exists only to verify the D-1 envelope-budget gate."],
+  "integrity": {
+    "method": "sha256",
+    "value": "19f4e4215581f7329862c3610cdbdb0d3620638f36afea20a721c578f9c2ca0d"
+  },
+  "trace": {
+    "ts": "2026-05-07T12:34:56Z",
+    "host": "claude-code",
+    "model": "claude-opus-4-7",
+    "tier": "standard"
+  }
+}

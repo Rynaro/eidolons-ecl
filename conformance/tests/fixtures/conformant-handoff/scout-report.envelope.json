@@ -1,0 +1,43 @@
+{
+  "envelope_version": "1.0",
+  "message_id": "01926e3a-2c8a-7b04-b3a1-1cf0a7a6d5e1",
+  "thread_id":  "01926e3a-2c8a-7b04-b3a1-1cf0a7a6d5e1",
+  "parent_id":  null,
+  "from": { "eidolon": "atlas",   "version": "1.4.2"  },
+  "to":   { "eidolon": "spectra", "version": "4.2.11" },
+  "performative": "PROPOSE",
+  "edge_origin": "roster",
+  "objective": "Hand off scout-report on install.sh $HOME race for spec authoring.",
+  "artifact": {
+    "kind": "scout-report",
+    "schema_version": "1.0",
+    "path": "scout-report.md",
+    "sha256": "d55b64a29f252ffba61f30f7ead5f93869a31be3ce348c118a46c37396fe416c",
+    "size_bytes": 1026
+  },
+  "context_delta": {
+    "token_budget": 4000,
+    "tokens_used": 320,
+    "input_handles": ["mission.md"],
+    "summary": "Three race-condition sites identified in cli/install.sh; HOME EACCES signature confirmed; scope bounded to install path."
+  },
+  "constraints": { "trust_level": "standard" },
+  "expected_response": {
+    "performative": "PROPOSE",
+    "shape_hint": "spec.yaml + spec.md"
+  },
+  "confidence": 0.91,
+  "assumptions": [
+    "Race is in install.sh, not in any installed Eidolon."
+  ],
+  "integrity": {
+    "method": "sha256",
+    "value": "d55b64a29f252ffba61f30f7ead5f93869a31be3ce348c118a46c37396fe416c"
+  },
+  "trace": {
+    "ts": "2026-05-07T12:34:56Z",
+    "host": "claude-code",
+    "model": "claude-opus-4-7",
+    "tier": "standard"
+  }
+}

@@ -1,0 +1,49 @@
+# Hand-off contract template. Copy and rename as `<from>-to-<to>.yaml`
+# under `contracts/`. See `contracts/README.md` for naming conventions
+# and the v1.0 enumerated edges.
+
+contract_version: "1.0"
+
+# Sender Eidolon slug. May also be 'orchestrator' or 'human'.
+from: "<from-slug>"
+
+# Recipient Eidolon slug.
+to: "<to-slug>"
+
+# Where the edge is declared.
+#   roster      — appears in roster/index.yaml's handoffs.* arrays.
+#   composition — appears in methodology/composition.md but not roster.
+#   implicit    — discovered through real usage; requires `notes:` rationale.
+edge_origin: roster
+
+# Performatives the sender may use on this edge. See ECL §2 for the
+# closed set of ten.
+performatives_allowed:
+  - PROPOSE
+  - INFORM
+  - REFUSE
+
+# Acceptable artefact kinds on this edge. Each entry references a per-
+# Eidolon profile schema that validates the payload's YAML frontmatter.
+artifacts:
+  - kind: "<kind-slug>"
+    schema_ref: ../schemas/per-eidolon/<kind-slug>.v1.json
+    required_sections:
+      - <section_a>
+      - <section_b>
+    evidence_anchor_required: false
+
+# Context-delta budget enforcement.
+context_delta:
+  token_budget_max: 4000
+  required_handles: []
+
+# Default trust_level for envelopes on this edge.
+# low | standard | high. ECL §6.3.
+trust_level: standard
+
+# Free-form prose for human readers. REQUIRED when edge_origin = implicit.
+notes: >
+  Replace this paragraph with the rationale: which row in the prose hand-off
+  table this corresponds to, why this edge exists, and any caveats specific
+  to this pair.

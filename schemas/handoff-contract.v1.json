@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v1.0.0/schemas/handoff-contract.v1.json",
+  "title": "ECL handoff-contract v1",
+  "description": "One YAML record per directed edge in the Eidolons hand-off graph. Defined by ECL v1.0 §3.",
+  "type": "object",
+  "required": [
+    "contract_version",
+    "from",
+    "to",
+    "edge_origin",
+    "performatives_allowed",
+    "artifacts"
+  ],
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "pattern": "^1\\.0(\\.\\d+)?$",
+      "description": "Matches the ECL spec version this contract targets."
+    },
+    "from": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Sender Eidolon slug, or 'orchestrator', 'human'."
+    },
+    "to": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Recipient Eidolon slug, or 'orchestrator', 'human'."
+    },
+    "edge_origin": {
+      "enum": ["roster", "composition", "implicit"],
+      "description": "ECL v1.0 §3.3."
+    },
+    "performatives_allowed": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "performative.v1.json#/$defs/performative" },
+      "uniqueItems": true
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["kind", "schema_ref"],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "schema_ref": {
+            "type": "string",
+            "description": "Relative path to a per-Eidolon JSON Schema validating the payload body."
+          },
+          "required_sections": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "For Markdown payloads: header names that MUST be present."
+          },
+          "evidence_anchor_required": {
+            "type": "boolean",
+            "default": false,
+            "description": "If true, every claim MUST cite path:line."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "context_delta": {
+      "type": "object",
+      "properties": {
+        "token_budget_max": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum tokens_used across any envelope on this edge."
+        },
+        "required_handles": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Handles every envelope on this edge MUST cite."
+        }
+      },
+      "additionalProperties": false
+    },
+    "trust_level": {
+      "enum": ["low", "standard", "high"],
+      "description": "Default trust_level for envelopes on this edge."
+    },
+    "notes": {
+      "type": "string",
+      "description": "Free-form prose for human readers. REQUIRED when edge_origin = implicit."
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "edge_origin": { "const": "implicit" } }, "required": ["edge_origin"] },
+      "then": { "required": ["notes"] }
+    }
+  ]
+}

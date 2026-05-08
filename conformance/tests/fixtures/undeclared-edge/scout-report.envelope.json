@@ -1,0 +1,38 @@
+{
+  "envelope_version": "1.0",
+  "message_id": "01926e3a-2c8a-7b04-b3a1-1cf0a7a6d5e3",
+  "thread_id":  "01926e3a-2c8a-7b04-b3a1-1cf0a7a6d5e3",
+  "parent_id":  null,
+  "from": { "eidolon": "atlas",        "version": "1.4.2" },
+  "to":   { "eidolon": "no-such-eidolon", "version": "0.0.1" },
+  "performative": "PROPOSE",
+  "edge_origin": "implicit",
+  "objective": "Stub envelope addressed to an Eidolon with no contract.",
+  "artifact": {
+    "kind": "scout-report",
+    "schema_version": "1.0",
+    "path": "scout-report.md",
+    "sha256": "b77ce0c6ad77a151c0f6d8dd577939f828e9e2ed703f15f2d1d3f19a2bcbbdd2",
+    "size_bytes": 481
+  },
+  "context_delta": {
+    "token_budget": 4000,
+    "tokens_used": 100,
+    "input_handles": ["mission.md"],
+    "summary": "Stub fixture; deliberately addressed to no-such-eidolon to trip C-1."
+  },
+  "constraints": { "trust_level": "standard" },
+  "expected_response": { "performative": "ACKNOWLEDGE" },
+  "confidence": 0.5,
+  "assumptions": ["This fixture exists only to verify the C-1 undeclared-edge gate."],
+  "integrity": {
+    "method": "sha256",
+    "value": "b77ce0c6ad77a151c0f6d8dd577939f828e9e2ed703f15f2d1d3f19a2bcbbdd2"
+  },
+  "trace": {
+    "ts": "2026-05-07T12:34:56Z",
+    "host": "claude-code",
+    "model": "claude-opus-4-7",
+    "tier": "standard"
+  }
+}

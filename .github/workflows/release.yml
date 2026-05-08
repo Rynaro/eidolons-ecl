@@ -1,0 +1,52 @@
+# Tag-driven release: produces a GitHub Release with the spec file and a
+# tarball of the conformance checker + reference SDK + contracts.
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install jq
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y jq
+
+      - name: Verify ECL_VERSION matches tag
+        run: |
+          tag="${GITHUB_REF#refs/tags/v}"
+          ecl_ver="$(cat ECL_VERSION | tr -d '[:space:]')"
+          # tag = X.Y.Z; ecl_ver = X.Y. They should agree on MAJOR.MINOR.
+          tag_xy="$(echo "$tag" | awk -F. '{print $1"."$2}')"
+          if [ "$tag_xy" != "$ecl_ver" ]; then
+            echo "Tag MAJOR.MINOR ($tag_xy) does not match ECL_VERSION ($ecl_ver)" >&2
+            exit 1
+          fi
+
+      - name: Bundle conformance + SDK + contracts + schemas
+        run: |
+          tar czf ecl-conformance.tar.gz \
+            conformance/ \
+            reference-sdk/ \
+            contracts/ \
+            schemas/ \
+            ECL_VERSION
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          gh release create "$tag" \
+            --title "$tag" \
+            --notes-file CHANGELOG.md \
+            "spec/ecl-1.0.md" \
+            "ecl-conformance.tar.gz"

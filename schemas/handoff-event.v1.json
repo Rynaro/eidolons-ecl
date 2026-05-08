@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v1.0.0/schemas/handoff-event.v1.json",
+  "title": "ECL handoff-event v1",
+  "description": "One trace event line in .eidolons/.trace/<thread_id>.jsonl. Defined by ECL v1.0 §5.",
+  "type": "object",
+  "required": [
+    "ts",
+    "event",
+    "message_id",
+    "thread_id",
+    "from",
+    "to",
+    "performative",
+    "integrity_method"
+  ],
+  "properties": {
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC 3339 UTC timestamp."
+    },
+    "event": {
+      "enum": ["emit", "receive", "verify_pass", "verify_fail"],
+      "description": "Event kind. ECL v1.0 §5.2."
+    },
+    "message_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "thread_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "from": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*@(\\d+\\.\\d+\\.\\d+|n/a)$",
+      "description": "<eidolon>@<version> (or 'human@n/a' / 'orchestrator@n/a')."
+    },
+    "to": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*@(\\d+\\.\\d+\\.\\d+|n/a)$"
+    },
+    "performative": {
+      "$ref": "performative.v1.json#/$defs/performative"
+    },
+    "integrity_method": {
+      "enum": ["sha256", "hmac-sha256"]
+    },
+    "context_tokens": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "model": {
+      "type": "string"
+    },
+    "tier": {
+      "enum": ["standard", "trance"]
+    },
+    "verify_failure_code": {
+      "enum": [
+        "INTEGRITY_MISMATCH",
+        "SCHEMA_INVALID",
+        "UNDECLARED_EDGE",
+        "PERFORMATIVE_NOT_ALLOWED",
+        "ARTIFACT_KIND_NOT_ALLOWED",
+        "CONTEXT_OVER_BUDGET",
+        "MISSING_REQUIRED_SECTION"
+      ],
+      "description": "Required when event = verify_fail. ECL v1.0 §5.3."
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "event": { "const": "verify_fail" } }, "required": ["event"] },
+      "then": { "required": ["verify_failure_code"] }
+    }
+  ]
+}

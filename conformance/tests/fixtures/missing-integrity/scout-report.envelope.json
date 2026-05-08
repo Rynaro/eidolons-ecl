@@ -1,0 +1,38 @@
+{
+  "envelope_version": "1.0",
+  "message_id": "01926e3a-2c8a-7b04-b3a1-1cf0a7a6d5e2",
+  "thread_id":  "01926e3a-2c8a-7b04-b3a1-1cf0a7a6d5e2",
+  "parent_id":  null,
+  "from": { "eidolon": "atlas",   "version": "1.4.2"  },
+  "to":   { "eidolon": "spectra", "version": "4.2.11" },
+  "performative": "PROPOSE",
+  "edge_origin": "roster",
+  "objective": "Stub envelope with deliberately-wrong integrity value.",
+  "artifact": {
+    "kind": "scout-report",
+    "schema_version": "1.0",
+    "path": "scout-report.md",
+    "sha256": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+    "size_bytes": 490
+  },
+  "context_delta": {
+    "token_budget": 4000,
+    "tokens_used": 100,
+    "input_handles": ["mission.md"],
+    "summary": "Stub fixture; deliberately wrong integrity hash."
+  },
+  "constraints": { "trust_level": "standard" },
+  "expected_response": { "performative": "ACKNOWLEDGE" },
+  "confidence": 0.5,
+  "assumptions": ["This fixture exists only to verify that the I-3 gate trips on hash mismatch."],
+  "integrity": {
+    "method": "sha256",
+    "value": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+  },
+  "trace": {
+    "ts": "2026-05-07T12:34:56Z",
+    "host": "claude-code",
+    "model": "claude-opus-4-7",
+    "tier": "standard"
+  }
+}

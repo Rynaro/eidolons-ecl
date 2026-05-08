@@ -1,0 +1,67 @@
+# Nightly: validate ECL worked examples and (when implementors begin
+# emitting ECL envelopes) run conformance/check.sh against each Eidolon
+# repo at its latest tag.
+#
+# v1.0 note: live Eidolons do not yet emit ECL envelopes; this workflow
+# currently exercises the in-repo worked examples to catch drift. Once
+# implementors adopt ECL, the per-implementor matrix below will activate.
+name: self-check
+
+on:
+  schedule:
+    - cron: '17 4 * * *'   # 04:17 UTC daily
+  workflow_dispatch:
+
+jobs:
+  examples-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install jq, yq
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y jq
+          sudo curl -sSL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Run worked examples
+        run: |
+          bash examples/atlas-spectra-apivr-chain/run.sh
+          bash examples/apivr-vigil-escalation/run.sh
+
+  implementor-check:
+    runs-on: ubuntu-latest
+    if: false  # Activate when implementors emit ECL envelopes (v1.1+).
+    strategy:
+      fail-fast: false
+      matrix:
+        eidolon:
+          - { repo: Rynaro/ATLAS,        tag: v1.4.2 }
+          - { repo: Rynaro/SPECTRA,      tag: v4.2.11 }
+          - { repo: Rynaro/APIVR-Delta,  tag: v3.0.5 }
+          - { repo: Rynaro/IDG,          tag: v1.1.5 }
+          - { repo: Rynaro/VIGIL,        tag: v1.0.3 }
+          - { repo: Rynaro/FORGE,        tag: v1.2.1 }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install jq, yq
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y jq
+          sudo curl -sSL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Clone implementor at tag
+        run: |
+          git clone --depth=1 --branch "${{ matrix.eidolon.tag }}" \
+            "https://github.com/${{ matrix.eidolon.repo }}.git" /tmp/eidolon
+
+      - name: Conformance check (info-only until promotion)
+        run: |
+          bash conformance/check.sh /tmp/eidolon || true
+          rc=$?
+          echo "Implementor: ${{ matrix.eidolon.repo }}@${{ matrix.eidolon.tag }}"
+          echo "Exit code: $rc"
+        continue-on-error: true
