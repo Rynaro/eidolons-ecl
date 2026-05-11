@@ -10,7 +10,7 @@
  *      code "NOT_IMPLEMENTED" (confirming they are stubs, not silently
  *      no-ops or missing exports).
  */
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   ECL_VERSION_TARGET,
   EclError,
