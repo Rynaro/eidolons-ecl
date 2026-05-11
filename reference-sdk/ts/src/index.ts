@@ -13,7 +13,12 @@
 
 export { ECL_VERSION_TARGET } from "./version.js";
 export { EclError } from "./errors.js";
-export type { EclErrorCode, VerifyFailureCode, SdkInternalCode, EclErrorOptions } from "./errors.js";
+export type {
+  EclErrorCode,
+  VerifyFailureCode,
+  SdkInternalCode,
+  EclErrorOptions,
+} from "./errors.js";
 export type {
   Performative,
   AgentRef,
@@ -56,25 +61,21 @@ import { EclError } from "./errors.js";
 // ---------------------------------------------------------------------------
 
 /** @stub — implementation lands in Story S2. */
-// biome-ignore lint: stub — parameter intentionally unused until S2 lands
 export function envelopeBuild(_opts: Record<string, unknown>): Promise<never> {
   throw new EclError({ code: "NOT_IMPLEMENTED", message: "Story S2 not landed" });
 }
 
 /** @stub — implementation lands in Story S3. */
-// biome-ignore lint: stub — parameter intentionally unused until S3 lands
 export function envelopeVerify(_opts: Record<string, unknown>): Promise<never> {
   throw new EclError({ code: "NOT_IMPLEMENTED", message: "Story S3 not landed" });
 }
 
 /** @stub — implementation lands in Story S4. */
-// biome-ignore lint: stub — parameter intentionally unused until S4 lands
 export function handoffEmit(_opts: Record<string, unknown>): Promise<never> {
   throw new EclError({ code: "NOT_IMPLEMENTED", message: "Story S4 not landed" });
 }
 
 /** @stub — implementation lands in Story S5. */
-// biome-ignore lint: stub — parameter intentionally unused until S5 lands
 export function traceTail(_opts: Record<string, unknown>): AsyncIterable<never> {
   throw new EclError({ code: "NOT_IMPLEMENTED", message: "Story S5 not landed" });
 }
