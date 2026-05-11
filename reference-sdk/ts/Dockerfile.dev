@@ -1,0 +1,45 @@
+# Dev container for the ECL TypeScript reference SDK.
+#
+# Built only for development — the runtime artefact (npm package + vendor
+# single-file build) is portable and has no container dependency. Per the
+# repository policy: every dependency install / build / test runs inside
+# this container; the host stays clean.
+#
+# Layer order optimised for: rebuild on package.json change, not on source.
+
+FROM node:22-bookworm-slim
+
+# Pin Node minor for reproducible builds; print version on every shell.
+ENV NODE_ENV=development \
+    PNPM_HOME=/home/node/.local/share/pnpm \
+    PATH=/home/node/.local/share/pnpm:$PATH \
+    CI=false
+
+# Minimal apt deps. jq is needed for envelope/contract conformance smoke
+# tests that match the bash SDK's behaviour; uuid-runtime gives the
+# system uuid generator parity with the bash helpers. git is convenient
+# for in-container git ops (vendor build inspects HEAD).
+RUN apt-get update -qq \
+ && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        jq \
+        uuid-runtime \
+        git \
+        bash \
+        coreutils \
+ && rm -rf /var/lib/apt/lists/*
+
+# pnpm via Node's corepack — no global install pollution; version pin
+# tracks the lockfile in the workspace once it lands.
+RUN corepack enable
+
+# Run as the non-root `node` user (uid 1000) shipped by the base image.
+USER node
+WORKDIR /workspace
+
+# The workspace itself is bind-mounted by compose.yml; this Dockerfile
+# does not COPY any source. The container is a thin execution surface.
+
+# Default shell drops into /workspace and prints versions so the
+# maintainer sees the environment before running anything.
+CMD ["bash", "-lc", "node --version && pnpm --version && jq --version && exec bash"]
