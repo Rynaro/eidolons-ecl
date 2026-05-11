@@ -20,7 +20,6 @@ from eidolons_ecl.__main__ import (
     cmd_a2a_card,
     cmd_a2a_translate,
     cmd_compose_gen,
-    cmd_eval,
     cmd_migrate,
     main,
 )
@@ -96,7 +95,7 @@ def test_subcommands_registered() -> None:
 # ---------------------------------------------------------------------------
 
 _STUB_CASES: list[tuple[_StubFn, str, str]] = [
-    (cmd_eval, "S2.1", "cmd_eval"),
+    # cmd_eval is implemented in S2.1 — no longer a stub.
     (cmd_migrate, "S2.2", "cmd_migrate"),
     (cmd_a2a_card, "S2.4", "cmd_a2a_card"),
     (cmd_a2a_translate, "S2.4", "cmd_a2a_translate"),

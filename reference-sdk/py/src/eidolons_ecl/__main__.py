@@ -13,7 +13,29 @@ from .version import __version__
 
 
 def cmd_eval(args: argparse.Namespace) -> int:
-    raise NotImplementedError("Story S2.1 not landed")
+    from pathlib import Path
+
+    from .eval import evaluate_thread
+    from .eval.report import render_json, render_markdown
+
+    trace_dir = Path(args.trace_dir)
+    if not trace_dir.is_dir():
+        print(f"trace-dir not found: {trace_dir}", file=sys.stderr)
+        return 1
+    reports = evaluate_thread(trace_dir, thread_id=args.thread)
+    if not reports:
+        print("No thread JSONL files found.", file=sys.stderr)
+        return 1
+    for report in reports:
+        md = render_markdown(report)
+        js = render_json(report)
+        if args.out:
+            Path(args.out).write_text(md, encoding="utf-8")
+        else:
+            print(md)
+        if args.out_json:
+            Path(args.out_json).write_text(js, encoding="utf-8")
+    return 0
 
 
 def cmd_migrate(args: argparse.Namespace) -> int:
