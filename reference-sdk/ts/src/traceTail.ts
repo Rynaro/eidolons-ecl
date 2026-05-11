@@ -101,7 +101,7 @@ export interface TraceTailOptions {
 function* readLinesFromBuffer(
   buffer: string,
   fromFilter: string | undefined,
-  toFilter: string | undefined,
+  toFilter: string | undefined
 ): Generator<TraceEvent, void, unknown> {
   const lines = buffer.split("\n");
   for (const line of lines) {
@@ -113,14 +113,14 @@ function* readLinesFromBuffer(
       parsed = JSON.parse(trimmed);
     } catch {
       // Malformed line — skip silently (mirrors jq -c swallowing parse errors).
-      process.stderr.write(`[traceTail] skipping malformed JSON line\n`);
+      process.stderr.write("[traceTail] skipping malformed JSON line\n");
       continue;
     }
 
     // Apply from filter: event.from must start with "<slug>@"
     if (fromFilter !== undefined) {
       const rec = parsed as Record<string, unknown>;
-      if (typeof rec["from"] !== "string" || !rec["from"].startsWith(`${fromFilter}@`)) {
+      if (typeof rec.from !== "string" || !rec.from.startsWith(`${fromFilter}@`)) {
         continue;
       }
     }
@@ -128,7 +128,7 @@ function* readLinesFromBuffer(
     // Apply to filter: event.to must start with "<slug>@"
     if (toFilter !== undefined) {
       const rec = parsed as Record<string, unknown>;
-      if (typeof rec["to"] !== "string" || !rec["to"].startsWith(`${toFilter}@`)) {
+      if (typeof rec.to !== "string" || !rec.to.startsWith(`${toFilter}@`)) {
         continue;
       }
     }
@@ -448,6 +448,7 @@ export async function* traceTail(opts: TraceTailOptions): AsyncGenerator<TraceEv
       await waitForItem();
 
       while (queue.length > 0) {
+        // biome-ignore lint/style/noNonNullAssertion: queue.length > 0 is checked above; shift() cannot return undefined here
         const item = queue.shift()!;
         if (item.kind === "done") return;
         if (item.kind === "error") throw item.error;

@@ -19,11 +19,11 @@
  *   - Key ordering in output object matches spec (envelope_version first, trace last).
  */
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import * as crypto from "node:crypto";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { envelopeBuild } from "./envelopeBuild.js";
 import { EclError } from "./errors.js";
 
@@ -141,10 +141,21 @@ describe("envelopeBuild — core shape", () => {
     expect(keys[keys.length - 1]).toBe("trace");
     // Spot-check canonical order
     const canonicalOrder = [
-      "envelope_version", "message_id", "thread_id", "parent_id",
-      "from", "to", "performative", "edge_origin", "objective",
-      "artifact", "context_delta", "constraints", "confidence",
-      "integrity", "trace",
+      "envelope_version",
+      "message_id",
+      "thread_id",
+      "parent_id",
+      "from",
+      "to",
+      "performative",
+      "edge_origin",
+      "objective",
+      "artifact",
+      "context_delta",
+      "constraints",
+      "confidence",
+      "integrity",
+      "trace",
     ];
     expect(keys).toEqual(canonicalOrder);
   });
@@ -208,8 +219,8 @@ describe("envelopeBuild — integrity", () => {
   });
 
   it("hmac-sha256 throws USAGE when ECL_HMAC_KEY is unset", async () => {
-    const savedKey = process.env["ECL_HMAC_KEY"];
-    delete process.env["ECL_HMAC_KEY"];
+    const savedKey = process.env.ECL_HMAC_KEY;
+    delete process.env.ECL_HMAC_KEY;
 
     try {
       await expect(
@@ -219,16 +230,16 @@ describe("envelopeBuild — integrity", () => {
           performative: "PROPOSE",
           objective: "Test hmac no key.",
           integrityMethod: "hmac-sha256",
-        }),
+        })
       ).rejects.toMatchObject({ code: "USAGE" });
     } finally {
-      if (savedKey !== undefined) process.env["ECL_HMAC_KEY"] = savedKey;
+      if (savedKey !== undefined) process.env.ECL_HMAC_KEY = savedKey;
     }
   });
 
   it("hmac-sha256 produces a valid 64-char hex digest when ECL_HMAC_KEY is set", async () => {
-    const savedKey = process.env["ECL_HMAC_KEY"];
-    process.env["ECL_HMAC_KEY"] = "test-secret-key";
+    const savedKey = process.env.ECL_HMAC_KEY;
+    process.env.ECL_HMAC_KEY = "test-secret-key";
 
     try {
       const env = await envelopeBuild({
@@ -243,8 +254,8 @@ describe("envelopeBuild — integrity", () => {
       // HMAC value must differ from plain SHA-256
       expect(env.integrity.value).not.toBe(FIXTURE_SHA256);
     } finally {
-      if (savedKey !== undefined) process.env["ECL_HMAC_KEY"] = savedKey;
-      else delete process.env["ECL_HMAC_KEY"];
+      if (savedKey !== undefined) process.env.ECL_HMAC_KEY = savedKey;
+      else delete process.env.ECL_HMAC_KEY;
     }
   });
 });
@@ -421,7 +432,9 @@ describe("envelopeBuild — optional overrides", () => {
       objective: "Summary override.",
       summary: "Custom summary text.",
     });
-    expect((env.context_delta as unknown as Record<string, unknown>).summary).toBe("Custom summary text.");
+    expect((env.context_delta as unknown as Record<string, unknown>).summary).toBe(
+      "Custom summary text."
+    );
   });
 
   it("tokensUsed override is stored in context_delta.tokens_used", async () => {
@@ -516,7 +529,7 @@ describe("envelopeBuild — error paths", () => {
         // @ts-expect-error — intentional invalid value for test
         performative: "INVALID_PERF",
         objective: "Invalid perf.",
-      }),
+      })
     ).rejects.toMatchObject({ code: "USAGE" });
   });
 
@@ -527,7 +540,7 @@ describe("envelopeBuild — error paths", () => {
         contract: contractPath,
         performative: "PROPOSE",
         objective: "x".repeat(241),
-      }),
+      })
     ).rejects.toMatchObject({ code: "USAGE" });
   });
 
@@ -538,7 +551,7 @@ describe("envelopeBuild — error paths", () => {
         contract: contractPath,
         performative: "PROPOSE",
         objective: "Missing artifact.",
-      }),
+      })
     ).rejects.toMatchObject({ code: "IO_FAILED" });
   });
 
@@ -549,7 +562,7 @@ describe("envelopeBuild — error paths", () => {
         contract: path.join(tmpDir, "missing-contract.yaml"),
         performative: "PROPOSE",
         objective: "Missing contract.",
-      }),
+      })
     ).rejects.toMatchObject({ code: "IO_FAILED" });
   });
 
@@ -563,7 +576,7 @@ describe("envelopeBuild — error paths", () => {
         contract: badContractPath,
         performative: "PROPOSE",
         objective: "Bad contract yaml.",
-      }),
+      })
     ).rejects.toMatchObject({ code: "IO_FAILED" });
   });
 
@@ -575,14 +588,22 @@ describe("envelopeBuild — error paths", () => {
         contract: contractPath,
         performative: "PROPOSE",
         objective: "Missing artifact opt.",
-      }),
+      })
     ).rejects.toMatchObject({ code: "USAGE" });
   });
 
   it("all 10 valid performatives are accepted", async () => {
     const perfs: string[] = [
-      "REQUEST", "INFORM", "PROPOSE", "CRITIQUE", "DECIDE",
-      "DELEGATE", "ACKNOWLEDGE", "ESCALATE", "RESUME", "REFUSE",
+      "REQUEST",
+      "INFORM",
+      "PROPOSE",
+      "CRITIQUE",
+      "DECIDE",
+      "DELEGATE",
+      "ACKNOWLEDGE",
+      "ESCALATE",
+      "RESUME",
+      "REFUSE",
     ];
     for (const perf of perfs) {
       const env = await envelopeBuild({
@@ -602,8 +623,8 @@ describe("envelopeBuild — error paths", () => {
 
 describe("envelopeBuild — environment defaults", () => {
   it("trace.host defaults to ECL_HOST env when set", async () => {
-    const savedHost = process.env["ECL_HOST"];
-    process.env["ECL_HOST"] = "cursor";
+    const savedHost = process.env.ECL_HOST;
+    process.env.ECL_HOST = "cursor";
     try {
       const env = await envelopeBuild({
         artifact: artifactPath,
@@ -613,14 +634,14 @@ describe("envelopeBuild — environment defaults", () => {
       });
       expect(env.trace.host).toBe("cursor");
     } finally {
-      if (savedHost !== undefined) process.env["ECL_HOST"] = savedHost;
-      else delete process.env["ECL_HOST"];
+      if (savedHost !== undefined) process.env.ECL_HOST = savedHost;
+      else delete process.env.ECL_HOST;
     }
   });
 
   it("trace.host defaults to 'raw' when ECL_HOST is unset", async () => {
-    const savedHost = process.env["ECL_HOST"];
-    delete process.env["ECL_HOST"];
+    const savedHost = process.env.ECL_HOST;
+    delete process.env.ECL_HOST;
     try {
       const env = await envelopeBuild({
         artifact: artifactPath,
@@ -630,13 +651,13 @@ describe("envelopeBuild — environment defaults", () => {
       });
       expect(env.trace.host).toBe("raw");
     } finally {
-      if (savedHost !== undefined) process.env["ECL_HOST"] = savedHost;
+      if (savedHost !== undefined) process.env.ECL_HOST = savedHost;
     }
   });
 
   it("trace.model defaults to ECL_MODEL env when set", async () => {
-    const savedModel = process.env["ECL_MODEL"];
-    process.env["ECL_MODEL"] = "gpt-4o";
+    const savedModel = process.env.ECL_MODEL;
+    process.env.ECL_MODEL = "gpt-4o";
     try {
       const env = await envelopeBuild({
         artifact: artifactPath,
@@ -646,14 +667,14 @@ describe("envelopeBuild — environment defaults", () => {
       });
       expect(env.trace.model).toBe("gpt-4o");
     } finally {
-      if (savedModel !== undefined) process.env["ECL_MODEL"] = savedModel;
-      else delete process.env["ECL_MODEL"];
+      if (savedModel !== undefined) process.env.ECL_MODEL = savedModel;
+      else delete process.env.ECL_MODEL;
     }
   });
 
   it("trace.model defaults to 'unknown' when ECL_MODEL is unset", async () => {
-    const savedModel = process.env["ECL_MODEL"];
-    delete process.env["ECL_MODEL"];
+    const savedModel = process.env.ECL_MODEL;
+    delete process.env.ECL_MODEL;
     try {
       const env = await envelopeBuild({
         artifact: artifactPath,
@@ -663,7 +684,7 @@ describe("envelopeBuild — environment defaults", () => {
       });
       expect(env.trace.model).toBe("unknown");
     } finally {
-      if (savedModel !== undefined) process.env["ECL_MODEL"] = savedModel;
+      if (savedModel !== undefined) process.env.ECL_MODEL = savedModel;
     }
   });
 });
