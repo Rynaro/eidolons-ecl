@@ -1,0 +1,487 @@
+---
+# SPECTRA hand-off — ECL v1.1.0 spec bump (S1.3 + S1.4 + S1.5)
+spec_version: 1
+spectra_version: 4.2.11
+spec_id: v1.1-spec-bump
+status: assemble
+confidence: 0.89
+created_at: "2026-05-12T00:00:00Z"
+roadmap_parent: /Users/henrique/workspace/oss/agents/eidolons/.spectra/harness-roadmap.md
+roadmap_stories: [S1.3, S1.4, S1.5]
+tech_choice_doc: /Users/henrique/workspace/oss/agents/eidolons-ecl/docs/tech-choice.md
+phase_1_a_precedent:
+  spec: /Users/henrique/workspace/oss/agents/eidolons-ecl/.spectra/ts-sdk-port.md
+  chronicle: /Users/henrique/workspace/oss/agents/eidolons-ecl/.idg/ts-sdk-phase1-chronicle.md
+target_repo: Rynaro/eidolons-ecl
+target_branch: feat/v1.1.0-spec-bump
+target_tag: v1.1.0
+single_pr: true
+trance_tier: standard
+
+clarify:
+  who:
+    s1_4_family:
+      eidolon: apivr-delta
+      version: "3.0.5"
+      model: sonnet
+      isolation: worktree
+    s1_3:
+      eidolon: idg
+      version: "1.1.5"
+      model: sonnet
+      mode: synthesis-only
+    s1_5:
+      eidolon: idg
+      version: "1.1.5"
+      model: sonnet
+      mode: synthesis-only
+    parent:
+      role: validation + PR open + post-merge tag
+  what: |
+    Land three Phase 1 stories together as ECL v1.1.0:
+    - S1.3: docs/threat-model.md (5 threats × ECL mitigations).
+    - S1.4: HMAC-SHA-256 promoted to RECOMMENDED at trust_level=high;
+            new conformance gate I-5 in bash + TS SDK; ECL_HMAC_KEY
+            lifecycle documented.
+    - S1.5: docs/drift-register.md (empty seed + governance process).
+  why: Closes Phase 1 of harness-roadmap.md; unblocks ECL v1.1.0 release tag.
+  constraints:
+    - Backward compatible — sha256 stays MUST-pass at non-high trust levels.
+    - HMAC at trust_level=high is RECOMMENDED, not REQUIRED, in v1.1.
+    - No schema $id bumps; no envelope-shape changes.
+    - Container constraint for TS SDK touch: every make target runs INSIDE reference-sdk/ts/ dev container.
+    - Apache-2.0 across new artefacts.
+    - No Eidolon adoption changes in this PR (tracked as [ACTION-2]).
+
+decisions_resolved:
+  - id: DECISION-S1
+    title: Spec file naming
+    resolution: versioned-per-tag (create spec/ecl-1.1.md, keep spec/ecl-1.0.md)
+    rationale: |
+      .github/workflows/conformance.yml:48-50 already enforces
+      `test -f "spec/ecl-${ECL_VERSION}.md"`. .github/workflows/release.yml:51
+      hardcodes a per-version asset path. Per-version files are the existing
+      convention; renaming to spec/ecl.md would break archival GH-Release
+      asset references and lose SemVer back-reference. v1.0 stays in-tree
+      for the §7.3 12-month compatibility window.
+    impact:
+      created: [spec/ecl-1.1.md]
+      modified:
+        - ECL_VERSION
+        - .github/workflows/release.yml
+        - README.md  # 4 anchor updates
+        - CHANGELOG.md
+      preserved: [spec/ecl-1.0.md]
+
+  - id: DECISION-S2
+    title: Schema $id versioning
+    resolution: keep $ids at v1.0.0 (no churn)
+    rationale: |
+      HMAC promotion is prose-level + a conformance gate; the JSON Schema
+      already permits both sha256 and hmac-sha256. No field added, no
+      constraint tightened at the schema layer. Twelve schema files would
+      take a mechanical $id bump for zero behavioural change; churn-heavy
+      diff obscures the actual normative change. ajv resolves $refs by
+      $id (envelopeVerify.ts:128-200) — changing $ids forces TS SDK
+      recompile + external vendor migration. Precedent: v1.0.1 added 8
+      contract files without touching $ids. Bump $ids at v2.0.0 or when
+      the first additive schema field lands (Phase 2 S2.3 ISE fields).
+    impact:
+      modified: []
+      drift_candidate: DC-1
+
+  - id: DECISION-S3
+    title: TS SDK version
+    resolution: bump reference-sdk/ts/package.json from 1.1.0 to 1.1.1; ECL_VERSION_TARGET from "1.0" to "1.1"
+    rationale: |
+      docs/tech-choice.md:42-45 commits to lock-step minor versioning.
+      HMAC warn integration is a behavioural addition (additive non-breaking)
+      = SemVer patch within v1.1.x. Bumping to 1.2.0 would desync the SDK
+      from the spec (spec is 1.1, SDK would be 1.2). Keeping at 1.1.0 ships
+      new code under the same version = bad release hygiene.
+    impact:
+      modified:
+        - reference-sdk/ts/package.json
+        - reference-sdk/ts/src/version.ts
+        - reference-sdk/ts/src/__tests__/scaffold.test.ts  # assertion update
+
+actions_deferred:
+  - id: ACTION-1
+    owner: future-spectra-cycle
+    target_version: v1.2 or v2.0
+    description: Promote HMAC from RECOMMENDED to MUST at trust_level=high. Requires deprecation window + normative §6 edit + drift register entry.
+
+  - id: ACTION-2
+    owner: per-eidolon-adoption
+    description: |
+      Bump ECL_VERSION in each Eidolon repo (atlas, spectra, apivr-delta,
+      idg, forge, vigil) from 1.0 to 1.1. Each adoption spec under
+      eidolons/.spectra/{eidolon}-ecl-adoption.md enumerates the change set.
+
+  - id: ACTION-3
+    owner: future-spectra-cycle
+    description: |
+      Re-enable the two describe.skip'd shell-out integration tests in
+      envelopeVerify.test.ts (C-1 EDGE_UNKNOWN parse mismatch). Tracked as
+      drift candidate DC-3 in S1.5's drift register.
+
+  - id: ACTION-4
+    owner: v1.2+
+    description: Re-evaluate DECISION-S2 when the first additive schema field lands. Bump schema $ids THEN.
+
+stories:
+  # ===== S1.4.a — spec text =====
+  - id: S1.4.a
+    title: Spec text — promote HMAC + document key lifecycle
+    owner: apivr-delta
+    label: "apivr:spec-text"
+    confidence: 0.93
+    files_to_create:
+      - spec/ecl-1.1.md  # copy of spec/ecl-1.0.md with edits below
+    files_to_modify:
+      - ECL_VERSION  # 1.0 → 1.1
+      - .github/workflows/release.yml  # line 51 path update
+      - README.md  # 4 anchor updates (lines 9, 22, 95)
+      - CHANGELOG.md  # see changelog_template
+    files_to_preserve:
+      - spec/ecl-1.0.md  # archival; remains in tree
+    spec_edits:
+      - location: spec/ecl-1.1.md header lines 1-7
+        change: Version 1.0 → 1.1; Published date → PR merge date
+      - location: spec/ecl-1.1.md §1.1.1 line 96
+        change: regex ^1\.0(\.\d+)?$  →  ^1\.[01](\.\d+)?$
+      - location: spec/ecl-1.1.md §1.2.2 line 127
+        change: SHOULD → "MUST emit hmac-sha256 OR conformance MAY warn per I-5"
+      - location: spec/ecl-1.1.md §6.1 integrity table lines 444-449
+        change: hmac-sha256 row from "OPTIONAL; RECOMMENDED at trust_level=high" → "**RECOMMENDED** at trust_level=high; OPTIONAL otherwise. See §6.4."
+      - location: spec/ecl-1.1.md §6.2
+        action: add new §6.2.6 SHOULD-level conformance recommendation for gate I-5
+      - location: spec/ecl-1.1.md §6
+        action: append new §6.4 "HMAC key lifecycle" subsection (provisioning, scope, lifetime, storage, rotation, verification failure)
+      - location: spec/ecl-1.1.md §6.3
+        action: add §6.3.3 SHOULD pointer to §6.4
+      - location: spec/ecl-1.1.md §7.4
+        action: replace v1.0 stub with pointer to docs/drift-register.md
+    gates:
+      - id: G-S1.4.a-Build
+        target: yq eval . .github/workflows/release.yml
+        expect: parses without error
+      - id: G-S1.4.a-Conformance-CI
+        target: .github/workflows/conformance.yml step "ECL_VERSION matches latest spec file"
+        expect: passes (spec/ecl-1.1.md exists)
+      - id: G-S1.4.a-Release-CI
+        target: .github/workflows/release.yml step "Verify ECL_VERSION matches tag"
+        expect: post-merge tag v1.1.0 passes
+      - id: G-S1.4.a-Anchor-Drift
+        target: grep -rE 'spec/ecl-1\.0\.md' --exclude-dir=spec --exclude-dir=.git .
+        expect: only archival CHANGELOG entries
+
+  # ===== S1.4.b — conformance/lib/integrity.sh =====
+  - id: S1.4.b
+    title: Conformance checker — I-5 warn on (trust_level=high AND integrity.method=sha256)
+    owner: apivr-delta
+    label: "apivr:conformance-bash"
+    confidence: 0.90
+    depends_on: [S1.4.a]
+    files_to_modify:
+      - conformance/lib/integrity.sh  # extend ecl_check_integrity() after I-4 block
+      - conformance/README.md  # add I-5 row to gate table
+      - conformance/tests/conformance.bats  # 3 new test cases
+    files_to_create:
+      - conformance/tests/fixtures/high-trust-sha256/  # envelope + payload + contract
+      - conformance/tests/fixtures/high-trust-hmac/    # envelope + payload + contract
+    gate_id: I-5
+    gate_level: SHOULD
+    gate_name: hmac_recommended_at_high_trust
+    gate_message: "trust_level=high + integrity.method=sha256 — RECOMMENDED hmac-sha256 (ECL v1.1 §6)"
+    splice_location: conformance/lib/integrity.sh:102 (after I-4 SHOULD block)
+    bash_3_2_compatible: true
+    implementation_sketch: |
+      # I-5 (SHOULD, ECL v1.1 §6.2.6)
+      local trust_level
+      trust_level="$(jq -r '.constraints.trust_level // "standard"' "$env_path")"
+      if [ "$trust_level" = "high" ] && [ "$method" = "sha256" ]; then
+        ecl_record "I-5" "SHOULD" "warn" "hmac_recommended_at_high_trust" \
+          "trust_level=high + integrity.method=sha256 — RECOMMENDED hmac-sha256 (ECL v1.1 §6)" \
+          "$env_path"
+      else
+        ecl_record "I-5" "SHOULD" "ok" "hmac_recommended_at_high_trust" "" "$env_path"
+      fi
+    gates:
+      - id: G-S1.4.b-Build
+        target: bash -n conformance/lib/integrity.sh
+        expect: exit 0
+      - id: G-S1.4.b-Lint
+        target: shellcheck -x -S error conformance/lib/integrity.sh
+        expect: exit 0
+      - id: G-S1.4.b-Test
+        target: bats conformance/tests/conformance.bats
+        expect: exit 0; 3 new I-5 tests pass
+      - id: G-S1.4.b-Conformance-Backcompat
+        target: re-run existing fixtures (conformant-handoff, missing-integrity, undeclared-edge, over-budget-context)
+        expect: same exit codes as v1.0 (I-5 not triggered)
+      - id: G-S1.4.b-CI
+        target: .github/workflows/conformance.yml conformance job
+        expect: passes
+
+  # ===== S1.4.c — TS SDK envelopeVerify =====
+  - id: S1.4.c
+    title: TS SDK envelopeVerify — mirror I-5 in warnings[]
+    owner: apivr-delta
+    label: "apivr:sdk-ts"
+    confidence: 0.91
+    depends_on: [S1.4.a]
+    container_constraint:
+      required: true
+      rule: every make target runs INSIDE reference-sdk/ts/ dev container
+      no_host_node: true
+    files_to_modify:
+      - reference-sdk/ts/src/envelopeVerify.ts  # splice I-5 warn after I-4 block ~line 664
+      - reference-sdk/ts/src/envelopeVerify.test.ts  # 3 new test cases
+      - reference-sdk/ts/src/version.ts  # ECL_VERSION_TARGET "1.0" → "1.1"
+      - reference-sdk/ts/src/__tests__/scaffold.test.ts  # assertion line 26 update
+      - reference-sdk/ts/package.json  # version 1.1.0 → 1.1.1
+    splice_location: reference-sdk/ts/src/envelopeVerify.ts (after I-4 size_bytes warn ~line 664)
+    implementation_sketch: |
+      // I-5 (SHOULD, ECL v1.1 §6.2.6)
+      const trustLevel = envelope.constraints?.trust_level;
+      if (trustLevel === "high" && method === "sha256") {
+        warnings.push({
+          gate: "I-5",
+          message:
+            "trust_level=high + integrity.method=sha256 — RECOMMENDED hmac-sha256 (ECL v1.1 §6.4)",
+        });
+      }
+    test_cases:
+      - name: emits I-5 warning when trust_level=high and integrity.method=sha256
+        expects:
+          ok: true  # SHOULD-level warn does not fail
+          warning_gate: I-5
+      - name: does NOT emit I-5 when trust_level=high and integrity.method=hmac-sha256
+        env: { ECL_HMAC_KEY: test-key-for-i5 }
+        expects:
+          warning_gate_i5_present: false
+      - name: does NOT emit I-5 at trust_level=standard with sha256
+        expects:
+          warning_gate_i5_present: false
+    test_isolation:
+      skipShellGates: true  # avoid the C-1 EDGE_UNKNOWN bash-parse mismatch (DC-3)
+    gates:
+      - id: G-S1.4.c-Build
+        target: "cd reference-sdk/ts && make build"
+        expect: exit 0; dist artifacts emitted
+      - id: G-S1.4.c-Test
+        target: "cd reference-sdk/ts && make test"
+        expect: exit 0; 3 new tests pass
+      - id: G-S1.4.c-Lint
+        target: "cd reference-sdk/ts && make lint"
+        expect: exit 0
+      - id: G-S1.4.c-Check
+        target: "cd reference-sdk/ts && make check"
+        expect: exit 0 (install + build + test + lint)
+      - id: G-S1.4.c-Version-Assert
+        target: scaffold.test.ts line 26
+        expect: 'expect(ECL_VERSION_TARGET).toBe("1.1")'
+      - id: G-S1.4.c-NoHost
+        target: filesystem inspection
+        expect: no node_modules outside reference-sdk/ts/
+
+  # ===== S1.3 — threat-model doc =====
+  - id: S1.3
+    title: docs/threat-model.md — 5 threats × ECL mitigations
+    owner: idg
+    label: "idg:threat-model"
+    confidence: 0.88
+    mode: synthesis-only
+    files_to_create:
+      - docs/threat-model.md
+    required_markers: ["[DECISION]", "[ACTION]", "[DISPUTED]", "[GAP]"]
+    threats:
+      - id: T1
+        title: Agent-in-the-Middle (AiTM)
+        source: ACL 2025 Findings — Agent-in-the-Middle Attacks
+        spec_citation: spec/ecl-1.0.md:574
+        mitigations:
+          - "spec/ecl-1.1.md §6 Integrity: sha256 MUST + hmac-sha256 RECOMMENDED at trust_level=high (§6.2 + new §6.2.6)"
+          - "§6.2.2: receivers SHALL recompute and refuse mismatched payloads"
+          - "Conformance gates I-1 / I-3 / I-5 (bash) + TS envelopeVerify"
+      - id: T2
+        title: Prompt Infection / propagation
+        source: arXiv:2410.07283
+        spec_citation: spec/ecl-1.0.md:575-576
+        mitigations:
+          - "§3 Hand-off contracts: every envelope MUST match a contract on a declared edge"
+          - "Role-restricted routing: infected agents cannot emit on edges they do not own"
+          - "§6.3 trust_level=low: receivers SHOULD treat content as data, not instructions"
+      - id: T3
+        title: Inter-agent trust exploitation
+        source: general literature (harness-roadmap.md:148)
+        mitigations:
+          - "§1 Envelope: from.eidolon@version cross-referenced against roster"
+          - "§6.3 trust levels (coarse SHOULD-level)"
+          - "§2 Performatives: ten-verb enum; receivers refuse off-contract performatives"
+      - id: T4
+        title: Context poisoning
+        source: general literature (harness-roadmap.md:148)
+        mitigations:
+          - "§4 Context-delta discipline: summary describes NEW info only (§4.1.2)"
+          - "input_handles[]: receivers re-read source rather than inline replay"
+          - "§5 JSONL trace: replay a thread to find poisoned-content introduction point"
+      - id: T5
+        title: Indirect prompt injection
+        source: OWASP LLM01:2025 (harness-roadmap.md:148)
+        mitigations:
+          - "§6.3 trust_level=low: receivers SHOULD treat low-trust content as data; MUST NOT execute embedded directives"
+          - "§1.1 artifact.sha256 + §6.2 integrity gating"
+          - "§3 contracts limit which agents can deliver which artifact kinds"
+    section_template: |
+      ## T<N> — <title>
+      ### Description
+      ### Source
+      ### ECL v1.1 mitigation
+      ### Residual risk
+    gates:
+      - id: G-S1.3-Completeness
+        expect: all 5 threats present with description + source + mitigation + residual risk
+      - id: G-S1.3-Helpfulness
+        expect: every mitigation cites a specific §-anchor or gate ID
+      - id: G-S1.3-Truthfulness
+        expect: every citation traces to spec/ecl-1.0.md:553-582 or harness-roadmap.md
+      - id: G-S1.3-Markers
+        expect: required IDG markers present (≥1 [GAP] flagging undefended attack surfaces)
+      - id: G-S1.3-Markdown-Parse
+        target: pandoc -f markdown -t html docs/threat-model.md
+        expect: parses without error
+
+  # ===== S1.5 — drift register =====
+  - id: S1.5
+    title: docs/drift-register.md — empty seed + governance process
+    owner: idg
+    label: "idg:drift-register"
+    confidence: 0.87
+    mode: synthesis-only
+    files_to_create:
+      - docs/drift-register.md
+    required_sections:
+      - preamble  # what a drift is + warn→SHOULD→MUST lifecycle
+      - schema    # field definitions for each D-N entry
+      - governance  # adding / warn-only window / promotion / retirement
+      - seed_entries  # explicitly EMPTY at v1.1.0
+      - candidates  # non-normative, flagged for future review
+    entry_schema:
+      id: string  # D-N
+      title: string
+      discovered_at: rfc3339
+      discovered_via: enum [conformance-checker, live-emit, external-report]
+      evidence: array
+      spec_section: string  # §-anchor
+      warn_only_window:
+        opened_at: version
+        target_promotion: enum [SHOULD, MUST]
+        target_version: version
+      conformance_gate: string  # gate ID
+      status: enum [open, promoted, retired]
+      notes: string
+    drift_candidates:
+      - id: DC-1
+        title: Schema $id versioning lag
+        evidence: "schemas/*.json all carry v1.0.0 $ids at spec v1.1.0"
+        trigger_for_promotion: first additive schema field (Phase 2 S2.3 ISE fields)
+      - id: DC-2
+        title: Unused contract fields (schema_ref, required_sections, evidence_anchor_required)
+        evidence: ".spectra/ts-sdk-port.md GAP-2"
+        trigger_for_promotion: first consumer that exercises them
+      - id: DC-3
+        title: envelopeVerify shell-out C-1 EDGE_UNKNOWN parse mismatch
+        evidence: ".idg/ts-sdk-phase1-chronicle.md:77-84; envelopeVerify.test.ts describe.skip blocks"
+        trigger_for_promotion: prior to v1.2.0 if not resolved
+    seed_state: empty  # No drifts at v1.1.0.
+    gates:
+      - id: G-S1.5-Completeness
+        expect: preamble + schema + governance + seed_entries + candidates sections present
+      - id: G-S1.5-Helpfulness
+        expect: schema concrete enough for downstream contributor to author D-N entry without re-deriving format
+      - id: G-S1.5-Truthfulness
+        expect: drift candidates DC-1/DC-2/DC-3 trace to documented evidence
+      - id: G-S1.5-Markdown-Parse
+        target: pandoc -f markdown -t html docs/drift-register.md
+        expect: parses without error
+      - id: G-S1.5-Spec-Anchor
+        target: grep "docs/drift-register.md" spec/ecl-1.1.md
+        expect: at least one hit (§7.4 anchors to this doc)
+
+dispatch_plan:
+  ordering:
+    - 1. S1.4.a  # creates spec/ecl-1.1.md; unblocks S1.3 and S1.5 anchors
+    - 2. S1.3    # threat-model.md, anchored against spec/ecl-1.1.md
+    - 3. S1.5    # drift-register.md, anchored against spec/ecl-1.1.md
+    - 4. S1.4.b  # bash conformance gate
+    - 5. S1.4.c  # TS SDK warn integration
+    - 6. CHANGELOG.md  # final v1.1.0 entry pass
+  parallelizable_pairs:
+    - [S1.3, S1.5]   # both IDG, no inter-dep, can fan out (different worktrees if parallel)
+    - [S1.4.b, S1.4.c]  # both APIVR-Δ, independent file sets
+
+cross_story_invariants:
+  - All five stories land on a SINGLE PR against feat/v1.1.0-spec-bump.
+  - PR description references this spec (.spectra/v1.1-spec-bump.md).
+  - No git-tag until PR merges and CI on main is green.
+  - v1.1.0 tag is annotated (`git tag -a v1.1.0`) per release-integrity-contract memory.
+  - HEAD == origin/main verified before tagging (per feedback_git_tagging_loops memory).
+
+changelog_template: |
+  ## [Unreleased]
+
+  ## [1.1.0] — 2026-05-XX — HMAC promotion + threat model + drift register seed
+
+  ### Added
+  - docs/threat-model.md — 5 threats × ECL mitigations.
+  - docs/drift-register.md — empty seed + governance process.
+  - spec/ecl-1.1.md — successor to spec/ecl-1.0.md.
+  - Conformance gate I-5 (SHOULD): warn when trust_level=high AND integrity.method=sha256.
+  - spec/ecl-1.1.md §6.4 — HMAC key lifecycle (RECOMMENDED at trust_level=high).
+
+  ### Changed
+  - §6.1 — hmac-sha256 promoted from OPTIONAL to RECOMMENDED at trust_level=high.
+  - §1.2.2 — aligned prose with I-5 conformance gate.
+  - §1.1.1 — envelope_version regex relaxed to ^1\.[01](\.\d+)?$ (v1.0 envelopes valid under v1.1).
+  - §7.4 — drift register replaces v1.0 stub with pointer to docs/drift-register.md.
+  - ECL_VERSION 1.0 → 1.1.
+  - reference-sdk/ts/ SDK 1.1.0 → 1.1.1; ECL_VERSION_TARGET "1.0" → "1.1".
+  - .github/workflows/release.yml — release asset path → spec/ecl-1.1.md.
+
+  ### Notes
+  - Backward compatible — v1.0 envelopes valid under v1.1.
+  - No schema $id bumps.
+  - No new schemas, no envelope-format changes.
+
+  [1.1.0]: https://github.com/Rynaro/eidolons-ecl/releases/tag/v1.1.0
+
+post_merge_tag_protocol:
+  - verify: HEAD == origin/main
+  - tag: git tag -a v1.1.0 -m "ECL v1.1.0 — HMAC promotion + threat model + drift register seed"
+  - push: git push origin v1.1.0
+  - triggers: .github/workflows/release.yml (publishes GH Release w/ spec/ecl-1.1.md asset + ecl-conformance.tar.gz)
+
+hand_off_labels:
+  apivr:
+    - S1.4.a: apivr:spec-text
+    - S1.4.b: apivr:conformance-bash
+    - S1.4.c: apivr:sdk-ts
+  idg:
+    - S1.3: idg:threat-model
+    - S1.5: idg:drift-register
+
+confidence_at_assemble: 0.89
+confidence_threshold: 0.85
+refine_cycles_used: 0
+provenance:
+  - source: harness-roadmap.md §Phase 1 — ECL v1.1
+  - source: docs/tech-choice.md (Phase 0 committed 2026-05-11)
+  - source: .spectra/ts-sdk-port.md (Phase 1.A precedent)
+  - source: .idg/ts-sdk-phase1-chronicle.md (Phase 1.A close)
+  - source: spec/ecl-1.0.md (existing spec; §6 + §7 + §Citations are the load-bearing inputs)
+  - source: conformance/check.sh + conformance/lib/integrity.sh + conformance/README.md (gate ID space)
+  - source: reference-sdk/ts/src/envelopeVerify.ts (splice point identification)
+  - source: .github/workflows/conformance.yml (G0-2 + DECISION-S1 lock-in)
+  - source: .github/workflows/release.yml (DECISION-S1 release-asset constraint)
