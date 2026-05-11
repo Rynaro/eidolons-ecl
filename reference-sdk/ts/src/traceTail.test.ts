@@ -25,7 +25,7 @@ import * as path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { EclError } from "./errors.js";
-import { traceTail, type TraceTailOptions } from "./traceTail.js";
+import { type TraceTailOptions, traceTail } from "./traceTail.js";
 import type { EmitTraceEvent, TraceEvent } from "./types.js";
 
 // ---------------------------------------------------------------------------
@@ -49,7 +49,7 @@ function makeEmitEvent(overrides: Partial<EmitTraceEvent> = {}): EmitTraceEvent 
 
 /** Append a single event as a JSONL line to a file. */
 function appendEvent(filePath: string, event: TraceEvent): void {
-  fs.appendFileSync(filePath, JSON.stringify(event) + "\n", { flag: "a" });
+  fs.appendFileSync(filePath, `${JSON.stringify(event)}\n`, { flag: "a" });
 }
 
 /** Collect all events from an AsyncIterable into an array. */
@@ -69,7 +69,7 @@ async function collectAll(iterable: AsyncIterable<TraceEvent>): Promise<TraceEve
 async function collectWithTimeout(
   iterable: AsyncIterable<TraceEvent>,
   stopCount: number,
-  timeoutMs: number,
+  timeoutMs: number
 ): Promise<TraceEvent[]> {
   const results: TraceEvent[] = [];
   const ac = new AbortController();
@@ -84,7 +84,7 @@ async function collectWithTimeout(
       const next = await Promise.race([
         iter.next(),
         new Promise<IteratorResult<TraceEvent>>((_, reject) =>
-          ac.signal.addEventListener("abort", () => reject(new Error("timeout")), { once: true }),
+          ac.signal.addEventListener("abort", () => reject(new Error("timeout")), { once: true })
         ),
       ]);
       if (next.done) break;
@@ -123,8 +123,14 @@ describe("traceTail — non-follow", () => {
     const threadId = "01926e3a-0000-7000-8000-aaaaaaaaaaaa";
     const filePath = path.join(tmpDir, `${threadId}.jsonl`);
 
-    const ev1 = makeEmitEvent({ ts: "2026-05-11T10:00:00Z", message_id: "01926e3a-0000-7000-8000-000000000001" });
-    const ev2 = makeEmitEvent({ ts: "2026-05-11T10:01:00Z", message_id: "01926e3a-0000-7000-8000-000000000002" });
+    const ev1 = makeEmitEvent({
+      ts: "2026-05-11T10:00:00Z",
+      message_id: "01926e3a-0000-7000-8000-000000000001",
+    });
+    const ev2 = makeEmitEvent({
+      ts: "2026-05-11T10:01:00Z",
+      message_id: "01926e3a-0000-7000-8000-000000000002",
+    });
     appendEvent(filePath, ev1);
     appendEvent(filePath, ev2);
 
@@ -139,12 +145,21 @@ describe("traceTail — non-follow", () => {
     const threadId = "01926e3a-0000-7000-8000-bbbbbbbbbbbb";
     const filePath = path.join(tmpDir, `${threadId}.jsonl`);
 
-    appendEvent(filePath, makeEmitEvent({ from: "atlas@1.4.2", message_id: "01926e3a-0000-7000-8000-000000000011" }));
-    appendEvent(filePath, makeEmitEvent({ from: "apivr@3.0.5", message_id: "01926e3a-0000-7000-8000-000000000012" }));
-    appendEvent(filePath, makeEmitEvent({ from: "atlas@1.4.2", message_id: "01926e3a-0000-7000-8000-000000000013" }));
+    appendEvent(
+      filePath,
+      makeEmitEvent({ from: "atlas@1.4.2", message_id: "01926e3a-0000-7000-8000-000000000011" })
+    );
+    appendEvent(
+      filePath,
+      makeEmitEvent({ from: "apivr@3.0.5", message_id: "01926e3a-0000-7000-8000-000000000012" })
+    );
+    appendEvent(
+      filePath,
+      makeEmitEvent({ from: "atlas@1.4.2", message_id: "01926e3a-0000-7000-8000-000000000013" })
+    );
 
     const events = await collectAll(
-      traceTail({ traceDir: tmpDir, thread: threadId, from: "atlas" }),
+      traceTail({ traceDir: tmpDir, thread: threadId, from: "atlas" })
     );
 
     expect(events).toHaveLength(2);
@@ -158,19 +173,19 @@ describe("traceTail — non-follow", () => {
 
     appendEvent(
       filePath,
-      makeEmitEvent({ to: "spectra@4.2.11", message_id: "01926e3a-0000-7000-8000-000000000021" }),
+      makeEmitEvent({ to: "spectra@4.2.11", message_id: "01926e3a-0000-7000-8000-000000000021" })
     );
     appendEvent(
       filePath,
-      makeEmitEvent({ to: "vigil@1.0.3", message_id: "01926e3a-0000-7000-8000-000000000022" }),
+      makeEmitEvent({ to: "vigil@1.0.3", message_id: "01926e3a-0000-7000-8000-000000000022" })
     );
     appendEvent(
       filePath,
-      makeEmitEvent({ to: "spectra@4.2.11", message_id: "01926e3a-0000-7000-8000-000000000023" }),
+      makeEmitEvent({ to: "spectra@4.2.11", message_id: "01926e3a-0000-7000-8000-000000000023" })
     );
 
     const events = await collectAll(
-      traceTail({ traceDir: tmpDir, thread: threadId, to: "spectra" }),
+      traceTail({ traceDir: tmpDir, thread: threadId, to: "spectra" })
     );
 
     expect(events).toHaveLength(2);
@@ -184,11 +199,11 @@ describe("traceTail — non-follow", () => {
 
     appendEvent(
       path.join(tmpDir, `${threadA}.jsonl`),
-      makeEmitEvent({ message_id: "01926e3a-0000-7000-8000-000000000031" }),
+      makeEmitEvent({ message_id: "01926e3a-0000-7000-8000-000000000031" })
     );
     appendEvent(
       path.join(tmpDir, `${threadB}.jsonl`),
-      makeEmitEvent({ message_id: "01926e3a-0000-7000-8000-000000000032" }),
+      makeEmitEvent({ message_id: "01926e3a-0000-7000-8000-000000000032" })
     );
 
     const events = await collectAll(traceTail({ traceDir: tmpDir, thread: threadA }));
@@ -223,9 +238,9 @@ describe("traceTail — non-follow", () => {
     const validBefore = makeEmitEvent({ message_id: "01926e3a-0000-7000-8000-000000000051" });
     const validAfter = makeEmitEvent({ message_id: "01926e3a-0000-7000-8000-000000000052" });
 
-    fs.appendFileSync(filePath, JSON.stringify(validBefore) + "\n");
+    fs.appendFileSync(filePath, `${JSON.stringify(validBefore)}\n`);
     fs.appendFileSync(filePath, "THIS IS NOT JSON\n");
-    fs.appendFileSync(filePath, JSON.stringify(validAfter) + "\n");
+    fs.appendFileSync(filePath, `${JSON.stringify(validAfter)}\n`);
 
     const events = await collectAll(traceTail({ traceDir: tmpDir, thread: threadId }));
 
@@ -269,7 +284,7 @@ describe("traceTail — non-follow", () => {
         from: "atlas@1.4.2",
         to: "spectra@4.2.11",
         message_id: "01926e3a-0000-7000-8000-000000000061",
-      }),
+      })
     );
     // matches from only
     appendEvent(
@@ -278,7 +293,7 @@ describe("traceTail — non-follow", () => {
         from: "atlas@1.4.2",
         to: "vigil@1.0.3",
         message_id: "01926e3a-0000-7000-8000-000000000062",
-      }),
+      })
     );
     // matches to only
     appendEvent(
@@ -287,11 +302,11 @@ describe("traceTail — non-follow", () => {
         from: "apivr@3.0.5",
         to: "spectra@4.2.11",
         message_id: "01926e3a-0000-7000-8000-000000000063",
-      }),
+      })
     );
 
     const events = await collectAll(
-      traceTail({ traceDir: tmpDir, thread: threadId, from: "atlas", to: "spectra" }),
+      traceTail({ traceDir: tmpDir, thread: threadId, from: "atlas", to: "spectra" })
     );
 
     expect(events).toHaveLength(1);
@@ -384,7 +399,7 @@ describe("traceTail — no-race guarantee", () => {
         makeEmitEvent({
           message_id: `01926e3a-0000-7000-8000-${String(i).padStart(12, "0")}`,
           ts: `2026-05-11T10:${String(Math.floor(i / 60)).padStart(2, "0")}:${String(i % 60).padStart(2, "0")}Z`,
-        }),
+        })
       );
     }
 
