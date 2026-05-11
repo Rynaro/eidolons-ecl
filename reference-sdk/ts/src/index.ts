@@ -42,8 +42,6 @@ export type {
   BaseProfile,
 } from "./types.js";
 
-import { EclError } from "./errors.js";
-
 // ---------------------------------------------------------------------------
 // S2 — envelopeBuild (Wave II, landed)
 // ---------------------------------------------------------------------------
@@ -51,7 +49,7 @@ export { envelopeBuild } from "./envelopeBuild.js";
 export type { EnvelopeBuildOptions } from "./envelopeBuild.js";
 
 // ---------------------------------------------------------------------------
-// S5 — traceTail (Story S5, Wave II)
+// S5 — traceTail (Wave II, landed)
 // ---------------------------------------------------------------------------
 export { traceTail, type TraceTailOptions } from "./traceTail.js";
 
@@ -67,10 +65,6 @@ export {
 } from "./envelopeVerify.js";
 
 // ---------------------------------------------------------------------------
-// S4 — handoffEmit (Wave III, not yet landed)
+// S4 — handoffEmit (Wave III, landed)
 // ---------------------------------------------------------------------------
-
-/** @stub — implementation lands in Story S4. */
-export function handoffEmit(_opts: Record<string, unknown>): Promise<never> {
-  throw new EclError({ code: "NOT_IMPLEMENTED", message: "Story S4 not landed" });
-}
+export { handoffEmit, type HandoffEmitOptions, type EmitResult } from "./handoffEmit.js";
