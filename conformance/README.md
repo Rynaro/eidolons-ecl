@@ -64,7 +64,7 @@ The full gate list at v1.0:
 |---|---|---|
 | E-1 | MUST | envelope is valid JSON |
 | E-2 | MUST | required §1.1 fields are present |
-| E-3 | MUST | `envelope_version` matches `^1\.0(\.\d+)?$` |
+| E-3 | MUST | `envelope_version` matches `^1\.[01](\.\d+)?$` (v1.0 and v1.1 envelopes accepted) |
 | E-4 | MUST | `performative` is one of the ten enumerated values |
 | E-5 | MUST | `from.eidolon` and `to.eidolon` match the slug pattern |
 | E-6 | MUST | `artifact.path` is relative and contains no `..` |
@@ -74,6 +74,7 @@ The full gate list at v1.0:
 | I-2 | MUST | payload is resolvable and readable |
 | I-3 | MUST | recomputed digest matches `integrity.value` |
 | I-4 | SHOULD | `artifact.size_bytes` matches actual file size |
+| I-5 | SHOULD | warn when `trust_level=high` AND `integrity.method=sha256` — RECOMMENDED `hmac-sha256` (ECL v1.1 §6.2.6 / §6.4) |
 | C-1 | MUST | a contract exists for the (`from`, `to`) edge |
 | C-2 | MUST | `performative` is in `contract.performatives_allowed` |
 | C-3 | MUST | `artifact.kind` is in `contract.artifacts[*].kind` |

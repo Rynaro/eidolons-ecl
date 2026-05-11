@@ -19,6 +19,12 @@ mkdir -p "$TRACE_DIR"
 
 THREAD_ID="$(uuidgen | tr 'A-Z' 'a-z')"
 
+# ECL v1.1 §6.4 — apivr↔vigil escalation declares trust_level=high in its
+# contracts. Per §6.2.6 and gate I-5, high-trust envelopes SHOULD use
+# hmac-sha256. Provision a per-thread demo key for the worked example.
+# Real deployments source this from a secrets manager (§6.4.1).
+export ECL_HMAC_KEY="ecl-worked-example-apivr-vigil-${THREAD_ID}"
+
 # 1. APIVR-Δ → VIGIL (ESCALATE).
 APIVR_MID="$(uuidgen | tr 'A-Z' 'a-z')"
 bash "$SDK/handoff-emit.sh" \
@@ -33,6 +39,7 @@ bash "$SDK/handoff-emit.sh" \
   --tokens-used 410 \
   --summary "Three Reflect attempts on flaky-network-test category; same flake persists under retry budget +2, jittered backoff, and fetch-timeout pin. Sandbox authority granted." \
   --confidence 0.7 \
+  --integrity-method hmac-sha256 \
   --trace-dir "$TRACE_DIR"
 
 # 2. VIGIL → APIVR-Δ (PROPOSE root-cause + verified patch).
@@ -50,6 +57,7 @@ bash "$SDK/handoff-emit.sh" \
   --tokens-used 520 \
   --summary "Confirmed cause: cli/src/sync.sh:88 || mask of git-fetch exit code during retry. Counterfactual flip in 12/12 sandbox runs. Patch in .vigil-sandbox/." \
   --confidence 0.93 \
+  --integrity-method hmac-sha256 \
   --trace-dir "$TRACE_DIR"
 
 # 3. APIVR-Δ → VIGIL (ACKNOWLEDGE the root-cause + closeout).
@@ -85,6 +93,7 @@ bash "$SDK/handoff-emit.sh" \
   --tokens-used 30 \
   --summary "Patch landed; flake gone." \
   --confidence 0.95 \
+  --integrity-method hmac-sha256 \
   --trace-dir "$TRACE_DIR"
 
 echo

@@ -108,4 +108,18 @@ ecl_check_integrity() {
   else
     ecl_record "I-4" "SHOULD" "warn" "size_bytes_match" "declared=$declared_size actual=$actual_size" "$env_path"
   fi
+
+  # I-5 (SHOULD, ECL v1.1 §6.2.6): warn when trust_level=high AND
+  # integrity.method=sha256. RECOMMENDED is hmac-sha256 at high trust.
+  # Backward-compatible: v1.0 envelopes that combine high + sha256 stay
+  # conformant; the warn is non-blocking.
+  local trust_level
+  trust_level="$(jq -r '.constraints.trust_level // "standard"' "$env_path")"
+  if [ "$trust_level" = "high" ] && [ "$method" = "sha256" ]; then
+    ecl_record "I-5" "SHOULD" "warn" "hmac_recommended_at_high_trust" \
+      "trust_level=high + integrity.method=sha256 — RECOMMENDED hmac-sha256 (ECL v1.1 §6.4)" \
+      "$env_path"
+  else
+    ecl_record "I-5" "SHOULD" "ok" "hmac_recommended_at_high_trust" "" "$env_path"
+  fi
 }

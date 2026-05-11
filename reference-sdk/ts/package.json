@@ -1,6 +1,6 @@
 {
   "name": "@eidolons/ecl-sdk",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "ECL TypeScript reference SDK — port of the bash reference SDK with API parity.",
   "license": "Apache-2.0",
