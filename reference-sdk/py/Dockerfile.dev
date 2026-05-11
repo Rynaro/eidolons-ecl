@@ -1,0 +1,38 @@
+# Dev container for the ECL Python reference SDK.
+#
+# Built only for development — the runtime artefact (pip package + vendor
+# single-file .pyz) is portable and has no container dependency. Per the
+# repository policy: every dependency install / build / test runs inside
+# this container; the host stays clean.
+#
+# Layer order optimised for: rebuild on pyproject.toml change, not on source.
+
+FROM python:3.12-slim
+
+# Create a non-root user (eclpy, uid 1000, gid 1000) to match the
+# host-security container pattern used by reference-sdk/ts/.
+RUN groupadd -g 1000 eclpy \
+ && useradd -u 1000 -g 1000 -m -s /bin/bash eclpy
+
+ENV UV_LINK_MODE=copy \
+    UV_CACHE_DIR=/uv-cache \
+    PYTHONUNBUFFERED=1 \
+    PATH=/home/eclpy/.local/bin:$PATH
+
+# Install uv via pip so there are no external fetch dependencies beyond PyPI.
+# uv is a fast Python resolver/runner; it supersedes pip in all dev targets.
+RUN pip install --no-cache-dir uv
+
+# Named volume /uv-cache is declared in compose.yml; pre-create it so Docker
+# does not make it root-owned before the volume is attached.
+RUN mkdir -p /uv-cache && chown eclpy:eclpy /uv-cache
+
+USER eclpy
+WORKDIR /workspace/reference-sdk/py
+
+# The workspace itself is bind-mounted by compose.yml; this Dockerfile does
+# not COPY any source. The container is a thin execution surface.
+
+# Default command prints Python and uv versions so the maintainer sees the
+# environment, then drops to an interactive shell.
+CMD ["bash", "-lc", "python --version && uv --version && exec bash"]
