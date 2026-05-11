@@ -25,21 +25,33 @@ canonical pipeline:
 | `apivr-to-forge.yaml` | apivr | forge | roster | reasoning-request |
 | `forge-to-apivr.yaml` | forge | apivr | roster | reasoning-report |
 
-## Edges deferred to v1.0.x patch releases
+## Edges enumerated in v1.0.1
 
-Lateral consultation edges between Eidolons that are declared in
-`roster/index.yaml` but not yet exercised by the worked examples:
+Lateral consultation edges between FORGE and every other Eidolon —
+unblocks the FORGE adoption in the Eidolons nexus by enumerating each
+edge separately rather than relying on the apivr-to-forge / forge-to-apivr
+representative shapes. Body shape mirrors the templates noted below; the
+bespoke `notes:` field on each file documents the edge-specific
+consultation trigger.
+
+| File | From | To | Edge origin | Template |
+|---|---|---|---|---|
+| `atlas-to-forge.yaml`    | atlas    | forge | roster | apivr-to-forge.yaml |
+| `spectra-to-forge.yaml`  | spectra  | forge | roster | apivr-to-forge.yaml |
+| `idg-to-forge.yaml`      | idg      | forge | roster | apivr-to-forge.yaml |
+| `vigil-to-forge.yaml`    | vigil    | forge | roster | apivr-to-forge.yaml |
+| `forge-to-atlas.yaml`    | forge    | atlas | roster | forge-to-apivr.yaml |
+| `forge-to-spectra.yaml`  | forge    | spectra | roster | forge-to-apivr.yaml |
+| `forge-to-idg.yaml`      | forge    | idg | roster | forge-to-apivr.yaml |
+| `forge-to-vigil.yaml`    | forge    | vigil | roster | forge-to-apivr.yaml |
+
+## Edges deferred to later v1.0.x patch releases
+
+Edges declared in `roster/index.yaml` but not yet exercised; emission on
+these edges fails conformance until a contract lands.
 
 | Pending file | From | To | Template |
 |---|---|---|---|
-| `atlas-to-forge.yaml`    | atlas    | forge | apivr-to-forge.yaml |
-| `spectra-to-forge.yaml`  | spectra  | forge | apivr-to-forge.yaml |
-| `idg-to-forge.yaml`      | idg      | forge | apivr-to-forge.yaml |
-| `vigil-to-forge.yaml`    | vigil    | forge | apivr-to-forge.yaml |
-| `forge-to-atlas.yaml`    | forge    | atlas | forge-to-apivr.yaml |
-| `forge-to-spectra.yaml`  | forge    | spectra | forge-to-apivr.yaml |
-| `forge-to-idg.yaml`      | forge    | idg | forge-to-apivr.yaml |
-| `forge-to-vigil.yaml`    | forge    | vigil | forge-to-apivr.yaml |
 | `atlas-to-vigil.yaml`    | atlas    | vigil | apivr-to-vigil.yaml (failure-description kind, not escalation) |
 | `spectra-to-vigil.yaml`  | spectra  | vigil | apivr-to-vigil.yaml |
 | `idg-to-vigil.yaml`      | idg      | vigil | apivr-to-vigil.yaml |
