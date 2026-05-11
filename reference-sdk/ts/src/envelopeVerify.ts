@@ -31,12 +31,12 @@
  * @see .spectra/ts-sdk-port.md §S3 — Story S3 spec
  */
 
+import { spawn } from "node:child_process";
 import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { spawn } from "node:child_process";
-import Ajv2020 from "ajv/dist/2020";
 import addFormats from "ajv-formats";
+import Ajv2020 from "ajv/dist/2020";
 import { EclError } from "./errors.js";
 import type { VerifyFailureCode } from "./errors.js";
 import type { Envelope } from "./types.js";
@@ -165,10 +165,7 @@ function buildAjv(schemasDir: string): {
       ajv.addSchema(schema);
     }
 
-    if (
-      typeof schema.$id === "string" &&
-      (schema.$id as string).includes("envelope.v1.json")
-    ) {
+    if (typeof schema.$id === "string" && (schema.$id as string).includes("envelope.v1.json")) {
       envelopeSchemaId = schema.$id as string;
     }
   }
@@ -190,9 +187,7 @@ function buildAjv(schemasDir: string): {
         if (typeof schema.$id === "string" && !ajv.getSchema(schema.$id)) {
           ajv.addSchema(schema);
         }
-      } catch {
-        continue;
-      }
+      } catch {}
     }
   }
 
@@ -272,8 +267,7 @@ function resolveSchemasDir(envelopeDir: string, explicitSchemas?: string): strin
   if (repoRoot) return path.join(repoRoot, "schemas");
   throw new EclError({
     code: "USAGE",
-    message:
-      "Cannot locate schemas directory. Supply opts.schemas or set ECL_CONFORMANCE_CHECK.",
+    message: "Cannot locate schemas directory. Supply opts.schemas or set ECL_CONFORMANCE_CHECK.",
   });
 }
 
@@ -291,8 +285,7 @@ function resolveContractsDir(envelopeDir: string, explicitContracts?: string): s
   if (repoRoot) return path.join(repoRoot, "contracts");
   throw new EclError({
     code: "USAGE",
-    message:
-      "Cannot locate contracts directory. Supply opts.contracts.",
+    message: "Cannot locate contracts directory. Supply opts.contracts.",
   });
 }
 
@@ -331,11 +324,7 @@ interface BashCheckerOutput {
  * The mapping covers all gates in conformance/lib/ (C-/D- prefix only here,
  * since E-/I- are handled by TS-ajv).
  */
-function mapBashNameToCode(
-  id: string,
-  name: string,
-  status: string
-): VerifyFailureCode {
+function mapBashNameToCode(id: string, name: string, status: string): VerifyFailureCode {
   if (id.startsWith("C-")) {
     if (name.includes("contract_for_edge") || id === "C-1") return "EDGE_UNKNOWN";
     if (name.includes("performative") || id === "C-2") return "PERFORMATIVE_NOT_ALLOWED";
@@ -418,8 +407,7 @@ async function runBashChecker(
       for (const r of parsed.results) {
         // Only surface C- and D- gate results from the shell-out phase;
         // E- and I- are handled by the TS-ajv phase.
-        const isShellOutGate =
-          r.id.startsWith("C-") || r.id.startsWith("D-");
+        const isShellOutGate = r.id.startsWith("C-") || r.id.startsWith("D-");
 
         if (r.status === "fail" && isShellOutGate) {
           failures.push({
@@ -476,7 +464,7 @@ function appendTraceEvent(
     : { ...baseEvent, event: "verify_fail", verify_failure_code: firstFailureCode };
 
   try {
-    fs.appendFileSync(tracePath, JSON.stringify(event) + "\n", { flag: "a" });
+    fs.appendFileSync(tracePath, `${JSON.stringify(event)}\n`, { flag: "a" });
   } catch {
     // Best-effort.
   }
@@ -717,7 +705,7 @@ export async function envelopeVerify(opts: EnvelopeVerifyOptions): Promise<Verif
 
   // Trace integration (GAP-6).
   if (opts.traceDir && envelope && typeof envelope === "object" && envelope.thread_id) {
-    const firstFailCode = failures.length > 0 ? failures[0].code : undefined;
+    const firstFailCode: VerifyFailureCode | undefined = failures[0]?.code;
     appendTraceEvent(opts.traceDir, envelope, ok, firstFailCode);
   }
 
