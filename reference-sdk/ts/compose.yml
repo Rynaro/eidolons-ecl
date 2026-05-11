@@ -1,0 +1,32 @@
+# Dev compose for the ECL TypeScript reference SDK.
+# Bind-mounts the entire eidolons-ecl repo so the SDK can reach the
+# schemas/, contracts/, and spec/ directories at their canonical paths.
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: eidolons-ecl-ts-sdk-dev:latest
+    container_name: ecl-ts-sdk-dev
+    init: true
+    # Bind-mount the entire eidolons-ecl repo (two levels up from this
+    # compose file) so the SDK has access to schemas/, contracts/,
+    # spec/, conformance/, and reference-sdk/bash/ for round-trip tests.
+    volumes:
+      - ../..:/workspace:rw
+      # Persist the pnpm store across container restarts so installs
+      # don't redo work on every shell.
+      - pnpm-store:/home/node/.local/share/pnpm
+    working_dir: /workspace/reference-sdk/ts
+    environment:
+      - PNPM_HOME=/home/node/.local/share/pnpm
+    tty: true
+    stdin_open: true
+    # Default to an interactive shell when `compose run` is used without
+    # an explicit command.
+    command: ["bash"]
+
+volumes:
+  pnpm-store:
+    name: ecl-ts-sdk-pnpm-store

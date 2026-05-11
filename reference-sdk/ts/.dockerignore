@@ -1,0 +1,6 @@
+# Keep the build context tiny. The dev container does not COPY source —
+# it bind-mounts the workspace at run time — but a minimal context keeps
+# image builds fast and avoids accidental include of host artefacts.
+
+**
+!Dockerfile.dev

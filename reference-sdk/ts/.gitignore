@@ -1,0 +1,19 @@
+node_modules/
+dist/
+coverage/
+.vite/
+.vitest/
+*.log
+*.tsbuildinfo
+
+# pnpm
+.pnpm-store/
+
+# Vendor build outputs (kept under dist/, listed for clarity)
+dist/vendor/
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
