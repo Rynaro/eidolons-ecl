@@ -559,6 +559,74 @@ describe("envelopeVerify — trace integration", () => {
 });
 
 // ---------------------------------------------------------------------------
+// I-5 (ECL v1.1 §6.2.6) — HMAC RECOMMENDED at trust_level=high
+// ---------------------------------------------------------------------------
+
+describe("envelopeVerify — I-5 (HMAC recommended at high trust)", () => {
+  /** Build a fresh envelope and force its `constraints.trust_level`. */
+  async function buildEnvelopeWithTrust(
+    trustLevel: "low" | "standard" | "high",
+    integrityMethod: "sha256" | "hmac-sha256"
+  ): Promise<string> {
+    const env = await envelopeBuild({
+      artifact: artifactPath,
+      contract: contractPath,
+      performative: "PROPOSE",
+      objective: "I-5 fixture.",
+      integrityMethod,
+    });
+    // Force the trust_level on the envelope (envelopeBuild defaults from contract).
+    env.constraints = { ...env.constraints, trust_level: trustLevel };
+    const envPath = path.join(tmpDir, `i5-${trustLevel}-${integrityMethod}.envelope.json`);
+    fs.writeFileSync(envPath, `${JSON.stringify(env, null, 2)}\n`, "utf8");
+    return envPath;
+  }
+
+  it("emits I-5 warning when trust_level=high AND integrity.method=sha256", async () => {
+    const envPath = await buildEnvelopeWithTrust("high", "sha256");
+    const result = await envelopeVerify({
+      envelope: envPath,
+      schemas: schemasDir,
+      contracts: contractsDir,
+      skipShellGates: true,
+    });
+    // SHOULD-level warn → ok stays true; failures empty for E-/I- gates.
+    const i5 = result.warnings.find((w) => w.gate === "I-5");
+    expect(i5).toBeDefined();
+    expect(i5?.message).toMatch(/RECOMMENDED hmac-sha256/);
+  });
+
+  it("does NOT emit I-5 when trust_level=high AND integrity.method=hmac-sha256", async () => {
+    process.env.ECL_HMAC_KEY = "test-key-for-i5";
+    try {
+      const envPath = await buildEnvelopeWithTrust("high", "hmac-sha256");
+      const result = await envelopeVerify({
+        envelope: envPath,
+        schemas: schemasDir,
+        contracts: contractsDir,
+        skipShellGates: true,
+      });
+      const i5 = result.warnings.find((w) => w.gate === "I-5");
+      expect(i5).toBeUndefined();
+    } finally {
+      delete process.env.ECL_HMAC_KEY;
+    }
+  });
+
+  it("does NOT emit I-5 at trust_level=standard with sha256", async () => {
+    const envPath = await buildEnvelopeWithTrust("standard", "sha256");
+    const result = await envelopeVerify({
+      envelope: envPath,
+      schemas: schemasDir,
+      contracts: contractsDir,
+      skipShellGates: true,
+    });
+    const i5 = result.warnings.find((w) => w.gate === "I-5");
+    expect(i5).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Explicit artifact override
 // ---------------------------------------------------------------------------
 

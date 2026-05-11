@@ -662,6 +662,18 @@ export async function envelopeVerify(opts: EnvelopeVerifyOptions): Promise<Verif
             message: `size_bytes mismatch: declared=${declaredSize} actual=${actualSize}`,
           });
         }
+
+        // I-5 (SHOULD, ECL v1.1 §6.2.6): warn when trust_level=high AND
+        // integrity.method=sha256. RECOMMENDED is hmac-sha256 at high trust.
+        // SHOULD-level warn — does NOT fail conformance.
+        const trustLevel = envelope.constraints?.trust_level;
+        if (trustLevel === "high" && method === "sha256") {
+          warnings.push({
+            gate: "I-5",
+            message:
+              "trust_level=high + integrity.method=sha256 — RECOMMENDED hmac-sha256 (ECL v1.1 §6.4)",
+          });
+        }
       }
     }
   }

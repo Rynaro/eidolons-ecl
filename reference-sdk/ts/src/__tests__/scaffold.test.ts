@@ -22,8 +22,8 @@ import {
 } from "../index.js";
 
 describe("ECL_VERSION_TARGET", () => {
-  it('equals "1.0"', () => {
-    expect(ECL_VERSION_TARGET).toBe("1.0");
+  it('equals "1.1"', () => {
+    expect(ECL_VERSION_TARGET).toBe("1.1");
   });
 });
 

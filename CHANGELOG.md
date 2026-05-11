@@ -6,6 +6,70 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-05-12 — HMAC promotion + threat model + drift register seed
+
+### Added
+- `spec/ecl-1.1.md` — successor to `spec/ecl-1.0.md`. v1.0 archive remains
+  in-tree per the §7.3 12-month compatibility window.
+- New normative §6.2.6 — SHOULD-level conformance warn when
+  `trust_level=high` AND `integrity.method=sha256`.
+- New normative §6.4 — HMAC key lifecycle (provisioning, scope, lifetime,
+  storage, rotation, verification failure).
+- New conformance gate **I-5** (SHOULD) in `conformance/lib/integrity.sh`
+  and `reference-sdk/ts/` mirror — warn when `trust_level=high` AND
+  `integrity.method=sha256`. Non-blocking; backward-compatible.
+- `docs/threat-model.md` — five threats (AiTM, prompt infection,
+  inter-agent trust exploitation, context poisoning, indirect prompt
+  injection) mapped to ECL envelope-level mitigations with §-anchors and
+  gate IDs. Cites ACL 2025, arXiv:2410.07283, OWASP LLM01:2025.
+- `docs/drift-register.md` — formal entry schema + governance process
+  (Adding / warn-only window / promotion / retirement). v1.1.0 ships with
+  zero open drifts and three drift candidates (DC-1 schema $id versioning
+  lag, DC-2 unused contract fields, DC-3 envelopeVerify shell-out
+  C-1 parse mismatch).
+- `spec/ecl-1.1.md` §7.4 — replaces the v1.0 stub with a pointer to
+  `docs/drift-register.md` as the authoritative register.
+
+### Changed
+- **§6.1** — `hmac-sha256` row promoted from "OPTIONAL; RECOMMENDED for
+  trust_level=high" to "**RECOMMENDED** at trust_level=high; OPTIONAL
+  otherwise". `sha256` row notes the I-5 SHOULD-level warn at
+  `trust_level=high`.
+- **§1.1.1** — `envelope_version` regex relaxed to `^1\.[01](\.\d+)?$`
+  so v1.0 envelopes remain conformant under v1.1.
+- **§1.2.2** — aligned prose with the new I-5 gate; pointers to §6.3
+  and §6.4 added.
+- **§6.3** — new §6.3.3 SHOULD pointer to §6.4 (key lifecycle).
+- `ECL_VERSION` file: `1.0` → `1.1`.
+- `SPEC.md` symlink: `spec/ecl-1.0.md` → `spec/ecl-1.1.md`.
+- `.github/workflows/release.yml` — release asset list now includes both
+  `spec/ecl-1.1.md` and `spec/ecl-1.0.md` (v1.0 stays attached for
+  archival access).
+- `.github/workflows/conformance.yml` — SPEC.md symlink check updated
+  to expect `spec/ecl-1.1.md`.
+- `conformance/README.md` — gate table gains I-5 row; E-3 updated to
+  reflect the relaxed `envelope_version` regex.
+- `reference-sdk/ts/` SDK `1.1.0 → 1.1.1`; `ECL_VERSION_TARGET` `"1.0"`
+  → `"1.1"`; `envelopeVerify` emits I-5 in `result.warnings[]`.
+- 3 new vitest cases under `envelopeVerify.test.ts` covering I-5 paths
+  (warn on high+sha256, no-warn on high+hmac-sha256, no-warn on
+  standard+sha256).
+
+### Notes
+- **Backward compatible** — v1.0 envelopes valid under v1.1.
+- **No schema $id bumps** — schemas stay at `v1.0.0` $ids (DECISION-S2
+  in `.spectra/v1.1-spec-bump.md`; tracked as drift candidate DC-1).
+- **No new envelope-format changes** — promotion is prose + gate only.
+- Per-Eidolon `ECL_VERSION` bumps to `1.1` are out of scope for this PR;
+  each adoption spec under `eidolons/.spectra/{eidolon}-ecl-adoption.md`
+  carries the per-Eidolon change set.
+
+### Drift register
+None open at v1.1.0. See `docs/drift-register.md` for candidates
+(DC-1 / DC-2 / DC-3) flagged for future review.
+
+[1.1.0]: https://github.com/Rynaro/eidolons-ecl/releases/tag/v1.1.0
+
 ## [1.0.1] — 2026-05-11 — FORGE lateral contracts enumerated
 
 ### Added

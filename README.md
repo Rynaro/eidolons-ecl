@@ -6,8 +6,9 @@ standalone bash conformance checker. The Eidolons nexus
 (`Rynaro/eidolons`) and every shipped Eidolon (ATLAS, SPECTRA, APIVR-Δ, IDG,
 FORGE, VIGIL) compose against this contract.
 
-- **Latest stable:** [ECL v1.0](spec/ecl-1.0.md) (also reachable as
+- **Latest stable:** [ECL v1.1](spec/ecl-1.1.md) (also reachable as
   [`SPEC.md`](SPEC.md), the symlink to the latest stable spec).
+  v1.0 archive: [`spec/ecl-1.0.md`](spec/ecl-1.0.md).
 - **Envelope schema:** [`schemas/envelope.v1.json`](schemas/envelope.v1.json).
 - **Performative enum:** [`schemas/performative.v1.json`](schemas/performative.v1.json).
 - **Hand-off contracts:** [`contracts/`](contracts/).
@@ -19,8 +20,10 @@ FORGE, VIGIL) compose against this contract.
 
 This repo holds:
 
-1. **The normative spec** in [`spec/ecl-1.0.md`](spec/ecl-1.0.md). RFC 8174
-   (BCP 14) keywords; numbered §1–§7 sections; one file per minor version.
+1. **The normative spec** in [`spec/ecl-1.1.md`](spec/ecl-1.1.md). RFC 8174
+   (BCP 14) keywords; numbered §1–§8 sections; one file per minor version.
+   Earlier versions kept in-tree (e.g. [`spec/ecl-1.0.md`](spec/ecl-1.0.md))
+   for the §7.3 12-month compatibility window.
 2. **JSON Schemas** in [`schemas/`](schemas/) for the envelope, performative
    enum, hand-off contract, context-delta record, and trace event.
 3. **Machine-readable hand-off contracts** in [`contracts/`](contracts/), one
@@ -92,7 +95,7 @@ ECL uses SemVer at the document level. v1.0 is the first stable. The roadmap:
   optional ISE-style trust-hierarchy fields; ANP-style decentralized identifier
   scaffold.
 
-See [§7 of the spec](spec/ecl-1.0.md#7--versioning--compatibility) for the full
+See [§7 of the spec](spec/ecl-1.1.md#7--versioning--compatibility) for the full
 promotion timeline.
 
 ## Relationship to other repos
