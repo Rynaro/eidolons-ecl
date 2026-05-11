@@ -1,0 +1,814 @@
+---
+spec_meta:
+  eidolon: spectra
+  version: 4.2.11
+  kind: spec
+  status: assemble
+  confidence: 0.90
+  trance_tier: G3-evaluator-optimizer
+  refine_cycles_used: 1
+  created_at: "2026-05-11T00:00:00Z"
+  target_repos:
+    - Rynaro/eidolons-ecl
+    - Rynaro/eidolons
+  parent_roadmap: /Users/henrique/workspace/oss/agents/eidolons/.spectra/harness-roadmap.md
+  parent_section: "Phase 2 — ECL v2.0"
+  precedents:
+    - /Users/henrique/workspace/oss/agents/eidolons-ecl/.spectra/ts-sdk-port.md
+    - /Users/henrique/workspace/oss/agents/eidolons-ecl/.spectra/v1.1-spec-bump.md
+  stories_in_scope: [S2.1, S2.2, S2.3, S2.4, S2.5]
+  sub_phases: [phase-2.A, phase-2.B, phase-2.C]
+
+clarify:
+  who:
+    - role: "Phase 2.A subagents"
+      type: APIVR-Δ
+      model: sonnet
+      isolation: worktree
+      stories: [S2.A.0, S2.1, S2.5]
+    - role: "Phase 2.B subagents"
+      type: APIVR-Δ
+      model: sonnet
+      isolation: worktree
+      stories: [S2.2, S2.4]
+    - role: "Phase 2.C APIVR family"
+      type: APIVR-Δ
+      model: sonnet
+      isolation: worktree
+      stories: [S2.3.a, S2.3.c-bash, S2.3.c-ts, S2.3.c-py]
+    - role: "Phase 2.C IDG"
+      type: IDG
+      mode: synthesis-only
+      stories: [S2.3.b]
+    - role: parent
+      responsibilities:
+        - run validation gates
+        - open PRs
+        - tag v1.2.0 / v1.2.x / v2.0.0 post-merge
+
+  what:
+    summary: >
+      Phase 2 of the harness roadmap across three sub-phases:
+      v1.2.0 (foundational Python tier + composition generator),
+      v1.2.x or v1.3.0 (additive migration tool + A2A bridge),
+      v2.0.0 (ISE trust-hierarchy fields + HMAC MUST promotion + schema $id bump).
+
+  why: >
+    Turns ECL from "spec + bash + TS SDK" into a production-grade harness with
+    measurable coordination quality, audit-lineage back-fill, defense-in-depth
+    trust hierarchy, cross-org A2A interop, and deterministic methodology
+    generation. The version split keeps backward-compat cheap for adopters who
+    only want the additive value (v1.2) while reserving the v2.0 envelope for
+    the one real shape change (ISE fields).
+
+  constraints:
+    - container_first: "all pip/pytest/ruff/mypy/build inside reference-sdk/py/ dev container"
+    - container_base_image: "python:3.12-slim"
+    - backward_compat:
+        v10_under_v11: "still valid"
+        v10_v11_under_v12: "still valid"
+        v10_v11_v12_under_v20: "valid for 12 months per §7.3"
+    - lock_step_versioning: "all SDKs move together on minor per docs/tech-choice.md:42-45"
+    - license: "Apache-2.0 across every new artefact"
+    - read_only_a2a: "S2.4 bridge has no server runtime, no inbound listener"
+    - deterministic_outputs:
+        s2_5_generator: "byte-identical re-run on identical inputs (gated)"
+    - no_eval_or_exec: "yaml.safe_load only; no dynamic code execution"
+    - ci_gate_updates_at_version_bumps:
+        - .github/workflows/conformance.yml
+        - .github/workflows/release.yml
+
+decisions:
+  - id: DECISION-P2-1
+    title: "Version strategy"
+    chosen: "split: v1.2 for additive stories (S2.1/S2.2/S2.4/S2.5); v2.0 for ISE (S2.3)"
+    rejected:
+      - id: option-a
+        title: "all Phase 2 → v2.0"
+        reason: "overpays; SDK-tier additions don't need a major bump"
+      - id: option-c
+        title: "ISE made additive → all v1.2"
+        reason: "under-prices schema $id bump per DC-1 drift register trigger"
+    rationale_summary: >
+      Apply spec/ecl-1.1.md §7.1 SemVer rules rigorously. S2.1/S2.2/S2.4/S2.5
+      are pure additions (SDK + tooling, no spec/schema change) → MINOR. S2.3
+      adds OPTIONAL envelope fields AND bumps schema $ids AND promotes HMAC at
+      trust_level=high from RECOMMENDED to MUST → triggers the MAJOR rule per
+      DC-1 promotion semantics + receiver-mandating security posture.
+    artefacts_affected:
+      - ECL_VERSION file
+      - spec/ecl-2.0.md (new)
+      - schemas/envelope.v2.json (new)
+      - docs/migration-v1-to-v2.md (new)
+      - docs/drift-register.md (D-01 promoted)
+
+  - id: DECISION-P2-2
+    title: "Sub-phase decomposition"
+    chosen: "three sub-phases (2.A foundation / 2.B additions / 2.C break)"
+    rejected:
+      - id: single-pr
+        reason: "3-5x Phase 1.B; review cost binding"
+      - id: five-prs
+        reason: "over-decomposed; S2.1+S2.5 share scaffolding"
+      - id: foundation-additions-break-with-s2_5-in-2B
+        reason: "S2.5 too small to anchor its own slot; co-lives naturally with S2.A.0/S2.1"
+    sub_phases:
+      - id: phase-2.A
+        stories: [S2.A.0, S2.1, S2.5]
+        branch: feat/v1.2.0-py-sdk-and-composition-gen
+        tag: v1.2.0
+        effort: large
+        rationale: "greenfield Python tier; container scaffold; cross-repo touchpoint at Rynaro/eidolons"
+      - id: phase-2.B
+        stories: [S2.2, S2.4]
+        branch: feat/v1.2.x-migration-and-a2a
+        tag: v1.2.1
+        tag_fallback: v1.3.0
+        effort: medium
+        rationale: "two additive Python modules on existing scaffold; A2A is well-scoped read-only"
+      - id: phase-2.C
+        stories: [S2.3]
+        sub_stories: [S2.3.a, S2.3.b, S2.3.c-bash, S2.3.c-ts, S2.3.c-py]
+        branch: feat/v2.0.0-ise-fields
+        tag: v2.0.0
+        effort: medium
+        rationale: "only v2.0-shaped change; small surface but major-bump discipline + cross-SDK mirrors"
+
+  - id: DECISION-P2-3
+    title: "A2A bridge repo strategy"
+    chosen: "subdirectory reference-sdk/py/src/eidolons_ecl/a2a_bridge/"
+    rejected:
+      - id: sibling-repo
+        title: "eidolons-ecl-a2a-bridge sibling repo"
+        reason: "breaks lock-step versioning; forces pip-resolution surface; not a separate methodology, just a translator tier"
+    reversal_trigger: "A2A bridge grows runtime requirements that contradict library-only posture (e.g., HTTP server requirement); revisit per docs/tech-choice.md R-F-1"
+
+  - id: DECISION-P2-4
+    title: "S2.5 cross-repo strategy"
+    chosen: "option-b: generator lives in eidolons-ecl; invoked from eidolons CI via vendored .pyz bundle"
+    rejected:
+      - id: option-a
+        title: "auto-merging PR from eidolons-ecl CI to eidolons"
+        reason: "cross-org auto-merge fragile; trigger ordering awkward; security concession on token scope"
+      - id: option-c
+        title: "manual maintainer command"
+        reason: "cannot satisfy 'byte-deterministic' harness-roadmap acceptance gate; drift inevitable"
+    mechanism:
+      - "eidolons-ecl publishes dist/eidolons-ecl-sdk.bundle.pyz at v1.2.0 GH release"
+      - "Rynaro/eidolons .github/workflows/composition-drift.yml downloads pyz by pinned tag"
+      - "workflow runs python3 pyz compose-gen --contracts $TMP --out /tmp/regen.md"
+      - "workflow diffs against HEAD's methodology/composition.md; fails on drift"
+      - "no auto-merge; maintainer regenerates manually as part of any contracts/ change"
+    files_affected_eidolons_ecl:
+      - reference-sdk/py/src/eidolons_ecl/compose_gen/render.py
+      - reference-sdk/py/src/eidolons_ecl/compose_gen/templates/composition.md.j2
+      - reference-sdk/py/tests/test_compose_gen.py
+      - Makefile  # build-vendor-py target
+      - .github/workflows/release.yml  # attaches .pyz to v1.2.0 release
+    files_affected_eidolons:
+      - .github/workflows/composition-drift.yml  # new
+      - methodology/composition.md  # replaced with generated output
+      - methodology/composition.md.template  # local copy of Jinja2 template
+
+  - id: DECISION-P2-5
+    title: "Python packaging"
+    chosen:
+      build_backend: hatch (hatchling)
+      dependency_resolver: uv
+      test_runner: pytest
+      linter_formatter: ruff
+      type_checker: mypy
+      vendor_bundle_tool: zipapp (stdlib)
+      container_base: python:3.12-slim
+    rejected:
+      - id: setuptools_pip_tox_black
+        reason: "old stack; per-tool config sprawl"
+      - id: poetry
+        reason: "slower resolver than uv; less PEP-compliant; idiosyncratic lockfile"
+      - id: pdm
+        reason: "smaller community than uv+hatch; valid alternative"
+      - id: pyinstaller
+        reason: "over-engineered; platform-specific build; stdlib zipapp sufficient for pure-Python scope"
+    distribution:
+      primary: "pip install eidolons-ecl-sdk (PyPI; separate release PR)"
+      secondary: "vendor-as-single-file .pyz attached to GH release; used by Rynaro/eidolons CI per DECISION-P2-4"
+
+  - id: DECISION-P2-6
+    title: "S2.3 schema $id bump trigger"
+    chosen: "bump to v2.0.0 in new envelope.v2.json file; closes DC-1"
+    rationale: "DC-1 in docs/drift-register.md:170-191 named 'first additive schema field' as bump trigger; ISE fields are that trigger"
+    filename_convention:
+      - "schemas/envelope.v1.json stays in-tree (12-month §7.3 compatibility window)"
+      - "schemas/envelope.v2.json is new (adds ise object under $defs)"
+      - "$id at v2.0.0 URI: https://github.com/Rynaro/eidolons-ecl/blob/main/schemas/envelope.v2.json"
+    other_schemas:
+      - file: schemas/performative.v1.json
+        v2_action: "no change; v1 stays canonical at v2.0"
+      - file: schemas/handoff-contract.v1.json
+        v2_action: "no change at v2.0; bump in future v2.x if contract shape changes"
+      - file: schemas/context-delta.v1.json
+        v2_action: "no change at v2.0"
+      - file: schemas/handoff-event.v1.json
+        v2_action: "no change at v2.0"
+      - file: schemas/_base-profile.v1.json
+        v2_action: "no change at v2.0"
+    drift_register_update:
+      promotion: "DC-1 → D-01"
+      status: promoted
+      conformance_gate: E-3
+      target_version_closed: v2.0.0
+
+clarify_subquestions:
+  - q: "ECL_VERSION file value at end of Phase 2?"
+    a: "2.0 (at Phase 2.C tag). Phase 2.A bumps 1.1→1.2; Phase 2.B stays at 1.2; Phase 2.C bumps 1.2→2.0."
+  - q: "Python SDK ECL_VERSION_TARGET constant?"
+    a: '"1.2" at Phase 2.A landing; "2.0" at Phase 2.C landing (lock-step per docs/tech-choice.md:42-45)'
+  - q: "Python eval framework consumes TS SDK output?"
+    a: "No. TS and Py are independent peers; both write the same JSONL trace format; eval reads JSONL regardless of writer."
+  - q: "S2.4 read-only adapter only, no server runtime — confirm?"
+    a: "Confirmed. Two modes: emit Agent Card (pure file output); translate A2A Message → ECL envelope (pure transformation). No HTTP server, no listener, no daemon."
+  - q: "S2.5 deterministic output (byte-identical re-run)?"
+    a: "Confirmed via: LC_ALL=C sorted contract filenames; yaml.safe_load; Jinja2 trim_blocks/lstrip_blocks; no timestamps; explicit \\n line endings; gate G-S2.5-Determinism runs 3x and asserts SHA-256 equality."
+
+stories:
+  - id: S2.A.0
+    title: "Python tier scaffold"
+    sub_phase: phase-2.A
+    blocks: [S2.1, S2.5, S2.2, S2.4]
+    branch: feat/v1.2.0-py-sdk-and-composition-gen
+    owner:
+      type: APIVR-Δ
+      model: sonnet
+      isolation: worktree
+    files_to_create:
+      - reference-sdk/py/pyproject.toml
+      - reference-sdk/py/uv.lock
+      - reference-sdk/py/Dockerfile.dev
+      - reference-sdk/py/compose.yml
+      - reference-sdk/py/Makefile
+      - reference-sdk/py/.dockerignore
+      - reference-sdk/py/.gitignore
+      - reference-sdk/py/README.md
+      - reference-sdk/py/src/eidolons_ecl/__init__.py
+      - reference-sdk/py/src/eidolons_ecl/__main__.py
+      - reference-sdk/py/src/eidolons_ecl/version.py
+      - reference-sdk/py/src/eidolons_ecl/types.py
+      - reference-sdk/py/src/eidolons_ecl/errors.py
+      - reference-sdk/py/tests/test_scaffold.py
+    dependencies:
+      runtime:
+        - "jsonschema>=4.23"
+        - "pyyaml>=6.0.2"
+        - "jinja2>=3.1.4"
+      dev:
+        - "pytest>=8"
+        - "pytest-cov>=5"
+        - "ruff>=0.6"
+        - "mypy>=1.11"
+        - "uv>=0.4"
+    gates:
+      - id: G-S2.A.0-Build
+        check: "make build emits dist/eidolons_ecl_sdk-1.2.0-py3-none-any.whl + .tar.gz + .pyz"
+      - id: G-S2.A.0-Test
+        check: "make test smoke test passes"
+      - id: G-S2.A.0-Lint
+        check: "make lint (ruff)"
+      - id: G-S2.A.0-Typecheck
+        check: "make typecheck (mypy strict)"
+      - id: G-S2.A.0-Check
+        check: "composite make check exits 0"
+      - id: G-S2.A.0-NoHost
+        check: "no __pycache__, .venv, uv-cache outside reference-sdk/py/ or named volume"
+    confidence: 0.92
+
+  - id: S2.1
+    title: "Python evaluation framework"
+    sub_phase: phase-2.A
+    depends_on: [S2.A.0]
+    branch: feat/v1.2.0-py-sdk-and-composition-gen
+    owner:
+      type: APIVR-Δ
+      model: sonnet
+      isolation: worktree
+    files_to_create:
+      - reference-sdk/py/src/eidolons_ecl/eval/__init__.py
+      - reference-sdk/py/src/eidolons_ecl/eval/kpi.py
+      - reference-sdk/py/src/eidolons_ecl/eval/report.py
+      - reference-sdk/py/tests/test_eval_kpi.py
+      - reference-sdk/py/tests/fixtures/star-topology.jsonl
+    files_to_modify:
+      - reference-sdk/py/src/eidolons_ecl/__main__.py  # add eval subcommand
+    kpi_families:
+      - coordination_quality: "decisions_per_envelope_ratio, refuse_rate, escalate_rate"
+      - topology_efficacy: "chain | star | graph | degenerate (cycle)"
+      - competition_resilience: "fraction of CRITIQUE performatives"
+      - planning_vs_execution_divergence: "ratio of APIVR ESCALATE to SPECTRA PROPOSE"
+    out_of_scope:
+      - "trace file rotation handling"
+      - "cross-thread aggregation (Phase 3)"
+      - "network/host hooks (file-in → file-out only)"
+    gates:
+      - id: G-S2.1-Build
+      - id: G-S2.1-Test
+      - id: G-S2.1-Lint
+      - id: G-S2.1-Typecheck
+      - id: G-S2.1-Check
+      - id: G-S2.1-Unit
+        check: ">=85% line coverage on eval/kpi.py"
+      - id: G-S2.1-Example-Pass
+        check: "eval against examples/atlas-spectra-apivr-chain produces non-empty Markdown classifying topology as chain"
+      - id: G-S2.1-Determinism
+        check: "3 runs of eval on same input produce byte-identical output"
+    confidence: 0.87
+
+  - id: S2.5
+    title: "Generated methodology/composition.md (cross-repo)"
+    sub_phase: phase-2.A
+    depends_on: [S2.A.0]
+    branch: feat/v1.2.0-py-sdk-and-composition-gen
+    owner:
+      type: APIVR-Δ
+      model: sonnet
+      isolation: worktree
+    cross_repo: true
+    files_to_create_in_eidolons_ecl:
+      - reference-sdk/py/src/eidolons_ecl/compose_gen/__init__.py
+      - reference-sdk/py/src/eidolons_ecl/compose_gen/render.py
+      - reference-sdk/py/src/eidolons_ecl/compose_gen/templates/composition.md.j2
+      - reference-sdk/py/tests/test_compose_gen.py
+      - reference-sdk/py/tests/fixtures/composition.expected.md
+    files_to_modify_in_eidolons_ecl:
+      - reference-sdk/py/src/eidolons_ecl/__main__.py  # add compose-gen subcommand
+      - Makefile  # add build-vendor-py target
+    files_to_create_in_eidolons_nexus:
+      - .github/workflows/composition-drift.yml
+      - methodology/composition.md.template
+    files_to_modify_in_eidolons_nexus:
+      - methodology/composition.md  # replaced with generated output on merge commit
+    determinism_mechanisms:
+      - "LC_ALL=C sorted contract filenames"
+      - "yaml.safe_load (Python dict order = insertion order per PEP 468)"
+      - "Jinja2 trim_blocks=True, lstrip_blocks=True"
+      - "no timestamps, no random IDs, no hostnames in output"
+      - "explicit \\n line endings"
+    out_of_scope:
+      - "auto-regeneration on contracts/ edit (option a; rejected)"
+      - "multi-template support"
+      - "custom Markdown flavors"
+    gates:
+      - id: G-S2.5-Build
+      - id: G-S2.5-Test
+      - id: G-S2.5-Lint
+      - id: G-S2.5-Typecheck
+      - id: G-S2.5-Check
+      - id: G-S2.5-Determinism
+        check: "SHA-256 of generator output equal across 3 runs"
+      - id: G-S2.5-Golden-File
+        check: "render against curated contracts/ subset matches tests/fixtures/composition.expected.md byte-for-byte"
+      - id: G-S2.5-Cross-Repo-CI
+        check: "Rynaro/eidolons PR composition-drift job green on no-contract-change; fails on deliberate contracts/ edit until composition.md regenerated"
+      - id: G-S2.5-Vendor-Bundle
+        check: "python3 dist/eidolons-ecl-sdk.bundle.pyz compose-gen --help runs on clean Python 3.12 (no pip install)"
+    confidence: 0.88
+
+  - id: S2.2
+    title: "Migration tool for legacy artefacts"
+    sub_phase: phase-2.B
+    depends_on: [S2.A.0]
+    branch: feat/v1.2.x-migration-and-a2a
+    owner:
+      type: APIVR-Δ
+      model: sonnet
+      isolation: worktree
+    files_to_create:
+      - reference-sdk/py/src/eidolons_ecl/migrate/__init__.py
+      - reference-sdk/py/src/eidolons_ecl/migrate/backfill.py
+      - reference-sdk/py/src/eidolons_ecl/migrate/heuristics.py
+      - reference-sdk/py/tests/test_migrate.py
+      - reference-sdk/py/tests/fixtures/legacy-project/
+    files_to_modify:
+      - reference-sdk/py/src/eidolons_ecl/__main__.py  # add migrate subcommand
+    heuristics:
+      - "*scout-report*.md → atlas, scout-report"
+      - "*completion-report*.md → apivr, apivr-completion-report"
+      - "*root-cause-report*.md → vigil, root-cause-report"
+      - "*reasoning-report*.md → forge, reasoning-report"
+      - "*chronicle*.md → idg, chronicle"
+    idempotence:
+      mechanism: "skip if <artefact>.envelope.json sidecar exists"
+      gate: "second run reports MigrationReport.created_count == 0"
+    backfill_envelope_shape:
+      envelope_version: "1.0"
+      message_id_strategy: "UUIDv7 from mtime (deterministic) OR UUIDv4 fallback"
+      from_eidolon: "inferred from filename pattern"
+      to_eidolon: "inferred from parent dir; fallback orchestrator"
+      performative: "INFORM (one-way emission default)"
+      integrity_method: "sha256"
+      trust_level: "standard"
+      trace_ts: "artefact mtime ISO8601"
+      trace_host: "migrated"
+      trace_model: "unknown"
+    out_of_scope:
+      - "cross-artefact thread inference (Phase 3)"
+      - "v1.1-shaped envelopes (conservative: v1.0 only)"
+    gates:
+      - id: G-S2.2-Build
+      - id: G-S2.2-Test
+      - id: G-S2.2-Lint
+      - id: G-S2.2-Typecheck
+      - id: G-S2.2-Check
+      - id: G-S2.2-Unit
+        check: ">=85% line coverage on migrate/backfill.py"
+      - id: G-S2.2-Idempotence
+        check: "second run on same fixture: 0 new envelopes; identical fs state"
+      - id: G-S2.2-Conformance
+        check: "every back-filled envelope passes bash conformance/check.sh --level=MUST"
+      - id: G-S2.2-Real-World
+        check: "migrate against Rynaro/eidolons/.spectra/ (13 spec files) with zero conformance failures"
+    confidence: 0.85
+
+  - id: S2.4
+    title: "A2A bridge (read-only)"
+    sub_phase: phase-2.B
+    depends_on: [S2.A.0]
+    branch: feat/v1.2.x-migration-and-a2a
+    owner:
+      type: APIVR-Δ
+      model: sonnet
+      isolation: worktree
+    layout: "reference-sdk/py/src/eidolons_ecl/a2a_bridge/  (subdirectory per DECISION-P2-3)"
+    files_to_create:
+      - reference-sdk/py/src/eidolons_ecl/a2a_bridge/__init__.py
+      - reference-sdk/py/src/eidolons_ecl/a2a_bridge/agent_card.py
+      - reference-sdk/py/src/eidolons_ecl/a2a_bridge/translator.py
+      - reference-sdk/py/tests/test_a2a_bridge.py
+      - reference-sdk/py/tests/fixtures/a2a-message-sample.json
+      - reference-sdk/py/tests/fixtures/agent-card.expected.json
+      - reference-sdk/py/tests/fixtures/a2a-agent-card.schema.json  # vendored A2A schema for CI
+    files_to_modify:
+      - reference-sdk/py/src/eidolons_ecl/__main__.py  # add a2a-card + a2a-translate subcommands
+    agent_card_mapping:
+      name: "from roster entry"
+      description: "derived from methodology.cycle"
+      version: "from versions.latest"
+      skills: "derived from handoffs.downstream"
+      endpoints: "[] (read-only; no HTTP)"
+    translator_mapping:
+      a2a_role_user_to_ecl_performative: REQUEST
+      a2a_role_agent_to_ecl_performative: PROPOSE
+      a2a_parts_text_to_ecl_artifact: "written to temp file with kind=a2a-message"
+      a2a_metadata_to_ecl_assumptions: "array of strings"
+      ecl_from_eidolon: "a2a-external"
+      ecl_to_eidolon: "caller-supplied"
+      ecl_trust_level: "low (per §6.3 external source default)"
+    out_of_scope:
+      - "A2A server runtime (no HTTP, no listener, no daemon)"
+      - "A2A Task lifecycle / streaming / authentication (Phase 3)"
+      - "outbound ECL → A2A (Phase 3)"
+    gates:
+      - id: G-S2.4-Build
+      - id: G-S2.4-Test
+      - id: G-S2.4-Lint
+      - id: G-S2.4-Typecheck
+      - id: G-S2.4-Check
+      - id: G-S2.4-Unit
+        check: ">=85% line coverage on a2a_bridge/"
+      - id: G-S2.4-Agent-Card-Validity
+        check: "emitted Agent Card validates against vendored A2A Agent Card JSON Schema"
+      - id: G-S2.4-Round-Trip
+        check: "A2A Message → translator → envelope → bash conformance/check.sh exit 0"
+    confidence: 0.83
+
+  - id: S2.3
+    title: "ISE-style trust hierarchy fields (v2.0.0)"
+    sub_phase: phase-2.C
+    depends_on: [S2.A.0]
+    branch: feat/v2.0.0-ise-fields
+    sub_stories:
+      - id: S2.3.a
+        title: "Spec text + envelope.v2.json schema"
+        owner:
+          type: APIVR-Δ
+          model: sonnet
+          isolation: worktree
+        files_to_create:
+          - spec/ecl-2.0.md
+          - schemas/envelope.v2.json
+        files_to_modify:
+          - ECL_VERSION  # 1.2 → 2.0
+          - .github/workflows/release.yml  # add spec/ecl-2.0.md to release assets
+          - .github/workflows/conformance.yml  # expect spec/ecl-2.0.md
+          - README.md  # spec anchor bump
+          - CHANGELOG.md  # add [2.0.0]
+          - docs/drift-register.md  # promote DC-1 → D-01
+        spec_edits:
+          - section: header
+            change: "Version: 1.1 → 2.0; Published: <merge-date>"
+          - section: §1.1.1
+            change: 'envelope_version regex ^1\.[01](\.\d+)?$ → ^[12]\.\d+(\.\d+)?$'
+          - section: §1.2
+            change: "add row: ise | object | Trust hierarchy per §6.5"
+          - section: §6.1
+            change: "hmac-sha256 row: RECOMMENDED → MUST at trust_level=high"
+          - section: §6.2.6
+            change: "I-5 level: SHOULD/warn (exit 4) → MUST/fail (exit 2) when trust_level=high + sha256"
+          - section: §6.5 (new)
+            change: "ISE trust hierarchy normative subsection (5 sub-sections)"
+          - section: §7.1
+            change: "note v2.0 ships envelope.v2.json with $id bumped; references D-01"
+          - section: §7.3
+            change: "v2.0 receivers accept v1.x for 12 months"
+          - section: Citations
+            change: "add arXiv ISE paper reference"
+        ise_field_definition:
+          location: "envelope.v2.json $defs.ise"
+          shape:
+            type: object
+            properties:
+              trust_hierarchy:
+                type: array
+                items:
+                  source: "envelope | contract | payload | system"
+                  level: "system | developer | user"
+                  scope: string
+              segment_priority: string
+          semantics: "envelope.ise is OPTIONAL; receivers MAY ignore (v1.x fallback); v2-aware receivers SHALL apply hierarchy"
+
+      - id: S2.3.b
+        title: "Migration guide (IDG)"
+        owner:
+          type: IDG
+          mode: synthesis-only
+        files_to_create:
+          - docs/migration-v1-to-v2.md
+        required_sections:
+          - "Backward compatibility window"
+          - "Schema $id changes"
+          - "HMAC promotion (trust_level=high path)"
+          - "ISE adoption guidance"
+          - "Conformance gate changes (every gate level shift from v1.1 to v2.0)"
+
+      - id: S2.3.c-bash
+        title: "Bash SDK + conformance v2 support"
+        owner:
+          type: APIVR-Δ
+          model: sonnet
+          isolation: worktree
+        files_to_modify:
+          - reference-sdk/bash/envelope-build.sh
+          - conformance/lib/integrity.sh
+          - conformance/check.sh
+          - conformance/tests/conformance.bats
+          - conformance/tests/fixtures/v2-ise-canonical/  # new
+          - conformance/tests/fixtures/v2-high-trust-sha256/  # new
+        changes:
+          - "envelope-build.sh accepts --ise-default flag (no-op if false)"
+          - "integrity.sh I-5 promoted from SHOULD/warn → MUST/fail (exit 2) at envelope_version=2.0"
+          - "check.sh accepts envelope_version: 2.0"
+
+      - id: S2.3.c-ts
+        title: "TS SDK v2 support"
+        owner:
+          type: APIVR-Δ
+          model: sonnet
+          isolation: worktree
+        files_to_modify:
+          - reference-sdk/ts/package.json  # 1.1.1 → 2.0.0
+          - reference-sdk/ts/src/version.ts  # ECL_VERSION_TARGET "1.1" → "2.0"
+          - reference-sdk/ts/src/envelopeBuild.ts  # accept iseDefault option
+          - reference-sdk/ts/src/envelopeVerify.ts  # validate against envelope.v2.json when version=2.0
+          - reference-sdk/ts/src/types.ts  # add Ise type
+          - reference-sdk/ts/src/envelopeVerify.test.ts  # I-5 promotion tests
+
+      - id: S2.3.c-py
+        title: "Python SDK v2 support"
+        owner:
+          type: APIVR-Δ
+          model: sonnet
+          isolation: worktree
+        files_to_modify:
+          - reference-sdk/py/pyproject.toml  # 1.2.x → 2.0.0
+          - reference-sdk/py/src/eidolons_ecl/version.py  # ECL_VERSION_TARGET "1.2" → "2.0"
+          - reference-sdk/py/src/eidolons_ecl/envelope.py  # add ise_default parameter
+          - reference-sdk/py/src/eidolons_ecl/types.py  # add IseDict TypedDict
+          - reference-sdk/py/tests/test_envelope.py  # I-5 promotion tests
+
+    gates:
+      - id: G-S2.3-Spec-Files
+        check: "spec/ecl-2.0.md exists; ECL_VERSION=2.0; yq eval on all workflow YAML"
+      - id: G-S2.3-Schema-Valid
+        check: "jq empty schemas/envelope.v2.json; validates hand-crafted v2 envelope fixture"
+      - id: G-S2.3-Conformance-Backcompat
+        check: "every existing v1.0/v1.1 fixture still passes under v2.0 checker"
+      - id: G-S2.3-ISE-Fixture
+        check: "v2-ise-canonical fixture passes all MUST gates"
+      - id: G-S2.3-HMAC-Promotion
+        check: "v2-high-trust-sha256 fixture: exit 2 (MUST-fail) at v2.0; same shape at v1.1 exits 4 (SHOULD-warn)"
+      - id: G-S2.3-SDK-Round-Trip
+        check: "bash/TS/Py all emit + verify v2 envelopes; cross-SDK interop passes"
+      - id: G-S2.3-Migration-Guide
+        check: "docs/migration-v1-to-v2.md covers all 5 sections"
+      - id: G-S2.3-DC-1-Promoted
+        check: "docs/drift-register.md D-01 status=promoted"
+    confidence: 0.86
+
+trance_sequencing:
+  phase-2.A:
+    waves:
+      - wave: I
+        mode: serial
+        stories: [S2.A.0]
+      - wave: II
+        mode: parallel
+        stories: [S2.1, S2.5]
+        isolation: "all but one use isolation: worktree per memory rule"
+      - wave: III
+        mode: serial
+        action: "Phase 2.A finalization — tag v1.2.0; attach .pyz bundle to GH release"
+  phase-2.B:
+    waves:
+      - wave: I
+        mode: parallel
+        stories: [S2.2, S2.4]
+        isolation: "all but one use isolation: worktree"
+      - wave: II
+        mode: serial
+        action: "Phase 2.B finalization — tag v1.2.x (or v1.3.0)"
+  phase-2.C:
+    waves:
+      - wave: I
+        mode: serial
+        stories: [S2.3.a]
+        rationale: "spec + schema MUST land before SDK mirrors compile"
+      - wave: II
+        mode: parallel
+        stories: [S2.3.c-bash, S2.3.c-ts, S2.3.c-py]
+        isolation: "all but one use isolation: worktree"
+      - wave: III
+        mode: parallel
+        stories: [S2.3.b, "DC-1-promotion-in-drift-register"]
+      - wave: IV
+        mode: serial
+        action: "Phase 2.C finalization — tag v2.0.0; release assets include spec/ecl-2.0.md + migration guide"
+
+container_constraint:
+  base_image: python:3.12-slim
+  layout: reference-sdk/py/{Dockerfile.dev, compose.yml, Makefile}
+  make_targets:
+    install: "uv sync --frozen"
+    build: "uv build + zipapp bundle"
+    test: "uv run pytest"
+    lint: "uv run ruff check + ruff format --check"
+    typecheck: "uv run mypy src"
+    check: "install + build + test + lint + typecheck (CI parity)"
+  host_pollution_forbidden:
+    - python (host)
+    - pip (host)
+    - uv (host)
+    - pytest (host)
+    - ruff (host)
+    - mypy (host)
+  named_volume: ecl-py-sdk-uv-cache  # warm cache between compose runs
+
+backward_compat_invariants:
+  - "v1.0 envelopes valid under v1.1 receivers (already true)"
+  - "v1.0 + v1.1 envelopes valid under v1.2 receivers (Phase 2.A/2.B do not touch envelope semantics)"
+  - "v1.x envelopes valid under v2.0 receivers for 12 months per §7.3"
+  - "v1.x envelopes lacking envelope.ise function under v2.x receivers (v1 fallback)"
+  - "schema $id at v1.0.0 remains valid; v2.0.0 $id coexists"
+  - "bash SDK at v1.1.x in-tree through Phase 2.A/2.B; v2.0.x at Phase 2.C"
+  - "TS SDK at v1.1.x in-tree through Phase 2.A/2.B; v2.0.x at Phase 2.C"
+  - "HMAC at trust_level=high: RECOMMENDED in v1.1/v1.2 (warn I-5 exit 4); MUST in v2.0 (fail I-5 exit 2)"
+  - "migration path: emitters using trust_level=high + sha256 must switch to hmac-sha256 OR downgrade trust_level before adopting envelope_version=2.0"
+
+cross_repo_risks:
+  - id: R-P2-1
+    risk: "composition-drift CI flaky due to GH release asset download race"
+    likelihood: medium
+    mitigation: "pin tag exactly; use gh release download with retry; .pyz is small (<200KB)"
+  - id: R-P2-2
+    risk: "A2A spec evolves while Phase 2.B in flight; vendored schema invalidates"
+    likelihood: low
+    mitigation: "vendor schema pinned to specific A2A version; future PR adopts newer A2A"
+  - id: R-P2-3
+    risk: "ISE field semantics diverge between arXiv paper and downstream implementers"
+    likelihood: medium
+    mitigation: "§6.5 quotes ISE paper normative language verbatim where possible; receiver-side interpretation tracked as drift entries"
+  - id: R-P2-4
+    risk: "Python tier ramps slower than single-maintainer capacity (R-F-4)"
+    likelihood: medium
+    mitigation: "Phase 2.A largest; defer Phase 2.B to v1.3.0 if needed; Phase 2.C on independent timeline"
+  - id: R-P2-5
+    risk: "schema $id bump breaks external ajv consumers hard-coding v1.0.0 URIs"
+    likelihood: low-medium
+    mitigation: "migration guide enumerates affected $ids; 12-month §7.3 window keeps v1 $ids resolvable"
+  - id: R-P2-6
+    risk: "cross-org token-scope edge case for eidolons CI reading eidolons-ecl releases"
+    likelihood: low
+    mitigation: "default GITHUB_TOKEN has cross-repo read on public repos; both repos public; PAT or deploy key if either ever private"
+  - id: R-P2-7
+    risk: "HMAC promotion breaks v1.x downstream Eidolons at v2.0 adoption"
+    likelihood: medium
+    mitigation: "v2.0 envelope_version adoption is opt-in per Eidolon (§7.2); migration guide gives explicit path; v1.x envelopes still valid under v2.0 receivers"
+
+out_of_scope_phase_2:
+  - "npm + pip publish (separate release PRs)"
+  - "A2A Task lifecycle / streaming / authentication (Phase 3)"
+  - "cross-thread eval aggregation (Phase 3)"
+  - "auto-thread inference in migration tool (Phase 3)"
+  - "runtime engine for automatic envelope emission (Phase 3)"
+  - "GUI/TUI envelope inspector (Phase 3)"
+  - "OpenTelemetry exporters (Phase 3)"
+  - "ANP/DID cross-org Eidolon discovery (Phase 3)"
+  - "per-Eidolon ECL_VERSION bumps to 1.2 / 2.0 (cascading [ACTION], tracked downstream)"
+
+acceptance_per_phase:
+  phase-2.A:
+    tag: v1.2.0
+    requirements:
+      - "S2.A.0 closes all 6 gates"
+      - "S2.1 closes all 8 gates"
+      - "S2.5 closes all 9 gates including cross-repo CI"
+      - "make check exits 0 inside dev container"
+      - "no host-level __pycache__/.venv/uv-cache outside reference-sdk/py/ + named volume"
+      - "Rynaro/eidolons PR closing composition.md regeneration loop merges green"
+      - "tag v1.2.0 produces GH release with spec/ecl-1.1.md + archival spec/ecl-1.0.md + dist/eidolons-ecl-sdk.bundle.pyz"
+  phase-2.B:
+    tag: v1.2.1
+    tag_fallback: v1.3.0
+    requirements:
+      - "S2.2 closes all 9 gates including real-world .spectra/ migration"
+      - "S2.4 closes all 8 gates including A2A Agent Card schema validity"
+      - "make check exits 0"
+      - "tag produces GH release with migration tool + A2A bridge in bundled SDK"
+  phase-2.C:
+    tag: v2.0.0
+    requirements:
+      - "S2.3.a closes 5 spec/schema gates"
+      - "S2.3.b closes IDG CHT gate for migration guide"
+      - "S2.3.c closes 6 cross-SDK round-trip gates"
+      - "D-01 promoted in drift register"
+      - "ECL_VERSION = 2.0 at merge"
+      - "tag v2.0.0 produces GH release with spec/ecl-2.0.md + archival spec/ecl-1.1.md + spec/ecl-1.0.md + all SDK bundles + migration guide"
+
+handoff_labels:
+  - story: S2.A.0
+    sub_phase: phase-2.A
+    label: apivr:py-scaffold
+    subagent: "APIVR-Δ, model: sonnet, isolation: worktree"
+  - story: S2.1
+    sub_phase: phase-2.A
+    label: apivr:py-eval-framework
+    subagent: "APIVR-Δ, model: sonnet, isolation: worktree"
+  - story: S2.5-generator
+    sub_phase: phase-2.A
+    label: apivr:composition-generator
+    subagent: "APIVR-Δ, model: sonnet, isolation: worktree"
+  - story: S2.5-eidolons-ci
+    sub_phase: phase-2.A
+    label: apivr:eidolons-ci-wiring
+    subagent: "APIVR-Δ, model: sonnet, isolation: worktree"
+  - story: S2.2
+    sub_phase: phase-2.B
+    label: apivr:py-migration
+    subagent: "APIVR-Δ, model: sonnet, isolation: worktree"
+  - story: S2.4
+    sub_phase: phase-2.B
+    label: apivr:py-a2a-bridge
+    subagent: "APIVR-Δ, model: sonnet, isolation: worktree"
+  - story: S2.4-docs
+    sub_phase: phase-2.B
+    label: idg:a2a-bridge-readme
+    subagent: "IDG, synthesis-only"
+  - story: S2.3.a
+    sub_phase: phase-2.C
+    label: apivr:ise-spec apivr:ise-schema
+    subagent: "APIVR-Δ, model: sonnet, isolation: worktree"
+  - story: S2.3.c-bash
+    sub_phase: phase-2.C
+    label: apivr:ise-bash
+    subagent: "APIVR-Δ, model: sonnet, isolation: worktree"
+  - story: S2.3.c-ts
+    sub_phase: phase-2.C
+    label: apivr:ise-ts
+    subagent: "APIVR-Δ, model: sonnet, isolation: worktree"
+  - story: S2.3.c-py
+    sub_phase: phase-2.C
+    label: apivr:ise-py
+    subagent: "APIVR-Δ, model: sonnet, isolation: worktree"
+  - story: S2.3.b
+    sub_phase: phase-2.C
+    label: idg:migration-guide
+    subagent: "IDG, synthesis-only"
+
+provenance:
+  roadmap_parent: /Users/henrique/workspace/oss/agents/eidolons/.spectra/harness-roadmap.md
+  phase0_ground: /Users/henrique/workspace/oss/agents/eidolons-ecl/docs/tech-choice.md
+  phase1a_precedent: /Users/henrique/workspace/oss/agents/eidolons-ecl/.spectra/ts-sdk-port.md
+  phase1b_precedent: /Users/henrique/workspace/oss/agents/eidolons-ecl/.spectra/v1.1-spec-bump.md
+  current_spec: /Users/henrique/workspace/oss/agents/eidolons-ecl/spec/ecl-1.1.md
+  drift_register: /Users/henrique/workspace/oss/agents/eidolons-ecl/docs/drift-register.md
+  target_generated_artefact: /Users/henrique/workspace/oss/agents/eidolons/methodology/composition.md
+  source_contracts: /Users/henrique/workspace/oss/agents/eidolons-ecl/contracts/*.yaml
+  spec_authored: "SPECTRA v4.2.11 — 2026-05-11 — TRANCE G3 evaluator-optimizer — 1 Refine cycle"
+  companion_md: /Users/henrique/workspace/oss/agents/eidolons-ecl/.spectra/phase2-scoping.md
