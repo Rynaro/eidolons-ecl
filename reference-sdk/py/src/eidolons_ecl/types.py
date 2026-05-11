@@ -13,8 +13,7 @@ derivation is cheap and reviewable at this spec version.
 
 from __future__ import annotations
 
-from typing import Literal, Optional
-from typing import TypedDict, NotRequired
+from typing import Literal, NotRequired, TypedDict
 
 # ---------------------------------------------------------------------------
 # Performative — ECL §2
@@ -101,7 +100,7 @@ class ConstraintsBlock(TypedDict):
     """``constraints`` block — envelope.v1.json properties.constraints."""
 
     #: RFC 3339 deadline, or null for no deadline.
-    deadline_ts: NotRequired[Optional[str]]
+    deadline_ts: NotRequired[str | None]
     trust_level: NotRequired[TrustLevel]
 
 
@@ -152,7 +151,7 @@ class Envelope(TypedDict):
     #: UUID grouping all envelopes of one logical mission.
     thread_id: str
     #: Causal predecessor message_id, or null on first envelope.
-    parent_id: Optional[str]
+    parent_id: str | None
     from_: NotRequired[AgentRef]  # key stored as "from" in JSON
     to: AgentRef
     performative: Performative

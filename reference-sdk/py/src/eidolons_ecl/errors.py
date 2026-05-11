@@ -10,7 +10,7 @@ wrapper will translate these codes to exit codes.
 
 from __future__ import annotations
 
-from typing import Literal, Optional
+from typing import Literal
 
 # ECL §5.3 conformance failure codes (schema-level).
 EclErrorCode = Literal[
@@ -45,15 +45,15 @@ class EclError(Exception):
         code: EclErrorCode,
         message: str,
         *,
-        gate: Optional[str] = None,
-        phase: Optional[Phase] = None,
-        cause: Optional[BaseException] = None,
+        gate: str | None = None,
+        phase: Phase | None = None,
+        cause: BaseException | None = None,
     ) -> None:
         super().__init__(message)
         self.code: EclErrorCode = code
         #: ECL gate that triggered the failure (e.g. "E-1.1", "I-2").
-        self.gate: Optional[str] = gate
+        self.gate: str | None = gate
         #: Which validation phase produced the failure.
-        self.phase: Optional[Phase] = phase
+        self.phase: Phase | None = phase
         if cause is not None:
             self.__cause__ = cause
