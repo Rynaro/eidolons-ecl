@@ -45,7 +45,18 @@ export type {
 import { EclError } from "./errors.js";
 
 // ---------------------------------------------------------------------------
-// Function stubs — Story S1
+// S2 — envelopeBuild (Wave II, landed)
+// ---------------------------------------------------------------------------
+export { envelopeBuild } from "./envelopeBuild.js";
+export type { EnvelopeBuildOptions } from "./envelopeBuild.js";
+
+// ---------------------------------------------------------------------------
+// S5 — traceTail (Story S5, Wave II)
+// ---------------------------------------------------------------------------
+export { traceTail, type TraceTailOptions } from "./traceTail.js";
+
+// ---------------------------------------------------------------------------
+// Function stubs — Stories S3, S4 (Wave III, not yet landed)
 //
 // Each function throws EclError({ code: "NOT_IMPLEMENTED" }) so that:
 //   1. The TypeScript build succeeds (no dangling `export` declarations).
@@ -54,16 +65,9 @@ import { EclError } from "./errors.js";
 //      this).
 //
 // Implementations land in:
-//   S2 — envelopeBuild   (Wave II, parallel with S5)
-//   S3 — envelopeVerify  (Wave III, parallel with S3)
+//   S3 — envelopeVerify  (Wave III, parallel with S4)
 //   S4 — handoffEmit     (Wave III, parallel with S4)
-//   S5 — traceTail       (Wave II, parallel with S2)
 // ---------------------------------------------------------------------------
-
-/** @stub — implementation lands in Story S2. */
-export function envelopeBuild(_opts: Record<string, unknown>): Promise<never> {
-  throw new EclError({ code: "NOT_IMPLEMENTED", message: "Story S2 not landed" });
-}
 
 /** @stub — implementation lands in Story S3. */
 export function envelopeVerify(_opts: Record<string, unknown>): Promise<never> {
@@ -73,9 +77,4 @@ export function envelopeVerify(_opts: Record<string, unknown>): Promise<never> {
 /** @stub — implementation lands in Story S4. */
 export function handoffEmit(_opts: Record<string, unknown>): Promise<never> {
   throw new EclError({ code: "NOT_IMPLEMENTED", message: "Story S4 not landed" });
-}
-
-/** @stub — implementation lands in Story S5. */
-export function traceTail(_opts: Record<string, unknown>): AsyncIterable<never> {
-  throw new EclError({ code: "NOT_IMPLEMENTED", message: "Story S5 not landed" });
 }
