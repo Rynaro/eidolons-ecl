@@ -6,6 +6,40 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.1] — 2026-05-11 — FORGE lateral contracts enumerated
+
+### Added
+- Eight new contract files under `contracts/` enumerating every FORGE
+  lateral edge as roster-derived contracts:
+  - `atlas-to-forge.yaml`, `spectra-to-forge.yaml`, `idg-to-forge.yaml`,
+    `vigil-to-forge.yaml` — consultation requests to FORGE. Body mirrors
+    `apivr-to-forge.yaml` (kind `reasoning-request`, base profile).
+  - `forge-to-atlas.yaml`, `forge-to-spectra.yaml`, `forge-to-idg.yaml`,
+    `forge-to-vigil.yaml` — reasoning reports back from FORGE. Body
+    mirrors `forge-to-apivr.yaml` (kind `reasoning-report`,
+    `reasoning-report.v1.json` profile).
+- `notes:` field on each contract documents the edge-specific consultation
+  trigger (e.g. ATLAS calls FORGE on competing call-graph framings;
+  SPECTRA on noise-floor ties in the scoring rubric; VIGIL on
+  dependency-graph hypotheses with comparable counterfactual support;
+  IDG on `[DISPUTED]`-marker reconciliation).
+
+### Changed
+- `contracts/README.md` — the eight FORGE edges move from "Edges deferred
+  to v1.0.x patch releases" into a new "Edges enumerated in v1.0.1"
+  table. The three remaining vigil-inbound deferred edges (`atlas-to-vigil`,
+  `spectra-to-vigil`, `idg-to-vigil`) are relabelled as "later v1.0.x
+  patch releases" and stay deferred.
+
+### Notes
+- Pure additive patch: no schema changes, no envelope-format changes, no
+  changes to existing contracts. `ECL_VERSION` stays at `1.0`
+  (the version file declares `MAJOR.MINOR`, not patch).
+- Unblocks the FORGE adoption pass in the Eidolons nexus.
+- All eight new contracts validate against `schemas/handoff-contract.v1.json`.
+
+[1.0.1]: https://github.com/Rynaro/eidolons-ecl/releases/tag/v1.0.1
+
 ## [1.0.0] — 2026-05-08
 
 ### Added
