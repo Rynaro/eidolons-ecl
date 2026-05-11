@@ -1,0 +1,405 @@
+---
+# SPECTRA hand-off — TypeScript reference SDK port (Phase 1, S1.1)
+spec_version: 1
+spectra_version: 4.2.11
+spec_id: ts-sdk-port-phase1
+status: assemble
+confidence: 0.88
+created_at: "2026-05-11T21:30:00Z"
+source_scout: /Users/henrique/workspace/oss/agents/eidolons-ecl/.atlas-scout/scout-report.md
+tech_choice_doc: /Users/henrique/workspace/oss/agents/eidolons-ecl/docs/tech-choice.md
+roadmap_parent: /Users/henrique/workspace/oss/agents/eidolons/.spectra/harness-roadmap.md
+roadmap_story: S1.1
+target_repo: Rynaro/eidolons-ecl
+target_branch: feat/v1.1.0-ts-sdk
+handoff_target:
+  eidolon: apivr-delta
+  version: "3.0.5"
+  model: sonnet
+  isolation: worktree
+  wave_mode: trance
+  wave_count: 4
+clarify:
+  who: APIVR-Δ subagent / 4-way TRANCE wave (model=sonnet, isolation=worktree)
+  what: Port four bash SDK helpers to TypeScript at reference-sdk/ts/src/ with API parity and byte-equivalent envelope output.
+  why: Unblocks host-LLM integration tier (Cursor, Claude Code, VS Code, opencode, Codex); enables npm + vendor-as-single-file distribution.
+  constraints:
+    - "All dependency ops (pnpm install, tsc, vitest, biome) MUST run inside reference-sdk/ts/ dev container via `make <target>`."
+    - "Byte-equivalence: TS envelope output must pass bash conformance/check.sh."
+    - "No spec change in this PR. ECL stays at v1.0; SDK targets it."
+    - "API parity, not API improvement — no new options the bash SDK lacks."
+    - "Apache-2.0 across all artefacts."
+    - "package.json is private:true; first npm publish lives in a later release PR."
+
+decisions_resolved:
+  - id: D-1
+    title: ajv major version
+    resolution: ajv 8.x + ajv-formats 3.x
+    rationale: "ajv 8 is the only major with native JSON Schema 2020-12 support (Ajv2020 export); ajv-formats 3.x provides uuid + date-time formats; schemas load via addSchema(bundleArray) keyed by $id, never HTTP."
+  - id: D-2
+    title: vendor-build tool
+    resolution: tsup 8.x
+    rationale: "Zero-config esbuild wrapper; emits dual ESM+CJS in one pass; produces single-file vendor bundle via --format esm --no-splitting."
+  - id: D-3
+    title: trace JSONL atomicity
+    resolution: "POSIX append + per-line write (matches bash)"
+    rationale: "fs.appendFileSync with flag:a is atomic per write(2) for lines <= PIPE_BUF (4KiB); trace events sit well under that ceiling. ECL spec is silent on atomicity. Matching bash preserves cross-SDK semantic parity."
+  - id: D-4
+    title: conformance integration
+    resolution: "hybrid — ajv in TS for E-/I- gates, shell-out to bash check.sh for C-/D- gates"
+    rationale: "Hybrid preserves canonical-reference posture (bash is source of truth) while proving ajv can do real JSON Schema 2020-12 validation. Pure shell-out wastes the TS distribution path; pure TS duplicates the bash checker's contract-graph walk."
+
+gaps_resolved:
+  - id: GAP-1
+    title: jq-not-ajv today
+    resolution: "TS SDK becomes first ajv validator; documented in jsdoc; not promoted to bash."
+  - id: GAP-2
+    title: unused contract fields (schema_ref, required_sections, evidence_anchor_required)
+    resolution: deferred
+  - id: GAP-3
+    title: UUIDv7 library
+    resolution: "uuid v10.x; uuidv7() default for message_id and thread_id."
+  - id: GAP-4
+    title: TS error model
+    resolution: "EclError extends Error with code: VerifyFailureCode | 'USAGE' | 'INTEGRITY_COMPUTE_FAILED' | 'IO_FAILED'."
+  - id: GAP-5
+    title: Dockerfile.dev greenfield
+    resolution: "Resolved — container scaffold already on feat/v1.1.0-ts-sdk."
+  - id: GAP-6
+    title: receive-side trace events unwritten
+    resolution: "handoffEmit emits 'emit' only (matches bash); envelopeVerify writes 'verify_pass'/'verify_fail' when --trace-dir is supplied (opt-in)."
+
+container_constraint:
+  required: true
+  rule: "Every install/build/test/lint runs INSIDE reference-sdk/ts/ dev container via `make <target>`."
+  no_host_node: true
+  scaffold_status: infra-done
+  scaffold_files:
+    - reference-sdk/ts/Dockerfile.dev
+    - reference-sdk/ts/compose.yml
+    - reference-sdk/ts/Makefile
+    - reference-sdk/ts/.dockerignore
+    - reference-sdk/ts/.gitignore
+    - reference-sdk/ts/README.md
+  make_targets:
+    - install
+    - build
+    - test
+    - lint
+    - check
+
+trance_sequencing:
+  - wave: I
+    parallelism: 1
+    stories: [S1]
+  - wave: II
+    parallelism: 2
+    stories: [S2, S5]
+    depends_on_wave: I
+  - wave: III
+    parallelism: 2
+    stories: [S3, S4]
+    depends_on_wave: II
+
+stories:
+  - id: S1
+    title: Scaffold (package.json, tsconfig, vitest, tsup, biome, src/{index,version,types,errors})
+    blocks: [S2, S3, S4, S5]
+    files_to_create:
+      - reference-sdk/ts/package.json
+      - reference-sdk/ts/tsconfig.json
+      - reference-sdk/ts/vitest.config.ts
+      - reference-sdk/ts/tsup.config.ts
+      - reference-sdk/ts/biome.json
+      - reference-sdk/ts/pnpm-lock.yaml
+      - reference-sdk/ts/src/index.ts
+      - reference-sdk/ts/src/version.ts
+      - reference-sdk/ts/src/types.ts
+      - reference-sdk/ts/src/errors.ts
+      - reference-sdk/ts/src/scaffold.test.ts
+    package_json:
+      private: true
+      name: "@eidolons/ecl-sdk"
+      version: "1.1.0"
+      type: module
+      license: Apache-2.0
+      engines:
+        node: ">=22"
+      dependencies:
+        ajv: "^8.17.0"
+        ajv-formats: "^3.0.1"
+        uuid: "^10.0.0"
+      devDependencies:
+        typescript: "^5.5"
+        vitest: "^2"
+        tsup: "^8"
+        "@biomejs/biome": "^1.8"
+        "@types/node": "^22"
+    version_constant:
+      file: src/version.ts
+      export: ECL_VERSION_TARGET
+      value: "1.0"
+    gates:
+      - id: G-S1-Build
+        target: make build
+        expect: "exit 0; dist/index.js + dist/index.cjs + dist/index.d.ts + dist/eidolons-ecl-sdk.bundle.mjs"
+      - id: G-S1-Test
+        target: make test
+        expect: "exit 0; smoke test passes"
+      - id: G-S1-Lint
+        target: make lint
+        expect: "exit 0"
+      - id: G-S1-Check
+        target: make check
+        expect: "exit 0 (install + build + test + lint)"
+      - id: G-S1-NoHost
+        target: filesystem inspection
+        expect: "no node_modules outside reference-sdk/ts/; pnpm-store in named container volume only"
+    confidence: 0.93
+
+  - id: S2
+    title: envelopeBuild — mirror envelope-build.sh (22 flags)
+    depends_on: [S1]
+    api:
+      function: envelopeBuild
+      input_type: EnvelopeBuildOptions
+      output_type: Promise<Envelope>
+    files_to_create:
+      - reference-sdk/ts/src/envelopeBuild.ts
+      - reference-sdk/ts/src/envelopeBuild.test.ts
+    flag_parity:
+      required: [artifact, contract, performative, objective]
+      optional:
+        - messageId            # default: uuidv7()
+        - threadId             # default: same as messageId
+        - parentId             # default: null
+        - fromVersion          # default: "0.0.0"
+        - toVersion            # default: "0.0.0"
+        - kind                 # default: contract.artifacts[0].kind
+        - summary              # default: placeholder
+        - tokensUsed           # default: 0
+        - tokenBudget          # default: contract.context_delta.token_budget_max ?? 4000
+        - confidence           # default: 0.5
+        - trustLevel           # default: contract.trust_level ?? "standard"
+        - host                 # default: process.env.ECL_HOST ?? "raw"
+        - model                # default: process.env.ECL_MODEL ?? "unknown"
+        - tier                 # default: "standard"
+        - integrityMethod      # default: "sha256"
+    internal_mechanics:
+      yaml_parser: yaml (eemeli/yaml)
+      sha256: crypto.createHash("sha256").update(fileBuffer).digest("hex")
+      hmac_sha256: crypto.createHmac("sha256", process.env.ECL_HMAC_KEY).update(fileBuffer).digest("hex")
+      timestamp: 'new Date().toISOString().replace(/\.\d{3}Z$/, "Z")'
+      uuid_generator: uuid.v7
+      artifact_path_in_envelope: path.basename(artifactPath)
+      key_order: [envelope_version, message_id, thread_id, parent_id, from, to, performative, edge_origin, objective, artifact, context_delta, constraints, confidence, integrity, trace]
+    gates:
+      - id: G-S2-Build
+        target: make build
+      - id: G-S2-Test
+        target: make test
+      - id: G-S2-Lint
+        target: make lint
+      - id: G-S2-Check
+        target: make check
+      - id: G-S2-Unit
+        target: vitest coverage on envelopeBuild.ts
+        expect: ">=90% line coverage; covers defaults, every override, both integrity methods, missing-required, unreadable-artifact, unparseable-contract"
+      - id: G-S2-Conformance
+        target: bash conformance/check.sh <ts-envelope> --level=MUST
+        expect: "exit 0 against fixture from examples/atlas-spectra-apivr-chain/"
+      - id: G-S2-Bash-Parity
+        target: diff TS-emitted vs bash-emitted envelope on same input (fixed message-id, thread-id; allowed diff: trace.ts only)
+        expect: "jq -S 'del(.trace.ts)' equal"
+    confidence: 0.88
+
+  - id: S3
+    title: envelopeVerify — hybrid TS-ajv + bash-shell-out
+    depends_on: [S1, S2]
+    api:
+      function: envelopeVerify
+      input_type: EnvelopeVerifyOptions
+      output_type: Promise<VerifyResult>
+    files_to_create:
+      - reference-sdk/ts/src/envelopeVerify.ts
+      - reference-sdk/ts/src/envelopeVerify.test.ts
+      - reference-sdk/ts/src/schemas.ts   # ajv schema bundle loader
+    schemas_loaded:
+      - schemas/envelope.v1.json
+      - schemas/performative.v1.json
+      - schemas/handoff-contract.v1.json
+      - schemas/context-delta.v1.json
+      - schemas/handoff-event.v1.json
+      - schemas/per-eidolon/_base-profile.v1.json
+    ajv_config:
+      strict: false
+      allowMatchingProperties: true
+      formats: [uuid, date-time]
+    phase_1_ts_ajv:
+      gates_covered: [E-1.1, E-1.2, E-1.3, E-2.1, E-2.2, I-1, I-2]
+      output_codes: [SCHEMA_INVALID, INTEGRITY_MISMATCH]
+    phase_2_shell_out:
+      command: bash conformance/check.sh <envelope-abs-path> --contracts <contracts-dir> --json
+      gates_covered: [C-1, C-2, C-3.1, C-3.2, D-1, D-2]
+      output_codes: [UNDECLARED_EDGE, PERFORMATIVE_NOT_ALLOWED, ARTIFACT_KIND_NOT_ALLOWED, CONTEXT_OVER_BUDGET]
+    trace_integration:
+      opt_in_via: traceDir option
+      events_written: [verify_pass, verify_fail]
+    gates:
+      - id: G-S3-Build
+        target: make build
+      - id: G-S3-Test
+        target: make test
+      - id: G-S3-Lint
+        target: make lint
+      - id: G-S3-Check
+        target: make check
+      - id: G-S3-Unit
+        target: vitest coverage on envelopeVerify.ts
+        expect: ">=85% line coverage; covers all 7 VerifyFailureCode values, both integrity methods, shell-out failure case"
+      - id: G-S3-Round-trip
+        target: TS envelope → TS verify (ok=true); bash envelope → TS verify (ok=true); corrupted envelope → INTEGRITY_MISMATCH
+      - id: G-S3-Cross-SDK
+        target: bash envelopes through TS verify and TS envelopes through bash check.sh
+        expect: "both pass; this is the core interop guarantee"
+    confidence: 0.85
+
+  - id: S4
+    title: handoffEmit — compose envelopeBuild + sidecar write + trace append
+    depends_on: [S1, S2]
+    api:
+      function: handoffEmit
+      input_type: HandoffEmitOptions
+      output_type: Promise<EmitResult>
+    files_to_create:
+      - reference-sdk/ts/src/handoffEmit.ts
+      - reference-sdk/ts/src/handoffEmit.test.ts
+    options_extends: EnvelopeBuildOptions
+    extra_options:
+      - name: traceDir
+        default: ".eidolons/.trace"
+    side_effects:
+      - sidecar: "<artifact>.envelope.json (pretty-printed, 2-space indent, trailing \\n)"
+      - trace: "<traceDir>/<thread_id>.jsonl (append one 'emit' event)"
+    trace_event_shape:
+      ts: RFC3339 UTC
+      event: emit
+      message_id: string
+      thread_id: string
+      from: "<eidolon>@<version>"
+      to: "<eidolon>@<version>"
+      performative: string
+      integrity_method: string
+      context_tokens: integer
+      model: string
+      tier: string
+    gates:
+      - id: G-S4-Build
+        target: make build
+      - id: G-S4-Test
+        target: make test
+      - id: G-S4-Lint
+        target: make lint
+      - id: G-S4-Check
+        target: make check
+      - id: G-S4-Unit
+        target: vitest coverage on handoffEmit.ts
+        expect: ">=85% line coverage; covers sidecar write, trace append, mkdir -p semantics, concurrent emit"
+      - id: G-S4-Conformance
+        target: bash conformance/check.sh <tempdir> --level=MUST after TS emit
+        expect: "exit 0"
+      - id: G-S4-Round-trip
+        target: re-run examples/atlas-spectra-apivr-chain/run.sh semantics via TS handoffEmit instead of bash
+        expect: "bash conformance/check.sh $EX_DIR --level=MUST exits 0; trace JSONL has 3 emit lines"
+      - id: G-S4-Bash-Parity
+        target: side-by-side diff of TS vs bash envelope JSON on same fixture
+        expect: "diff is empty modulo message_id, thread_id, trace.ts"
+    confidence: 0.87
+
+  - id: S5
+    title: traceTail — AsyncIterable<TraceEvent> with filter + follow
+    depends_on: [S1]
+    api:
+      function: traceTail
+      input_type: TraceTailOptions
+      output_type: AsyncIterable<TraceEvent>
+    files_to_create:
+      - reference-sdk/ts/src/traceTail.ts
+      - reference-sdk/ts/src/traceTail.test.ts
+    options:
+      - traceDir          # default: ".eidolons/.trace"
+      - thread            # filter by thread_id
+      - from              # prefix-match on event.from
+      - to                # prefix-match on event.to
+      - follow            # default: false
+    internal_mechanics:
+      non_follow: "Read each *.jsonl sorted LC_ALL=C; split by newline; JSON.parse; apply filters; yield."
+      follow: "fs.watch + per-file position tracking; re-open on rename event."
+      malformed_lines: "Emit warning to stderr; skip; continue."
+    gates:
+      - id: G-S5-Build
+        target: make build
+      - id: G-S5-Test
+        target: make test
+      - id: G-S5-Lint
+        target: make lint
+      - id: G-S5-Check
+        target: make check
+      - id: G-S5-Unit
+        target: vitest coverage on traceTail.ts
+        expect: ">=80% line coverage; non-follow + filter + follow modes covered"
+      - id: G-S5-Bash-Parity
+        target: bash trace-tail.sh --thread <id> vs TS traceTail({thread})
+        expect: "arrays deep-equal modulo iteration order"
+      - id: G-S5-No-Race
+        target: 100 concurrent handoffEmit calls to same thread_id; tail collects all 100 without truncation
+        expect: "100 well-formed JSONL lines, no interleaving"
+    confidence: 0.84
+
+out_of_scope:
+  - npm publish (separate release PR after S1-S5 merge)
+  - vendor-build release artifact distribution
+  - reference-sdk/py (Phase 2, S2.1)
+  - HMAC promotion (S1.4)
+  - threat-model doc (S1.3)
+  - drift register population (S1.5)
+  - runtime engine (Phase 3)
+  - A2A bridge (Phase 2, S2.4)
+  - TS reimplementation of C-/D- conformance gates
+
+risks:
+  - id: R-TS-1
+    risk: "ajv $id-by-bundle fails for relative $ref to _base-profile.v1.json"
+    mitigation: "S3 includes addSchema bundle test; fall back to loadSchema callback if needed."
+  - id: R-TS-2
+    risk: "JSON key ordering diff between bash jq -n and TS JSON.stringify"
+    mitigation: "S2 fixes key order via explicit object literal; G-S2-Bash-Parity catches drift."
+  - id: R-TS-3
+    risk: "fs.watch cross-platform inconsistency on macOS APFS vs Linux inotify"
+    mitigation: "Document; add optional pollInterval fallback if APIVR-Δ flakes."
+  - id: R-TS-4
+    risk: "container build cost on cold cache"
+    mitigation: "Named pnpm-store volume warms after first install; CI may cache volume."
+  - id: R-TS-5
+    risk: "UUIDv7 vs bash UUIDv4 diff in interop"
+    mitigation: "schema validates format:uuid only (no version check); documented in jsdoc."
+
+acceptance_pr:
+  branch: feat/v1.1.0-ts-sdk
+  target: main
+  conditions:
+    - All five stories S1-S5 close all their gates.
+    - "`make check` exits 0 inside dev container."
+    - examples/atlas-spectra-apivr-chain/run.sh re-run via TS handoffEmit passes conformance.
+    - examples/apivr-vigil-escalation/run.sh re-run via TS handoffEmit passes conformance.
+    - No host-level node_modules or pnpm-store outside reference-sdk/ts/ and named container volume.
+
+provenance:
+  scout: atlas v1.4.2
+  scout_report: /Users/henrique/workspace/oss/agents/eidolons-ecl/.atlas-scout/scout-report.md
+  scout_date: "2026-05-11"
+  tech_choice: /Users/henrique/workspace/oss/agents/eidolons-ecl/docs/tech-choice.md
+  tech_choice_date: "2026-05-11"
+  spectra_version: 4.2.11
+  spec_date: "2026-05-11"
+  companion_md: /Users/henrique/workspace/oss/agents/eidolons-ecl/.spectra/ts-sdk-port.md
