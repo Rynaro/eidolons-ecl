@@ -36,8 +36,8 @@ packages = ["src/eidolons_ecl"]
 [tool.hatch.version]
 path = "src/eidolons_ecl/version.py"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
   "pytest>=8",
   "pytest-cov>=5",
   "ruff>=0.6",

@@ -11,7 +11,7 @@ import re
 import subprocess
 import sys
 import types
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 
@@ -114,8 +114,7 @@ def test_each_subcommand_raises_not_implemented(func: _StubFn, label: str) -> No
     with pytest.raises(NotImplementedError) as exc_info:
         func(types.SimpleNamespace())
     assert label in str(exc_info.value), (
-        f"Expected story label '{label}' in NotImplementedError message, "
-        f"got: {exc_info.value!r}"
+        f"Expected story label '{label}' in NotImplementedError message, got: {exc_info.value!r}"
     )
 
 

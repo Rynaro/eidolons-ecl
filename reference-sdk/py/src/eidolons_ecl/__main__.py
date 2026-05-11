@@ -61,9 +61,7 @@ def main(argv: list[str] | None = None) -> int:
     card_p.set_defaults(func=cmd_a2a_card)
 
     # a2a-translate — S2.4 (Phase 2.B)
-    tr_p = sub.add_parser(
-        "a2a-translate", help="translate inbound A2A Message to ECL envelope"
-    )
+    tr_p = sub.add_parser("a2a-translate", help="translate inbound A2A Message to ECL envelope")
     tr_p.add_argument("--message", required=True)
     tr_p.add_argument("--out")
     tr_p.set_defaults(func=cmd_a2a_translate)
