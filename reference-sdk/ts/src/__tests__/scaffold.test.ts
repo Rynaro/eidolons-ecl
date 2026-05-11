@@ -6,12 +6,14 @@
  *
  * Verifies:
  *   1. ECL_VERSION_TARGET equals "1.0".
- *   2. The unimplemented function stubs (S3–S4) throw EclError with
- *      code "NOT_IMPLEMENTED".
+ *   2. The unimplemented function stub (S4 — handoffEmit) throws EclError
+ *      with code "NOT_IMPLEMENTED".
  *   3. envelopeBuild (S2, now implemented) is exported as a function —
  *      it no longer throws NOT_IMPLEMENTED (it throws USAGE for missing args).
  *   4. traceTail (S5, now implemented) is exported and returns an
  *      AsyncIterable — it no longer throws NOT_IMPLEMENTED.
+ *   5. envelopeVerify (S3, now implemented) is exported as a function —
+ *      it throws USAGE for missing envelope, not NOT_IMPLEMENTED.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -29,23 +31,38 @@ describe("ECL_VERSION_TARGET", () => {
   });
 });
 
-describe("function stubs (S3–S4 not yet landed)", () => {
-  function assertNotImplemented(fn: () => unknown, name: string): void {
-    it(`${name} throws EclError with code NOT_IMPLEMENTED`, () => {
-      let caught: unknown;
-      try {
-        fn();
-      } catch (err) {
-        caught = err;
-      }
-      expect(caught).toBeInstanceOf(EclError);
-      const eclErr = caught as EclError;
-      expect(eclErr.code).toBe("NOT_IMPLEMENTED");
-    });
-  }
+describe("function stubs (S4 not yet landed)", () => {
+  it("handoffEmit throws EclError with code NOT_IMPLEMENTED", () => {
+    let caught: unknown;
+    try {
+      handoffEmit({});
+    } catch (err) {
+      caught = err;
+    }
+    expect(caught).toBeInstanceOf(EclError);
+    const eclErr = caught as EclError;
+    expect(eclErr.code).toBe("NOT_IMPLEMENTED");
+  });
+});
 
-  assertNotImplemented(() => envelopeVerify({}), "envelopeVerify");
-  assertNotImplemented(() => handoffEmit({}), "handoffEmit");
+describe("envelopeVerify (S3 — implemented)", () => {
+  it("is exported as a function", () => {
+    expect(typeof envelopeVerify).toBe("function");
+  });
+
+  it("throws EclError with code USAGE (not NOT_IMPLEMENTED) for missing envelope", async () => {
+    let caught: unknown;
+    try {
+      // @ts-expect-error — intentional: passing empty object to test implemented behavior
+      await envelopeVerify({});
+    } catch (err) {
+      caught = err;
+    }
+    expect(caught).toBeInstanceOf(EclError);
+    const eclErr = caught as EclError;
+    expect(eclErr.code).toBe("USAGE");
+    expect(eclErr.code).not.toBe("NOT_IMPLEMENTED");
+  });
 });
 
 describe("envelopeBuild (S2 — implemented)", () => {

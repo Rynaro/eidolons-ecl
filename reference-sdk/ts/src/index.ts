@@ -56,23 +56,19 @@ export type { EnvelopeBuildOptions } from "./envelopeBuild.js";
 export { traceTail, type TraceTailOptions } from "./traceTail.js";
 
 // ---------------------------------------------------------------------------
-// Function stubs — Stories S3, S4 (Wave III, not yet landed)
-//
-// Each function throws EclError({ code: "NOT_IMPLEMENTED" }) so that:
-//   1. The TypeScript build succeeds (no dangling `export` declarations).
-//   2. Tests written against unimplemented stories fail loudly and early.
-//   3. The four symbols are present and importable (scaffold.test.ts verifies
-//      this).
-//
-// Implementations land in:
-//   S3 — envelopeVerify  (Wave III, parallel with S4)
-//   S4 — handoffEmit     (Wave III, parallel with S4)
+// S3 — envelopeVerify (Wave III, landed)
 // ---------------------------------------------------------------------------
+export {
+  envelopeVerify,
+  type EnvelopeVerifyOptions,
+  type VerifyResult,
+  type GateFailure,
+  type GateWarning,
+} from "./envelopeVerify.js";
 
-/** @stub — implementation lands in Story S3. */
-export function envelopeVerify(_opts: Record<string, unknown>): Promise<never> {
-  throw new EclError({ code: "NOT_IMPLEMENTED", message: "Story S3 not landed" });
-}
+// ---------------------------------------------------------------------------
+// S4 — handoffEmit (Wave III, not yet landed)
+// ---------------------------------------------------------------------------
 
 /** @stub — implementation lands in Story S4. */
 export function handoffEmit(_opts: Record<string, unknown>): Promise<never> {
