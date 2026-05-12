@@ -59,11 +59,44 @@ def cmd_migrate(args: argparse.Namespace) -> int:
 
 
 def cmd_a2a_card(args: argparse.Namespace) -> int:
-    raise NotImplementedError("Story S2.4 (Phase 2.B) not landed")
+    from pathlib import Path
+
+    import json
+
+    from .a2a_bridge import emit_agent_card
+
+    roster = Path(args.roster)
+    if not roster.is_file():
+        print(f"roster not found: {roster}", file=sys.stderr)
+        return 1
+    card = emit_agent_card(roster)
+    rendered = json.dumps(card, sort_keys=True, indent=2)
+    if args.out:
+        Path(args.out).write_text(rendered + "\n", encoding="utf-8")
+    else:
+        print(rendered)
+    return 0
 
 
 def cmd_a2a_translate(args: argparse.Namespace) -> int:
-    raise NotImplementedError("Story S2.4 (Phase 2.B) not landed")
+    from pathlib import Path
+
+    import json
+
+    from .a2a_bridge import translate_a2a_message
+
+    msg_path = Path(args.message)
+    if not msg_path.is_file():
+        print(f"a2a message file not found: {msg_path}", file=sys.stderr)
+        return 1
+    msg = json.loads(msg_path.read_text(encoding="utf-8"))
+    envelope = translate_a2a_message(msg, target_eidolon=args.to)
+    rendered = json.dumps(envelope, sort_keys=True, indent=2)
+    if args.out:
+        Path(args.out).write_text(rendered + "\n", encoding="utf-8")
+    else:
+        print(rendered)
+    return 0
 
 
 def cmd_compose_gen(args: argparse.Namespace) -> int:
@@ -120,6 +153,7 @@ def main(argv: list[str] | None = None) -> int:
     # a2a-translate — S2.4 (Phase 2.B)
     tr_p = sub.add_parser("a2a-translate", help="translate inbound A2A Message to ECL envelope")
     tr_p.add_argument("--message", required=True)
+    tr_p.add_argument("--to", required=True, help="target eidolon slug (e.g. atlas)")
     tr_p.add_argument("--out")
     tr_p.set_defaults(func=cmd_a2a_translate)
 

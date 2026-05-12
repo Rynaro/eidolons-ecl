@@ -1,0 +1,10 @@
+{
+  "role": "user",
+  "parts": [
+    {"kind": "text", "text": "Please review this code change for ATLAS scout-report quality."}
+  ],
+  "metadata": {
+    "session_id": "abc-123",
+    "source": "external-reviewer"
+  }
+}
