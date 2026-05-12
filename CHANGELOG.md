@@ -6,6 +6,100 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.2.1] — 2026-05-12 — Phase 2.B: migration tool + A2A bridge
+
+### Added
+- `reference-sdk/py/src/eidolons_ecl/migrate/` — back-fill v1.0 ECL
+  envelopes for legacy Markdown artefacts (Story S2.2). Scans
+  `.spectra/` and `.atlas-scout/` recursively plus top-level `*.md`
+  under the caller-supplied root; classifies each file via filename-
+  pattern heuristics (`*scout-report*`, `*completion-report*`,
+  `*repair-failed-report*`, `*root-cause-report*`, `*reasoning-report*`,
+  `*reasoning-request*`, `*chronicle*`, `*spec*`) with `.spectra/`
+  and `.atlas-scout/` directory-membership fallbacks; writes a
+  conformant v1.0 envelope sidecar at `<artefact>.envelope.json`
+  alongside each classified file. Idempotent — pre-existing sidecars
+  are never overwritten (`skipped_existing`); unrecognised files are
+  left untouched (`skipped_unknown`). Emitted envelopes set
+  `performative = INFORM`, `to.eidolon = "orchestrator"`,
+  `trust_level = "standard"`, `edge_origin = "implicit"`,
+  `integrity.method = "sha256"` over the file bytes, and carry an
+  assumption noting the back-fill provenance. Invocable via
+  `eidolons-ecl migrate --root <dir> [--dry-run] [--report <path>]`;
+  the optional `--report` path receives a deterministic Markdown
+  summary (`render_markdown(MigrationReport)`).
+- `reference-sdk/py/src/eidolons_ecl/a2a_bridge/` — one-way A2A → ECL
+  adapter (Story S2.4). `emit_agent_card(roster_path)` parses
+  `roster/index.yaml` (or any roster-shaped YAML) and returns an A2A
+  Agent Card dict with `schemaVersion = "1.0"`, top-level
+  `version = "1.2"` (tracks the ECL SDK target), `organization`,
+  `name`, and a `members[]` list derived from `eidolons[*]` (each
+  member carries `name`, `description`, `capability_class`,
+  `methodology_cycle`, `lateral_consultants[]`, and a
+  downstream-derived `skills[]` array). `translate_a2a_message(msg,
+  target_eidolon=..., target_version=...)` converts an inbound A2A
+  Message dict to a conformant ECL v1.0 envelope: role→performative
+  mapping `user → REQUEST`, `agent → PROPOSE`, unknown → `REQUEST`
+  with an assumption entry; `from.eidolon = "a2a-external"`,
+  `trust_level = "low"`, `edge_origin = "implicit"`,
+  `artifact.kind = "a2a-message"`, `artifact.path` is the sentinel
+  `"a2a-message.txt"`, and the raw text is carried as the vendor
+  extension field `x_inline_content` (`x_*` per ECL §1.2.3 —
+  receivers SHALL ignore). Invocable via
+  `eidolons-ecl a2a-card --roster <path> [--out <path>]` and
+  `eidolons-ecl a2a-translate --message <path> --to <slug> [--out <path>]`.
+- `reference-sdk/py/tests/test_a2a_bridge.py` — 26 unit tests plus an
+  integration test (`test_integration_conformance_round_trip`) that
+  translates a synthetic A2A Message, persists the inline content to
+  the sentinel `a2a-message.txt`, provisions a synthetic
+  `contracts/a2a-external-to-atlas.yaml` edge in a tmp dir, and runs
+  the bash `conformance/check.sh` end-to-end (exit 0 expected).
+- `reference-sdk/py/tests/test_migrate.py` — 39 unit tests covering
+  the heuristic match table, envelope field shape, idempotence on
+  re-runs, the `skipped_existing` and `skipped_unknown` paths, and a
+  guarded integration test against the live nexus checkout.
+
+### Changed
+- `eidolons-ecl` CLI — the `migrate`, `a2a-card`, and `a2a-translate`
+  sub-commands shipped as stubs in v1.2.0 are now real entry points
+  wired to the modules above (see
+  `reference-sdk/py/src/eidolons_ecl/__main__.py`).
+- `reference-sdk/py/Dockerfile.dev` — image now installs
+  `jq + git + bash + coreutils` so the A2A bridge integration test
+  can shell out to `conformance/check.sh` from inside the dev
+  container.
+- `ruff` and `mypy --strict` pass cleanly across the new
+  `migrate/` and `a2a_bridge/` modules.
+
+### Notes
+- **Backward compatible** — v1.0, v1.1, and v1.2 envelopes all remain
+  valid; no spec text changed in this release. `SPEC.md` still
+  points at `spec/ecl-1.2.md` and `ECL_VERSION` stays at `1.2`
+  (the version file declares `MAJOR.MINOR`, not patch).
+- The A2A bridge is **one-way** (inbound A2A Message → ECL
+  envelope). Reverse translation (ECL → A2A) is Phase 3 work and is
+  intentionally out of scope here.
+- The vendor-extension field `x_inline_content` carries the raw
+  inbound message text. Receivers SHALL ignore `x_*` per ECL §1.2.3;
+  callers SHOULD persist that content to the sentinel path
+  `a2a-message.txt` (relative to the envelope file's directory)
+  before downstream emit, so the bash conformance checker can
+  resolve the artifact when verifying SHA-256.
+- External edges (`from.eidolon = "a2a-external"`) are intentionally
+  **NOT** enumerated in the repo's `contracts/` set — operators
+  declare them per deployment for any Eidolon they expose
+  externally. The integration test provisions a synthetic
+  `a2a-external-to-atlas.yaml` contract in a tmp dir to prove
+  structural correctness without committing an open-world edge to
+  the canonical contract set.
+- PyPI publishing for the Python SDK remains deferred (account-setup
+  blocker); distribution is via the zipapp bundle
+  (`dist/eidolons-ecl-sdk.bundle.pyz`) and source checkout.
+- **Phase 2.C (final, v2.0.0):** S2.3 ISE-style trust hierarchy
+  fields (schema $id bump trigger; closes drift candidate DC-1).
+
+[1.2.1]: https://github.com/Rynaro/eidolons-ecl/releases/tag/v1.2.1
+
 ## [1.2.0] — 2026-05-12 — Phase 2.A: Python tier + eval framework + composition generator
 
 ### Added
@@ -188,5 +282,5 @@ None open at v1.1.0. See `docs/drift-register.md` for candidates
 None at v1.0.0. Drifts will be enumerated as `D-1`, `D-2`, … as they are
 discovered against live Eidolon emit behaviour during the warn-only window.
 
-[Unreleased]: https://github.com/Rynaro/eidolons-ecl/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/Rynaro/eidolons-ecl/compare/v1.2.1...HEAD
 [1.0.0]: https://github.com/Rynaro/eidolons-ecl/releases/tag/v1.0.0

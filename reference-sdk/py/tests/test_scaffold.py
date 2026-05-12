@@ -10,22 +10,14 @@ from __future__ import annotations
 import re
 import subprocess
 import sys
-import types
-from collections.abc import Callable
 
 import pytest
 
 from eidolons_ecl import ECL_VERSION_TARGET, EclError
 from eidolons_ecl.__main__ import (
-    cmd_a2a_card,
-    cmd_a2a_translate,
-    cmd_migrate,
     main,
 )
 from eidolons_ecl.version import __version__
-
-# Stub function type: takes a Namespace, returns int (but actually raises).
-_StubFn = Callable[[types.SimpleNamespace], int]
 
 # ---------------------------------------------------------------------------
 # Version constants
@@ -93,28 +85,8 @@ def test_subcommands_registered() -> None:
 # Stub functions raise NotImplementedError with story label
 # ---------------------------------------------------------------------------
 
-_STUB_CASES: list[tuple[_StubFn, str, str]] = [
-    # cmd_eval is implemented in S2.1 — no longer a stub.
-    # cmd_compose_gen is implemented in S2.5 — no longer a stub.
-    (cmd_migrate, "S2.2", "cmd_migrate"),
-    (cmd_a2a_card, "S2.4", "cmd_a2a_card"),
-    (cmd_a2a_translate, "S2.4", "cmd_a2a_translate"),
-]
-
-
-@pytest.mark.parametrize(
-    "func,label",
-    [(fn, lbl) for fn, lbl, _ in _STUB_CASES],
-    ids=[name for _, _, name in _STUB_CASES],
-)
-def test_each_subcommand_raises_not_implemented(func: _StubFn, label: str) -> None:
-    """Every stub raises NotImplementedError mentioning the story label."""
-    with pytest.raises(NotImplementedError) as exc_info:
-        func(types.SimpleNamespace())
-    assert label in str(exc_info.value), (
-        f"Expected story label '{label}' in NotImplementedError message, got: {exc_info.value!r}"
-    )
-
+# All CLI sub-commands are now implemented — no more NotImplementedError stubs
+# (cmd_a2a_card and cmd_a2a_translate landed in S2.4).
 
 # ---------------------------------------------------------------------------
 # main() exits non-zero when no sub-command given

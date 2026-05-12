@@ -60,3 +60,6 @@ packages = ["eidolons_ecl"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = [
+  "integration: tests that depend on external repos or worked-example traces (deselected by default)",
+]

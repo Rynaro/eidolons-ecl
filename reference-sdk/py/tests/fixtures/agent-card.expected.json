@@ -1,0 +1,42 @@
+{
+  "description": "Aggregate of the Eidolons team. Each Eidolon is a specialised LLM agent; this card surfaces the team-level entry point. Each individual Eidolon is described in `members`.",
+  "endpoints": [],
+  "members": [
+    {
+      "capability_class": "scout",
+      "description": "ATLAS — Read-only codebase intelligence.",
+      "lateral_consultants": [
+        "forge"
+      ],
+      "methodology_cycle": "A→T→L→A→S",
+      "name": "atlas",
+      "skills": [
+        {
+          "description": "Hand off to spectra",
+          "name": "spectra"
+        }
+      ],
+      "version": "1.5.0"
+    },
+    {
+      "capability_class": "planner",
+      "description": "SPECTRA — Decision-ready specifications.",
+      "lateral_consultants": [
+        "forge"
+      ],
+      "methodology_cycle": "S→P→E→C→T→R→A",
+      "name": "spectra",
+      "skills": [
+        {
+          "description": "Hand off to apivr",
+          "name": "apivr"
+        }
+      ],
+      "version": "4.3.0"
+    }
+  ],
+  "name": "eidolons-aggregate",
+  "organization": "eidolons",
+  "schemaVersion": "1.0",
+  "version": "1.2"
+}
