@@ -24,15 +24,15 @@ from pathlib import Path
 
 MATCH_RULES: list[tuple[str, str, str]] = [
     # Specific report kinds first (more precise patterns first).
-    ("*scout-report*.md",         "atlas",        "scout-report"),
-    ("*completion-report*.md",    "apivr",        "apivr-completion-report"),
-    ("*repair-failed-report*.md", "apivr",        "repair-failed-report"),
-    ("*root-cause-report*.md",    "vigil",        "root-cause-report"),
-    ("*reasoning-report*.md",     "forge",        "reasoning-report"),
-    ("*reasoning-request*.md",    "apivr",        "reasoning-request"),
-    ("*chronicle*.md",            "idg",          "chronicle"),
+    ("*scout-report*.md", "atlas", "scout-report"),
+    ("*completion-report*.md", "apivr", "apivr-completion-report"),
+    ("*repair-failed-report*.md", "apivr", "repair-failed-report"),
+    ("*root-cause-report*.md", "vigil", "root-cause-report"),
+    ("*reasoning-report*.md", "forge", "reasoning-report"),
+    ("*reasoning-request*.md", "apivr", "reasoning-request"),
+    ("*chronicle*.md", "idg", "chronicle"),
     # Broad spec pattern last (catches remaining *.md in .spectra/ dirs).
-    ("*spec*.md",                 "spectra",      "spec"),
+    ("*spec*.md", "spectra", "spec"),
 ]
 
 

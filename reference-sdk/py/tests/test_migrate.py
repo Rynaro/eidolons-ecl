@@ -40,9 +40,7 @@ from eidolons_ecl.migrate.heuristics import classify
 integration = pytest.mark.integration
 
 # Path to the nexus spectra directory (may or may not exist in CI).
-_NEXUS_SPECTRA = pathlib.Path(
-    "/Users/henrique/workspace/oss/agents/eidolons/.spectra"
-)
+_NEXUS_SPECTRA = pathlib.Path("/Users/henrique/workspace/oss/agents/eidolons/.spectra")
 
 # Path to the eidolons-ecl repo root (for running conformance/check.sh).
 _REPO_ROOT = pathlib.Path(__file__).parent.parent.parent.parent
@@ -286,9 +284,7 @@ class TestBackfillHappyPath:
 class TestHeuristicMapping:
     """Envelopes carry the correct from_eidolon / kind from the heuristic."""
 
-    def _entry_for(
-        self, report: MigrationReport, filename: str
-    ) -> None:
+    def _entry_for(self, report: MigrationReport, filename: str) -> None:
         for e in report.entries:
             if e.path.endswith(filename):
                 return e  # type: ignore[return-value]
@@ -374,9 +370,7 @@ class TestSkippedExisting:
             if "already-enveloped" in entry.path:
                 assert entry.status == "skipped_existing"
 
-    def test_pre_existing_sidecar_not_overwritten(
-        self, tmp_path: pathlib.Path
-    ) -> None:
+    def test_pre_existing_sidecar_not_overwritten(self, tmp_path: pathlib.Path) -> None:
         _make_project(tmp_path)
         sidecar = tmp_path / ".spectra" / "already-enveloped.md.envelope.json"
         original = sidecar.read_text(encoding="utf-8")
@@ -451,9 +445,7 @@ class TestDryRun:
 
         # But no new envelopes should exist on disk (only the pre-existing one).
         new_sidecars = [
-            f
-            for f in tmp_path.rglob("*.envelope.json")
-            if "already-enveloped" not in f.name
+            f for f in tmp_path.rglob("*.envelope.json") if "already-enveloped" not in f.name
         ]
         assert len(new_sidecars) == 0
 
@@ -464,9 +456,7 @@ class TestDryRun:
         created_entries = [e for e in report.entries if e.status == "created"]
         assert len(created_entries) >= 1
 
-    def test_dry_run_does_not_prevent_real_run(
-        self, tmp_path: pathlib.Path
-    ) -> None:
+    def test_dry_run_does_not_prevent_real_run(self, tmp_path: pathlib.Path) -> None:
         _make_project(tmp_path)
         backfill_directory(tmp_path, dry_run=True)
         real_report = backfill_directory(tmp_path, dry_run=False)
@@ -610,9 +600,7 @@ def test_nexus_spectra_real_world(tmp_path: pathlib.Path) -> None:
         # Integrity value matches actual file on disk (the copy).
         md_path = project_root / entry.path
         expected_hex = hashlib.sha256(md_path.read_bytes()).hexdigest()
-        assert data["integrity"]["value"] == expected_hex, (
-            f"SHA-256 mismatch for {entry.path}"
-        )
+        assert data["integrity"]["value"] == expected_hex, f"SHA-256 mismatch for {entry.path}"
 
     # Conformance check (best-effort — skip if check.sh unavailable).
     check_sh = _REPO_ROOT / "conformance" / "check.sh"

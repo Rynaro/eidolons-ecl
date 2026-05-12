@@ -36,12 +36,12 @@ from .heuristics import classify
 class MigrationFileEntry:
     """Record of one file's migration outcome."""
 
-    path: str          # relative to root_dir
+    path: str  # relative to root_dir
     status: Literal["created", "skipped_existing", "skipped_unknown"]
-    envelope_path: str | None   # relative to root_dir; None for skipped_unknown
+    envelope_path: str | None  # relative to root_dir; None for skipped_unknown
     from_eidolon: str | None
     kind: str | None
-    reason: str | None          # explanatory text for skipped entries
+    reason: str | None  # explanatory text for skipped entries
 
 
 @dataclass(frozen=True)
@@ -67,7 +67,7 @@ _CONTEXT_DELTA_TOKEN_BUDGET = 4000
 def _mtime_rfc3339(path: Path) -> str:
     """Return the file's modification time as an RFC 3339 UTC timestamp."""
     mtime = path.stat().st_mtime
-    dt = datetime.datetime.fromtimestamp(mtime, tz=datetime.timezone.utc)
+    dt = datetime.datetime.fromtimestamp(mtime, tz=datetime.UTC)
     # Format: 2026-05-09T12:34:56Z  (no sub-second precision needed)
     return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -351,9 +351,7 @@ def render_markdown(report: MigrationReport) -> str:
         for entry in report.entries:
             from_col = entry.from_eidolon or "—"
             kind_col = entry.kind or "—"
-            note_col = entry.reason or (
-                f"→ `{entry.envelope_path}`" if entry.envelope_path else ""
-            )
+            note_col = entry.reason or (f"→ `{entry.envelope_path}`" if entry.envelope_path else "")
             lines.append(
                 f"| `{entry.path}` | {entry.status} | {from_col} | {kind_col} | {note_col} |"
             )
