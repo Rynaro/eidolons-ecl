@@ -1,0 +1,30 @@
+# Dev compose for the ECL Python reference SDK.
+# Bind-mounts the entire eidolons-ecl repo so the SDK can reach the
+# schemas/, contracts/, and spec/ directories at their canonical paths.
+
+services:
+  py-sdk:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: eidolons-ecl-py-sdk-dev:latest
+    container_name: ecl-py-sdk-dev
+    init: true
+    # Bind-mount the entire eidolons-ecl repo (two levels up from this
+    # compose file) so the SDK has access to schemas/, contracts/,
+    # spec/, conformance/, and reference-sdk/bash/ for round-trip tests.
+    volumes:
+      - ../..:/workspace:rw
+      # Persist the uv cache across container restarts so installs
+      # don't redo work on every shell.
+      - ecl-py-sdk-uv-cache:/uv-cache
+    working_dir: /workspace/reference-sdk/py
+    tty: true
+    stdin_open: true
+    # Default to an interactive shell when `compose run` is used without
+    # an explicit command.
+    command: ["bash"]
+
+volumes:
+  ecl-py-sdk-uv-cache:
+    name: ecl-py-sdk-uv-cache

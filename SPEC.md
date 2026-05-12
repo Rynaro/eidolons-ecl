@@ -1,1 +1,1 @@
-spec/ecl-1.1.md
+spec/ecl-1.2.md
