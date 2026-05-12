@@ -35,7 +35,6 @@ import hashlib
 import uuid
 from typing import Any
 
-
 # ---------------------------------------------------------------------------
 # Role → performative mapping (per S2.4 spec)
 # ---------------------------------------------------------------------------
@@ -145,9 +144,7 @@ def translate_a2a_message(
 
     if performative is None:
         performative = "REQUEST"
-        assumptions.append(
-            f"Unknown A2A role {role!r}; defaulted performative to REQUEST."
-        )
+        assumptions.append(f"Unknown A2A role {role!r}; defaulted performative to REQUEST.")
 
     content = _extract_text(message)
 

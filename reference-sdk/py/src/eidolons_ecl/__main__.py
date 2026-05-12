@@ -59,9 +59,8 @@ def cmd_migrate(args: argparse.Namespace) -> int:
 
 
 def cmd_a2a_card(args: argparse.Namespace) -> int:
-    from pathlib import Path
-
     import json
+    from pathlib import Path
 
     from .a2a_bridge import emit_agent_card
 
@@ -79,9 +78,8 @@ def cmd_a2a_card(args: argparse.Namespace) -> int:
 
 
 def cmd_a2a_translate(args: argparse.Namespace) -> int:
-    from pathlib import Path
-
     import json
+    from pathlib import Path
 
     from .a2a_bridge import translate_a2a_message
 

@@ -38,7 +38,7 @@ def _parse_roster(roster_path: pathlib.Path) -> dict[str, Any]:
     raw: Any = yaml.safe_load(roster_path.read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
         raise ValueError(f"Roster is not a YAML mapping: {roster_path}")
-    return raw  # type: ignore[return-value]
+    return raw
 
 
 def _member_card(entry: dict[str, Any]) -> dict[str, object]:
@@ -62,8 +62,7 @@ def _member_card(entry: dict[str, Any]) -> dict[str, object]:
     lateral: list[Any] = handoffs.get("lateral") or []
 
     skills: list[dict[str, str]] = [
-        {"description": f"Hand off to {dst}", "name": str(dst)}
-        for dst in downstream
+        {"description": f"Hand off to {dst}", "name": str(dst)} for dst in downstream
     ]
 
     return {
@@ -115,9 +114,7 @@ def emit_agent_card(
     roster = _parse_roster(roster_path)
     eidolons: list[Any] = roster.get("eidolons") or []
 
-    members: list[dict[str, object]] = [
-        _member_card(e) for e in eidolons if isinstance(e, dict)
-    ]
+    members: list[dict[str, object]] = [_member_card(e) for e in eidolons if isinstance(e, dict)]
 
     return {
         "description": (

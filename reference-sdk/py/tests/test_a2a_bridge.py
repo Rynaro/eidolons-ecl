@@ -117,9 +117,7 @@ class TestEmitAgentCard:
         assert len(spectra["skills"]) == 1
         assert spectra["skills"][0]["name"] == "apivr"
 
-    def test_description_contains_display_name_and_summary(
-        self, tmp_path: pathlib.Path
-    ) -> None:
+    def test_description_contains_display_name_and_summary(self, tmp_path: pathlib.Path) -> None:
         roster_path = _write_synthetic_roster(tmp_path)
         card = emit_agent_card(roster_path)
         members = card["members"]
@@ -137,15 +135,12 @@ class TestEmitAgentCard:
         rendered2 = json.dumps(card2, sort_keys=True, indent=2)
         assert rendered1 == rendered2
 
-    def test_missing_roster_returns_error_via_cli(
-        self, tmp_path: pathlib.Path
-    ) -> None:
+    def test_missing_roster_returns_error_via_cli(self, tmp_path: pathlib.Path) -> None:
         """CLI: non-existent roster file → exit code 1, no crash."""
-        import sys
-
-        from eidolons_ecl.__main__ import cmd_a2a_card
 
         import types
+
+        from eidolons_ecl.__main__ import cmd_a2a_card
 
         ns = types.SimpleNamespace(
             roster=str(tmp_path / "nonexistent.yaml"),
@@ -357,21 +352,21 @@ class TestTranslateA2aMessage:
         assert envelope["performative"] == "REQUEST"
         integrity = envelope["integrity"]
         assert isinstance(integrity, dict)
-        expected_hash = _sha256_of(
-            "Please review this code change for ATLAS scout-report quality."
-        )
+        expected_hash = _sha256_of("Please review this code change for ATLAS scout-report quality.")
         assert integrity["value"] == expected_hash
 
     @integration
     def test_integration_conformance_round_trip(self, tmp_path: pathlib.Path) -> None:
         """Integration: translate → write files → bash conformance/check.sh → exit 0.
 
-        The conformance checker resolves artifact.path relative to the envelope
-        directory.  We write:
-          - <tmp_path>/a2a-message.txt   — inline content (the artifact)
-          - <tmp_path>/test.envelope.json — the ECL envelope
-
-        Then run bash conformance/check.sh <envelope_path> and assert exit 0.
+        A2A bridge envelopes carry `from.eidolon = "a2a-external"` — an edge that
+        is NOT enumerated in the repo's ``contracts/`` directory by design
+        (external sources require deliberate per-deployment edge declaration).
+        For a clean conformance round-trip we provision a synthetic
+        ``a2a-external-to-atlas.yaml`` contract in ``tmp_path/contracts/`` and
+        point the checker at it via ``--contracts``.  This proves the
+        translator's structural correctness end-to-end without polluting the
+        repo's authoritative contract set.
         """
         if not _CONFORMANCE_CHECK.is_file():
             pytest.skip(f"conformance/check.sh not found at {_CONFORMANCE_CHECK}")
@@ -410,8 +405,35 @@ class TestTranslateA2aMessage:
             encoding="utf-8",
         )
 
+        # Provision a synthetic contracts dir with the a2a-external→atlas edge.
+        contracts_dir = tmp_path / "contracts"
+        contracts_dir.mkdir()
+        (contracts_dir / "a2a-external-to-atlas.yaml").write_text(
+            "contract_version: '1.0'\n"
+            "from: a2a-external\n"
+            "to: atlas\n"
+            "edge_origin: implicit\n"
+            "performatives_allowed: [REQUEST, PROPOSE, INFORM]\n"
+            "artifacts:\n"
+            "  - kind: a2a-message\n"
+            "trust_level: low\n"
+            "context_delta:\n"
+            "  token_budget_max: 4000\n"
+            "notes: |\n"
+            "  Synthetic contract for the A2A bridge integration test. Real\n"
+            "  deployments enumerate the actual edges they expose externally.\n",
+            encoding="utf-8",
+        )
+
         result = subprocess.run(
-            ["bash", str(_CONFORMANCE_CHECK), str(envelope_file), "--level=MUST"],
+            [
+                "bash",
+                str(_CONFORMANCE_CHECK),
+                str(envelope_file),
+                "--contracts",
+                str(contracts_dir),
+                "--level=MUST",
+            ],
             capture_output=True,
             text=True,
         )
