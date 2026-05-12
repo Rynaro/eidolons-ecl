@@ -64,7 +64,7 @@ The full gate list at v1.0:
 |---|---|---|
 | E-1 | MUST | envelope is valid JSON |
 | E-2 | MUST | required §1.1 fields are present |
-| E-3 | MUST | `envelope_version` matches `^1\.[01](\.\d+)?$` (v1.0 and v1.1 envelopes accepted) |
+| E-3 | MUST | `envelope_version` matches `^1\.[012](\.\d+)?$` (v1.0, v1.1, v1.2 envelopes accepted) |
 | E-4 | MUST | `performative` is one of the ten enumerated values |
 | E-5 | MUST | `from.eidolon` and `to.eidolon` match the slug pattern |
 | E-6 | MUST | `artifact.path` is relative and contains no `..` |

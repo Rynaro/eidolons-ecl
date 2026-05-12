@@ -6,6 +6,59 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-05-12 — Phase 2.A: Python tier + eval framework + composition generator
+
+### Added
+- `reference-sdk/py/` — Python reference SDK tier per `docs/tech-choice.md`
+  Phase 0 multi-language commitment. Containerised dev (Docker
+  `python:3.12-slim` + hatch + uv + pytest + ruff + mypy strict).
+- `reference-sdk/py/src/eidolons_ecl/eval/` — evaluation framework
+  computing four KPI families over `.eidolons/.trace/*.jsonl` files
+  (Story S2.1):
+  - Coordination quality (decisions/refuse/escalate rates → good/warn/poor)
+  - Topology efficacy (chain / star / graph / degenerate classifier)
+  - Competition resilience (CRITIQUE fraction → low/moderate/strong)
+  - Plan-execution divergence (SPECTRA→APIVR ratio → aligned/divergent/n/a)
+- `reference-sdk/py/src/eidolons_ecl/compose_gen/` — generator that
+  regenerates `methodology/composition.md` from `contracts/*.yaml`
+  via a Jinja2 template. Deterministic output for fixed input set
+  (Story S2.5).
+- `spec/ecl-1.2.md` — successor to `spec/ecl-1.1.md`. v1.0 and v1.1
+  envelopes remain conformant under v1.2 (§1.1.1 regex relaxed to
+  `^1\.[012](\.\d+)?$`). v1.0 and v1.1 archives stay in-tree per §7.3.
+- `eidolons-ecl` CLI: `eval`, `compose-gen` subcommands implemented.
+  `migrate`, `a2a-card`, `a2a-translate` remain stubs (Phase 2.B).
+- Vendor distribution: `python -m zipapp` builds
+  `dist/eidolons-ecl-sdk.bundle.pyz` (29 KB) alongside the wheel.
+
+### Changed
+- `ECL_VERSION` file: `1.1` → `1.2`.
+- `SPEC.md` symlink: `spec/ecl-1.1.md` → `spec/ecl-1.2.md`.
+- `.github/workflows/release.yml` — release asset list includes
+  `spec/ecl-1.2.md` (plus v1.1 and v1.0 archives).
+- `.github/workflows/conformance.yml` — SPEC.md symlink check updated
+  to expect `spec/ecl-1.2.md`.
+- `conformance/README.md` — E-3 regex documentation updated to reflect
+  the v1.2 expansion.
+- README.md — "Latest stable" pointer + Reference SDK tier list now
+  enumerates bash + TypeScript + Python.
+
+### Notes
+- **Backward compatible** — v1.0, v1.1, v1.2 envelopes all valid under
+  v1.2 conformance. No schema $id bumps (per SPECTRA decision D-P2-2:
+  schema $ids stay at v1.0.0 until first additive schema field lands
+  in v2.0 / Phase 2.C).
+- **Cross-repo follow-up (deferred):** `Rynaro/eidolons` will gain a
+  `.github/workflows/composition-drift.yml` workflow + a regenerated
+  `methodology/composition.md` once v1.2.0 is tagged + released, so
+  the workflow can pin to the released `.pyz` SHA. This lands as a
+  separate PR against the nexus.
+- **Phase 2.B (next, v1.2.1):** S2.2 migration tool + S2.4 A2A bridge.
+- **Phase 2.C (final, v2.0.0):** S2.3 ISE-style trust hierarchy fields
+  (schema $id bump trigger; closes drift candidate DC-1).
+
+[1.2.0]: https://github.com/Rynaro/eidolons-ecl/releases/tag/v1.2.0
+
 ## [1.1.0] — 2026-05-12 — HMAC promotion + threat model + drift register seed
 
 ### Added
