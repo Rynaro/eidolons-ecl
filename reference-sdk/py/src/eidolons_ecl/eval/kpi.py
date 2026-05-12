@@ -285,9 +285,7 @@ def _topology(events: list[dict[str, object]]) -> TopologyKpis:
         )
 
     # Chain: every node has in-degree ≤ 1 AND out-degree ≤ 1.
-    is_chain = all(d <= 1 for d in in_degree.values()) and all(
-        d <= 1 for d in out_degree.values()
-    )
+    is_chain = all(d <= 1 for d in in_degree.values()) and all(d <= 1 for d in out_degree.values())
 
     if is_chain:
         return TopologyKpis(
@@ -414,9 +412,7 @@ def _plan_exec(events: list[dict[str, object]]) -> PlanExecKpis:
         )
 
     ratio = apivr_escalate_count / spectra_propose_count
-    verdict: Literal["aligned", "divergent", "n/a"] = (
-        "divergent" if ratio >= 0.50 else "aligned"
-    )
+    verdict: Literal["aligned", "divergent", "n/a"] = "divergent" if ratio >= 0.50 else "aligned"
 
     return PlanExecKpis(
         spectra_propose_count=spectra_propose_count,
@@ -426,9 +422,7 @@ def _plan_exec(events: list[dict[str, object]]) -> PlanExecKpis:
     )
 
 
-def _report_for_thread(
-    thread_id: str, events: list[dict[str, object]]
-) -> KpiReport:
+def _report_for_thread(thread_id: str, events: list[dict[str, object]]) -> KpiReport:
     """Build a full KpiReport from a list of parsed trace events for one thread."""
     emit_events = [e for e in events if e.get("event") == "emit"]
     envelope_count = len(emit_events)

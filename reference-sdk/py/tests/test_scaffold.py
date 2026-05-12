@@ -19,7 +19,6 @@ from eidolons_ecl import ECL_VERSION_TARGET, EclError
 from eidolons_ecl.__main__ import (
     cmd_a2a_card,
     cmd_a2a_translate,
-    cmd_compose_gen,
     cmd_migrate,
     main,
 )
@@ -96,10 +95,10 @@ def test_subcommands_registered() -> None:
 
 _STUB_CASES: list[tuple[_StubFn, str, str]] = [
     # cmd_eval is implemented in S2.1 — no longer a stub.
+    # cmd_compose_gen is implemented in S2.5 — no longer a stub.
     (cmd_migrate, "S2.2", "cmd_migrate"),
     (cmd_a2a_card, "S2.4", "cmd_a2a_card"),
     (cmd_a2a_translate, "S2.4", "cmd_a2a_translate"),
-    (cmd_compose_gen, "S2.5", "cmd_compose_gen"),
 ]
 
 

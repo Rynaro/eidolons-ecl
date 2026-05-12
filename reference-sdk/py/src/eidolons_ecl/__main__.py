@@ -51,7 +51,24 @@ def cmd_a2a_translate(args: argparse.Namespace) -> int:
 
 
 def cmd_compose_gen(args: argparse.Namespace) -> int:
-    raise NotImplementedError("Story S2.5 not landed")
+    from pathlib import Path
+
+    from .compose_gen import render_composition
+
+    contracts_dir = Path(args.contracts)
+    template_path = Path(args.template)
+    if not contracts_dir.is_dir():
+        print(f"contracts dir not found: {contracts_dir}", file=sys.stderr)
+        return 1
+    if not template_path.is_file():
+        print(f"template not found: {template_path}", file=sys.stderr)
+        return 1
+    rendered = render_composition(contracts_dir, template_path)
+    if args.out:
+        Path(args.out).write_text(rendered, encoding="utf-8")
+    else:
+        print(rendered, end="")
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -94,7 +111,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     compose_p.add_argument("--contracts", required=True)
     compose_p.add_argument("--template", required=True)
-    compose_p.add_argument("--out", required=True)
+    compose_p.add_argument("--out")
     compose_p.set_defaults(func=cmd_compose_gen)
 
     args = parser.parse_args(argv)
