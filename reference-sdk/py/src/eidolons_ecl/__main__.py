@@ -39,7 +39,23 @@ def cmd_eval(args: argparse.Namespace) -> int:
 
 
 def cmd_migrate(args: argparse.Namespace) -> int:
-    raise NotImplementedError("Story S2.2 (Phase 2.B) not landed")
+    from pathlib import Path
+
+    from .migrate import backfill_directory
+    from .migrate.backfill import render_markdown
+
+    root = Path(args.root)
+    if not root.is_dir():
+        print(f"root dir not found: {root}", file=sys.stderr)
+        return 1
+    report = backfill_directory(root, dry_run=args.dry_run)
+    print(f"scanned: {report.scanned_count}")
+    print(f"created: {report.created_count}")
+    print(f"skipped_existing: {report.skipped_existing_count}")
+    print(f"skipped_unknown: {report.skipped_unknown_count}")
+    if args.report:
+        Path(args.report).write_text(render_markdown(report), encoding="utf-8")
+    return 0
 
 
 def cmd_a2a_card(args: argparse.Namespace) -> int:
@@ -91,6 +107,8 @@ def main(argv: list[str] | None = None) -> int:
     # migrate — S2.2 (Phase 2.B)
     migrate_p = sub.add_parser("migrate", help="back-fill envelopes for legacy artefacts")
     migrate_p.add_argument("--root", required=True)
+    migrate_p.add_argument("--dry-run", action="store_true", default=False)
+    migrate_p.add_argument("--report", default=None, help="write Markdown report to this path")
     migrate_p.set_defaults(func=cmd_migrate)
 
     # a2a-card — S2.4 (Phase 2.B)
