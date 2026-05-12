@@ -125,3 +125,75 @@ For edges enumerated in `contracts/README.md` as deferred (lateral
 consultations to/from FORGE for atlas/spectra/idg), follow the template
 listed there. Each is a near-copy of the representative contracts
 already shipped (`apivr-to-forge.yaml`, `forge-to-apivr.yaml`).
+
+## v1.2.1 — Tooling: `eidolons-ecl migrate`
+
+> **Scope note.** The sections above describe a *contract-level*
+> migration (prose composition table → YAML contracts in
+> `contracts/`). This subsection covers a different, complementary
+> migration concern: back-filling *envelope sidecars* for legacy
+> artefacts (`.spectra/*.md`, `.atlas-scout/*.md`, root-level `*.md`)
+> that pre-date ECL adoption. Both migrations are one-time; neither
+> blocks the other.
+
+ECL v1.2.1 ships an `eidolons-ecl migrate` CLI sub-command backed by
+`reference-sdk/py/src/eidolons_ecl/migrate/` (Story S2.2).
+
+Invocation:
+
+```bash
+eidolons-ecl migrate --root <project-root> [--dry-run] [--report <out.md>]
+```
+
+### Inputs
+
+- A project root directory. The tool scans:
+  - `<root>/.spectra/` recursively
+  - `<root>/.atlas-scout/` recursively
+  - `<root>/*.md` (top-level only, non-recursive)
+- Filename-pattern heuristics classify each candidate into a
+  `(from_eidolon, artifact_kind)` pair. Patterns are tested in order;
+  first match wins (`*scout-report*`, `*completion-report*`,
+  `*repair-failed-report*`, `*root-cause-report*`,
+  `*reasoning-report*`, `*reasoning-request*`, `*chronicle*`,
+  `*spec*`). Files inside `.spectra/` that match no glob fall back to
+  `(spectra, spec)`; files inside `.atlas-scout/` fall back to
+  `(atlas, scout-report)`. Unmatched files are skipped with
+  `status="skipped_unknown"`.
+
+### Outputs
+
+- For each classified artefact `path/to/file.md`, a conformant v1.0
+  ECL envelope is written to
+  `path/to/file.md.envelope.json` (sidecar). Defaults:
+  `performative = INFORM`, `to.eidolon = "orchestrator"`,
+  `trust_level = "standard"`, `edge_origin = "implicit"`,
+  `integrity.method = "sha256"` over file bytes,
+  `confidence = 0.5`, with an entry in `assumptions[]` recording the
+  back-fill provenance.
+- If `--report <out.md>` is supplied, a Markdown migration report is
+  written summarising scanned / created / skipped (existing) /
+  skipped (unknown) counts and per-file outcomes. The renderer is
+  deterministic (no timestamps, no random values), so the report
+  diffs cleanly on re-runs.
+
+### Idempotence
+
+A second run on the same tree produces `created_count == 0`. Pre-
+existing `*.envelope.json` sidecars are never overwritten — the
+entry is marked `status="skipped_existing"`. Pass `--dry-run` to
+populate the report without touching the filesystem.
+
+### Gates
+
+Back-filled envelopes target ECL v1.0 (the lowest-common-denominator
+shape) so they pass the full conformance gate set under v1.0, v1.1,
+and v1.2 without modification. The `integrity.value` field is the
+SHA-256 of the artefact bytes on disk, so the I-1 / I-2 integrity
+gates resolve directly against the source file. Operators SHOULD run
+`conformance/check.sh` against any tree they back-fill to confirm
+the gate set passes.
+
+Sources: `reference-sdk/py/src/eidolons_ecl/migrate/backfill.py`,
+`reference-sdk/py/src/eidolons_ecl/migrate/heuristics.py`,
+`reference-sdk/py/tests/test_migrate.py`, S2.2 spec session.
