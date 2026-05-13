@@ -1,7 +1,8 @@
 # Conformance checker
 
-Standalone bash 3.2 conformance checker for ECL v1.0. No runtime
-dependency on the nexus or any Eidolon repo.
+Standalone bash 3.2 conformance checker for ECL v2.0 (also accepts v1.x envelopes
+per the §7.3 12-month compatibility window). No runtime dependency on the nexus or
+any Eidolon repo.
 
 ## Hard requirements
 
@@ -57,14 +58,16 @@ Gates are namespaced by §:
 | `I-` | §6 (Integrity) | `lib/integrity.sh` |
 | `C-` | §3 (Contracts) | `lib/handoff-graph.sh` |
 | `D-` | §4 (Context-delta) | `lib/context-budget.sh` |
+| `S-` | §6.5 (ISE trust hierarchy) | `lib/ise.sh` |
 
-The full gate list at v1.0:
+The full gate list at v2.0:
 
 | Gate | Level | Asserts |
 |---|---|---|
 | E-1 | MUST | envelope is valid JSON |
 | E-2 | MUST | required §1.1 fields are present |
-| E-3 | MUST | `envelope_version` matches `^1\.[012](\.\d+)?$` (v1.0, v1.1, v1.2 envelopes accepted) |
+| E-3 | MUST | `envelope_version` matches `^(1\.[012]\|2\.0)(\.\d+)?$` (v1.0–v1.2 + v2.0 accepted; fixes latent v1.1/v1.2 rejection bug) |
+| E-3.compat | INFO | v1.x envelope accepted under v2.0 verifier (§7.3 window through 2027-05-13) |
 | E-4 | MUST | `performative` is one of the ten enumerated values |
 | E-5 | MUST | `from.eidolon` and `to.eidolon` match the slug pattern |
 | E-6 | MUST | `artifact.path` is relative and contains no `..` |
@@ -74,7 +77,7 @@ The full gate list at v1.0:
 | I-2 | MUST | payload is resolvable and readable |
 | I-3 | MUST | recomputed digest matches `integrity.value` |
 | I-4 | SHOULD | `artifact.size_bytes` matches actual file size |
-| I-5 | SHOULD | warn when `trust_level=high` AND `integrity.method=sha256` — RECOMMENDED `hmac-sha256` (ECL v1.1 §6.2.6 / §6.4) |
+| I-5 | SHOULD | warn when `trust_level=high` AND `integrity.method=sha256` — RECOMMENDED `hmac-sha256` (ECL v2.0 §6.2.6 / §6.4). [PROMOTION-CANDIDATE: MUST at v2.1] |
 | C-1 | MUST | a contract exists for the (`from`, `to`) edge |
 | C-2 | MUST | `performative` is in `contract.performatives_allowed` |
 | C-3 | MUST | `artifact.kind` is in `contract.artifacts[*].kind` |
@@ -83,6 +86,9 @@ The full gate list at v1.0:
 | D-1 | MUST | `tokens_used ≤ token_budget` |
 | D-2 | MUST | `tokens_used ≤ contract.context_delta.token_budget_max` |
 | D-3 | SHOULD | summary length under 200 tokens (heuristic chars/4) |
+| S-1 | MUST | if `ise` present, `ise.assertion_grade` is present and is a valid enum value |
+| S-2 | MUST | if `ise.receiver_authorization` present, field values are valid booleans |
+| S-3 | SHOULD | warn when `trust_level=high` AND `ise` absent — see §6.5.5. [PROMOTION-CANDIDATE: MUST at v2.1] |
 
 ## Running the test suite
 
@@ -92,7 +98,13 @@ bats conformance/tests/conformance.bats
 
 Fixtures under `tests/fixtures/`:
 
+v1.x fixtures (retained per §7.3 compatibility window):
 - `conformant-handoff/` — passes all gates (exit 0)
 - `missing-integrity/` — fails I-3 (exit 2)
 - `undeclared-edge/` — fails C-1 (exit 2)
 - `over-budget-context/` — fails D-1 + D-2 (exit 2)
+
+v2.0 fixtures:
+- `conformant-ise-v2/` — v2.0 envelope with full ISE block; passes all gates (exit 0)
+- `ise-missing-hierarchy/` — v2.0 envelope with `ise` but missing `assertion_grade`; fails S-1 (exit 2)
+- `v1-on-v2-compat/` — v1.2 envelope under v2.0 verifier; passes E-3, emits E-3.compat INFO (exit 0)

@@ -22,7 +22,7 @@
 #                           from <consumer>/ECL_VERSION; fall back to 1.0.
 #   -h, --help              Print this help and exit 0.
 #
-# Exit codes (ECL v1.0 §7):
+# Exit codes (ECL v2.0 §7):
 #   0  Passes all MUSTs at the declared ECL_VERSION.
 #   1  Generic failure (missing dir, unreadable files, bad usage).
 #   2  Fails one or more MUSTs.
@@ -36,7 +36,7 @@
 set -u
 # We deliberately do not `set -e`; we want to collect every check.
 
-VERSION="1.0.0"
+VERSION="2.0.0"
 
 # -- option parsing --------------------------------------------------------- #
 
@@ -128,14 +128,16 @@ if [ -z "$TARGET_VERSION" ]; then
 fi
 
 if [ -z "$TARGET_VERSION" ]; then
-  TARGET_VERSION="1.0"
+  TARGET_VERSION="2.0"
 fi
 
 case "$TARGET_VERSION" in
   1.0|1.0.*|1)   : "v1.0 baseline" ;;
-  1.*)           : "future 1.x; running v1.0 gates" ;;
+  1.*)           : "v1.x; running v1.x gates" ;;
+  2.0|2.0.*|2)   : "v2.0; running v2.0 gates including ISE" ;;
+  2.*)           : "future 2.x; running v2.0 gates" ;;
   *)
-    echo "Unsupported --target-version: $TARGET_VERSION (this checker knows 1.x)" >&2
+    echo "Unsupported --target-version: $TARGET_VERSION (this checker knows 1.x and 2.0)" >&2
     exit 1
     ;;
 esac
@@ -176,6 +178,8 @@ fi
 . "$LIB_DIR/handoff-graph.sh"
 # shellcheck source=lib/context-budget.sh
 . "$LIB_DIR/context-budget.sh"
+# shellcheck source=lib/ise.sh
+. "$LIB_DIR/ise.sh"
 
 # -- collect envelopes ----------------------------------------------------- #
 
@@ -210,6 +214,7 @@ while [ "$i" -lt "$n_env" ]; do
   ecl_check_integrity        "$env_path"
   ecl_check_handoff_graph    "$env_path" "$CONTRACTS_DIR"
   ecl_check_context_budget   "$env_path" "$CONTRACTS_DIR"
+  ecl_check_ise              "$env_path"
   i=$((i + 1))
 done
 
