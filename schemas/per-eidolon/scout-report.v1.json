@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v1.0.0/schemas/per-eidolon/scout-report.v1.json",
+  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v2.0.0/schemas/per-eidolon/scout-report.v1.json",
   "title": "ECL scout-report profile v1",
   "description": "ATLAS-emitted scout report, wrapped by an ECL envelope. Validates the YAML frontmatter only; body structure is owned by ATLAS's own schema in the ATLAS repo.",
   "allOf": [

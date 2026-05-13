@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v1.0.0/schemas/handoff-event.v1.json",
+  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v2.0.0/schemas/handoff-event.v1.json",
   "title": "ECL handoff-event v1",
   "description": "One trace event line in .eidolons/.trace/<thread_id>.jsonl. Defined by ECL v1.0 §5.",
   "type": "object",

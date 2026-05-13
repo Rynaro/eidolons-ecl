@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v1.0.0/schemas/handoff-contract.v1.json",
+  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v2.0.0/schemas/handoff-contract.v1.json",
   "title": "ECL handoff-contract v1",
   "description": "One YAML record per directed edge in the Eidolons hand-off graph. Defined by ECL v1.0 §3.",
   "type": "object",

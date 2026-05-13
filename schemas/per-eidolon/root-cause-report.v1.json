@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v1.0.0/schemas/per-eidolon/root-cause-report.v1.json",
+  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v2.0.0/schemas/per-eidolon/root-cause-report.v1.json",
   "title": "ECL root-cause-report profile v1",
   "description": "VIGIL emit after V→I→G→I→L cycle; consumed by APIVR-Δ (or SPECTRA/IDG for systemic findings).",
   "allOf": [

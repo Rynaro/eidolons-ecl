@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v1.0.0/schemas/per-eidolon/repair-failed-report.v1.json",
+  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v2.0.0/schemas/per-eidolon/repair-failed-report.v1.json",
   "title": "ECL repair-failed-report profile v1",
   "description": "APIVR-Δ emit on the 3-failure threshold; consumed by VIGIL.",
   "allOf": [
