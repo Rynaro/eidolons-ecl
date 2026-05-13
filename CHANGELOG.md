@@ -6,6 +6,42 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Six new contract files under `contracts/` enumerating every
+  `human → <eidolon>` edge for the shipped roster:
+  - `human-to-atlas.yaml`, `human-to-spectra.yaml`, `human-to-apivr.yaml`,
+    `human-to-idg.yaml`, `human-to-forge.yaml`, `human-to-vigil.yaml`.
+  - Allowed human-origin performatives: `REQUEST`, `INFORM`,
+    `CRITIQUE`, `REFUSE`, `ACKNOWLEDGE`, `ESCALATE`.
+  - Forbidden (enforced by absence from `performatives_allowed`):
+    `PROPOSE`, `DECIDE`, `DELEGATE`, `RESUME`. Per-performative
+    rationale is recorded in each contract's `notes:` field and in
+    Junction spec §5.7 (`human-to-atlas.yaml` carries the canonical
+    rationale; the other five reference it).
+  - `artifacts[0].kind: prompt`, `schema_ref:
+    ../schemas/per-eidolon/_base-profile.v1.json` — the base profile
+    is reused as the body shape; consumers may extend with a
+    `prompt.v1.json` profile in a later additive PR if needed.
+- `contracts/README.md` — new "Human-origin edges (additive)" section
+  enumerates the six files alongside the existing v1.0 / v1.0.1
+  tables.
+
+### Notes
+
+- **Backward compatible** — pure additive patch. No schema changes,
+  no envelope-format changes, no changes to existing 18 contracts.
+  `ECL_VERSION` stays at `2.0` (the version file declares
+  `MAJOR.MINOR`).
+- Unblocks Junction's release gate G-S9 (human-edge contracts upstream)
+  per the harness spec at `eidolons/.spectra/plans/2026-05-13-ecl-harness.md`.
+  Once these contracts ship, Junction drops its vendored
+  `internal/contracts/human-to-*.yaml` copies and reads from this
+  upstream.
+- All 24 contracts validate against `schemas/handoff-contract.v1.json`;
+  bats conformance suite (24 tests) green; both worked-example chains
+  green.
+
 ## [2.0.0] — 2026-05-13 — Phase 2.C: ISE trust-hierarchy, v2.0 MAJOR
 
 ### Added

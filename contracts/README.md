@@ -45,6 +45,27 @@ consultation trigger.
 | `forge-to-idg.yaml`      | forge    | idg | roster | forge-to-apivr.yaml |
 | `forge-to-vigil.yaml`    | forge    | vigil | roster | forge-to-apivr.yaml |
 
+## Human-origin edges (additive)
+
+Six contracts enumerating the `human → <eidolon>` edges for every
+shipped Eidolon. Authored to support Junction's F-HUMAN-EDGE (Junction
+spec §5.7); additive YAML, no ECL spec-version bump.
+
+| File | From | To | Edge origin | Primary artefact |
+|---|---|---|---|---|
+| `human-to-atlas.yaml`   | human | atlas   | roster | prompt |
+| `human-to-spectra.yaml` | human | spectra | roster | prompt |
+| `human-to-apivr.yaml`   | human | apivr   | roster | prompt |
+| `human-to-idg.yaml`     | human | idg     | roster | prompt |
+| `human-to-forge.yaml`   | human | forge   | roster | prompt |
+| `human-to-vigil.yaml`   | human | vigil   | roster | prompt |
+
+Allowed human-origin performatives: `REQUEST`, `INFORM`, `CRITIQUE`,
+`REFUSE`, `ACKNOWLEDGE`, `ESCALATE`. Forbidden (enforced by absence
+from `performatives_allowed`): `PROPOSE`, `DECIDE`, `DELEGATE`,
+`RESUME`. Rationale per performative is captured in each contract's
+`notes:` field and in Junction spec §5.7.
+
 ## Edges deferred to later v1.0.x patch releases
 
 Edges declared in `roster/index.yaml` but not yet exercised; emission on

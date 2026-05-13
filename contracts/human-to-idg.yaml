@@ -1,0 +1,29 @@
+contract_version: "1.0"
+from: human
+to: idg
+edge_origin: roster
+performatives_allowed:
+  - REQUEST
+  - INFORM
+  - CRITIQUE
+  - REFUSE
+  - ACKNOWLEDGE
+  - ESCALATE
+artifacts:
+  - kind: prompt
+    schema_ref: ../schemas/per-eidolon/_base-profile.v1.json
+    evidence_anchor_required: false
+context_delta:
+  token_budget_max: 4000
+  required_handles: []
+trust_level: standard
+notes: >
+  Human-origin edge into IDG. The originator may REQUEST IDG to
+  chronicle a session's artefacts and decisions, INFORM it with
+  additional context (a missing rationale, a corrected attribution),
+  CRITIQUE a prior chronicle for revision, REFUSE a proposed chronicle,
+  ACKNOWLEDGE a finalised chronicle, or ESCALATE a blocker outside the
+  current chain. Human originators MUST NOT emit PROPOSE, DECIDE,
+  DELEGATE, or RESUME — see human-to-atlas.yaml for per-performative
+  rationale (Junction spec §5.7). Authored to support Junction's
+  F-HUMAN-EDGE; additive to ECL v1.0 with no spec-version bump.
