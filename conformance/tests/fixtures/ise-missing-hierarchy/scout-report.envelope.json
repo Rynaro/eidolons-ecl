@@ -1,0 +1,41 @@
+{
+  "envelope_version": "2.0",
+  "message_id": "01942c7f-2b3c-7e04-9c5d-3ef2c9d4f8b3",
+  "thread_id":  "01942c7f-2b3c-7e04-9c5d-3ef2c9d4f8b3",
+  "parent_id":  null,
+  "from": { "eidolon": "atlas",   "version": "1.4.2"  },
+  "to":   { "eidolon": "spectra", "version": "4.2.11" },
+  "performative": "PROPOSE",
+  "edge_origin": "roster",
+  "objective": "Fixture: ise block present but assertion_grade absent — fails S-1.",
+  "artifact": {
+    "kind": "scout-report",
+    "schema_version": "2.0",
+    "path": "scout-report.md",
+    "sha256": "ed673346ae8d6a943943fc95400e2ecb14928050898068e13d5f24ba2bec68fc",
+    "size_bytes": 750
+  },
+  "context_delta": {
+    "token_budget": 4000,
+    "tokens_used": 50,
+    "input_handles": [],
+    "summary": "S-1 failure fixture: ise without assertion_grade."
+  },
+  "constraints": { "trust_level": "standard" },
+  "ise": {
+    "provenance": {
+      "methodology_version": "spectra-4.3.1"
+    }
+  },
+  "confidence": 0.5,
+  "integrity": {
+    "method": "sha256",
+    "value": "ed673346ae8d6a943943fc95400e2ecb14928050898068e13d5f24ba2bec68fc"
+  },
+  "trace": {
+    "ts": "2026-05-13T10:01:00Z",
+    "host": "claude-code",
+    "model": "claude-sonnet-4-6",
+    "tier": "standard"
+  }
+}

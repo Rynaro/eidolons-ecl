@@ -1,0 +1,51 @@
+{
+  "envelope_version": "2.0",
+  "message_id": "01942c7f-1a2b-7e04-9c5d-2df1b8c3e7a2",
+  "thread_id":  "01942c7f-1a2b-7e04-9c5d-2df1b8c3e7a2",
+  "parent_id":  null,
+  "from": { "eidolon": "atlas",   "version": "1.4.2"  },
+  "to":   { "eidolon": "spectra", "version": "4.2.11" },
+  "performative": "PROPOSE",
+  "edge_origin": "roster",
+  "objective": "Hand off scout-report on ECL v2.0 ISE trust-hierarchy integration.",
+  "artifact": {
+    "kind": "scout-report",
+    "schema_version": "2.0",
+    "path": "scout-report.md",
+    "sha256": "d101ebe7ae0bf0bed61e9affffc716b7c65c2657f5dcfa1454475164bf0b98ff",
+    "size_bytes": 801
+  },
+  "context_delta": {
+    "token_budget": 4000,
+    "tokens_used": 210,
+    "input_handles": ["mission.md"],
+    "summary": "ISE block OPTIONAL at v2.0; §6.5.5 SHOULD include when trust_level=high."
+  },
+  "constraints": { "trust_level": "standard" },
+  "ise": {
+    "assertion_grade": "validated",
+    "provenance": {
+      "methodology_version": "spectra-4.3.1",
+      "tool_surface": ["Read", "Bash"],
+      "lateral_consults": [
+        { "eidolon": "forge", "performative": "REQUEST" }
+      ]
+    },
+    "receiver_authorization": {
+      "auto_route": true,
+      "auto_merge": false,
+      "auto_deploy": false
+    }
+  },
+  "confidence": 0.95,
+  "integrity": {
+    "method": "sha256",
+    "value": "d101ebe7ae0bf0bed61e9affffc716b7c65c2657f5dcfa1454475164bf0b98ff"
+  },
+  "trace": {
+    "ts": "2026-05-13T10:00:00Z",
+    "host": "claude-code",
+    "model": "claude-sonnet-4-6",
+    "tier": "standard"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "envelope_version": "1.2",
+  "message_id": "01942c7f-3c4d-7e04-9c5d-4fg3daE5g9c4",
+  "thread_id":  "01942c7f-3c4d-7e04-9c5d-4fg3daE5g9c4",
+  "parent_id":  null,
+  "from": { "eidolon": "atlas",   "version": "1.4.2"  },
+  "to":   { "eidolon": "spectra", "version": "4.2.11" },
+  "performative": "PROPOSE",
+  "edge_origin": "roster",
+  "objective": "v1.2 envelope accepted under v2.0 verifier per §7.3 compat window.",
+  "artifact": {
+    "kind": "scout-report",
+    "schema_version": "1.2",
+    "path": "scout-report.md",
+    "sha256": "c17d28329200c71e65c2d7439efb4bff01224b0a9fa2418ac4724c68cc3dd90c",
+    "size_bytes": 721
+  },
+  "context_delta": {
+    "token_budget": 4000,
+    "tokens_used": 80,
+    "input_handles": [],
+    "summary": "v1.2 envelope; E-3.compat INFO emitted under v2.0 verifier."
+  },
+  "constraints": { "trust_level": "standard" },
+  "confidence": 0.90,
+  "integrity": {
+    "method": "sha256",
+    "value": "c17d28329200c71e65c2d7439efb4bff01224b0a9fa2418ac4724c68cc3dd90c"
+  },
+  "trace": {
+    "ts": "2026-05-13T10:02:00Z",
+    "host": "claude-code",
+    "model": "claude-sonnet-4-6",
+    "tier": "standard"
+  }
+}

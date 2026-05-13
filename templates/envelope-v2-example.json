@@ -1,0 +1,54 @@
+{
+  "envelope_version": "2.0",
+  "message_id": "01942c7f-0000-7000-0000-000000000000",
+  "thread_id":  "01942c7f-0000-7000-0000-000000000000",
+  "parent_id":  null,
+  "from": { "eidolon": "atlas",   "version": "1.4.2"  },
+  "to":   { "eidolon": "spectra", "version": "4.2.11" },
+  "performative": "PROPOSE",
+  "edge_origin": "roster",
+  "objective": "<one-sentence goal of this message>",
+  "artifact": {
+    "kind": "scout-report",
+    "schema_version": "2.0",
+    "path": "scout-report.md",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "size_bytes": 0
+  },
+  "context_delta": {
+    "token_budget": 4000,
+    "tokens_used": 0,
+    "input_handles": ["mission.md"],
+    "summary": "<<= 200 tokens of new info since parent_id>"
+  },
+  "constraints": { "trust_level": "standard" },
+  "ise": {
+    "assertion_grade": "self-attested",
+    "provenance": {
+      "methodology_version": "atlas-1.4.2",
+      "tool_surface": ["Read", "Bash"],
+      "lateral_consults": []
+    },
+    "receiver_authorization": {
+      "auto_route": true,
+      "auto_merge": false,
+      "auto_deploy": false
+    }
+  },
+  "expected_response": {
+    "performative": "PROPOSE",
+    "shape_hint": "spec.yaml + spec.md"
+  },
+  "confidence": 0.5,
+  "assumptions": [],
+  "integrity": {
+    "method": "sha256",
+    "value": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "trace": {
+    "ts": "2026-05-13T00:00:00Z",
+    "host": "claude-code",
+    "model": "claude-sonnet-4-6",
+    "tier": "standard"
+  }
+}
