@@ -93,9 +93,18 @@ check_s2_ise_authz_honored() {
 # S-3 (SHOULD/WARN): ISE_REQUIRED_AT_HIGH — if trust_level=high AND ise absent → warn.
 # This is a SHOULD-level gate (promotion candidate to MUST at v2.1).
 # Returns 0 regardless (warn does not set exit non-zero under SHOULD).
+# v1.x envelopes pre-date ISE; S-3 does not apply to them (§7.3 back-compat).
 check_s3_ise_required_at_high() {
   local env_path="$1"
-  local trust ise_present
+  local trust ise_present env_version
+  env_version="$(jq -r '.envelope_version // "0.0"' "$env_path")"
+  case "$env_version" in
+    1.0|1.0.*|1.1|1.1.*|1.2|1.2.*)
+      # v1.x envelopes pre-date ISE; S-3 does not apply (§7.3 back-compat).
+      ecl_record "S-3" "SHOULD" "ok" "ise_required_at_high" "" "$env_path"
+      return 0
+      ;;
+  esac
   trust="$(jq -r '.constraints.trust_level // "standard"' "$env_path")"
   ise_present="$(jq -e '.ise' "$env_path" >/dev/null 2>&1 && echo "true" || echo "false")"
 

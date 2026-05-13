@@ -40,6 +40,7 @@ bash "$SDK/handoff-emit.sh" \
   --summary "Three Reflect attempts on flaky-network-test category; same flake persists under retry budget +2, jittered backoff, and fetch-timeout pin. Sandbox authority granted." \
   --confidence 0.7 \
   --integrity-method hmac-sha256 \
+  --ise '{"assertion_grade":"self-attested","provenance":{"methodology_version":"apivr-3.0.5","tool_surface":["Bash","Read","Edit"]},"receiver_authorization":{"auto_route":true,"auto_merge":false,"auto_deploy":false}}' \
   --trace-dir "$TRACE_DIR"
 
 # 2. VIGIL → APIVR-Δ (PROPOSE root-cause + verified patch).
@@ -58,6 +59,7 @@ bash "$SDK/handoff-emit.sh" \
   --summary "Confirmed cause: cli/src/sync.sh:88 || mask of git-fetch exit code during retry. Counterfactual flip in 12/12 sandbox runs. Patch in .vigil-sandbox/." \
   --confidence 0.93 \
   --integrity-method hmac-sha256 \
+  --ise '{"assertion_grade":"validated","provenance":{"methodology_version":"vigil-1.0.3","tool_surface":["Bash","Read"]},"receiver_authorization":{"auto_route":true,"auto_merge":false,"auto_deploy":false}}' \
   --trace-dir "$TRACE_DIR"
 
 # 3. APIVR-Δ → VIGIL (ACKNOWLEDGE the root-cause + closeout).
@@ -94,6 +96,7 @@ bash "$SDK/handoff-emit.sh" \
   --summary "Patch landed; flake gone." \
   --confidence 0.95 \
   --integrity-method hmac-sha256 \
+  --ise '{"assertion_grade":"self-attested","provenance":{"methodology_version":"apivr-3.0.5","tool_surface":["Bash"]},"receiver_authorization":{"auto_route":true,"auto_merge":false,"auto_deploy":false}}' \
   --trace-dir "$TRACE_DIR"
 
 echo

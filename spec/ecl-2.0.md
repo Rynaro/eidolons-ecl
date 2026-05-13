@@ -647,7 +647,10 @@ flag is `false`.
 when a v1.x envelope is accepted under a v2.0 verifier.
 
 §6.5.5 — **SHOULD**: receivers SHOULD emit gate `S-3` warning when
-`constraints.trust_level=high` AND `ise` is absent.
+`constraints.trust_level=high` AND `ise` is absent **AND**
+`envelope_version` indicates v2.0 or later. The gate does not apply to
+v1.x envelopes accepted under the §7.3 backward-compatibility window —
+those envelopes pre-date the ISE field and are accepted as-is via §6.5.4.
 
 > [PROMOTION-CANDIDATE] `S-3` is SHOULD (warn) at v2.0. It is a candidate
 > for promotion to MUST at v2.1 (gate S-3 → MUST). Promotion trigger:
