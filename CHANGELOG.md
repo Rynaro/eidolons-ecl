@@ -6,6 +6,97 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.0.0] — 2026-05-13 — Phase 2.C: ISE trust-hierarchy, v2.0 MAJOR
+
+### Added
+
+- **`spec/ecl-2.0.md`** — ECL v2.0 spec. MAJOR bump introducing the ISE
+  (Intent, Source, Entitlement) trust-hierarchy block (§6.5) with three
+  new optional fields: `ise.assertion_grade` (required when `ise` present),
+  `ise.provenance`, and `ise.receiver_authorization`. New conformance gates
+  S-1 (MUST), S-2 (MUST), S-3 (SHOULD). Updated §7.3 compatibility window:
+  v2.0 receivers SHALL accept v1.x envelopes through 2027-05-13.
+- **`schemas/envelope.v2.json`** — New schema for v2.x envelopes with `ise`
+  `$defs/ise` block and widened `envelope_version` pattern to `1.[012]|2.0`.
+- **`conformance/lib/ise.sh`** — New bash 3.2 compatible library implementing
+  S-1, S-2, S-3 gates. Sourced by `conformance/check.sh`.
+- **ISE types in TS SDK** (`reference-sdk/ts/src/types.ts`): `IseBlock`,
+  `IseProvenance`, `IseReceiverAuthorization`, `AssertionGrade`.
+- **ISE types in Py SDK** (`reference-sdk/py/src/eidolons_ecl/types.py`):
+  `IseBlock`, `IseProvenance`, `IseReceiverAuthorization`, `AssertionGrade`.
+- **`--ise JSON`** flag added to `reference-sdk/bash/envelope-build.sh`.
+- **`envelopeBuild`** (TS): new `ise?` option; envelope includes ISE block
+  when provided.
+- **`envelopeVerify`** (TS): loads both `envelope.v1.json` and
+  `envelope.v2.json`; dispatches by `envelope_version` (v1.x → v1 schema,
+  v2.x → v2 schema); adds S-3 warning (`trust_level=high` + `ise` absent);
+  `deriveEGate` maps `/ise` path errors to `S-1`.
+- **Conformance fixtures** (v2.0): `conformant-ise-v2/`, `ise-missing-hierarchy/`,
+  `v1-on-v2-compat/` under `conformance/tests/fixtures/`. 7 new bats tests.
+- **v2 example envelopes**: `examples/*/\*.v2.envelope.json` (two sibling envelopes).
+- **`templates/envelope-v2-example.json`** — canonical v2.0 envelope template.
+- **`docs/migration-v1-to-v2.md`** — migration guide for v1.x → v2.0 upgrade.
+- **`docs/drift-register.md`**: file D-02 (ISE contract defaults deferred),
+  D-04 (Py verifier deferred); retire DC-1 → D-01, DC-3 → D-03.
+
+### Changed
+
+- `schemas/*.json` (all 12 files): `$id` URI path segment `/v1.0.0/` →
+  `/v2.0.0/`. Resolves drift candidate DC-1 (D-01 retired). See
+  `docs/migration-v1-to-v2.md` for import-path update guidance.
+- `schemas/README.md`: enumerates the new `envelope.v2.json` row under a v2.0
+  schema section; adds the previously-missing `handoff-event.v1.json` row to
+  the v1.x table (FINDING-030); documents the `$id` segment bump
+  (`/v1.0.0/` → `/v2.0.0/`) and clarifies that `*.v1.json` filenames are
+  unchanged — the versioned identifier is the `$id` URI path, not the file
+  name.
+- `conformance/check.sh`: version `1.0.0` → `2.0.0`; default target version
+  `1.0` → `2.0`; added `v2.0`/`2.x` target cases; sources `lib/ise.sh`.
+- `conformance/lib/envelope.sh`: E-3 regex now accepts
+  `1.0|1.1|1.2|2.0` (fixes latent P1 bug — v1.1/v1.2 envelopes were
+  rejected by old `1.0` only pattern); adds E-3.compat INFO gate.
+- `conformance/README.md`: updated gate table; added S-* prefix; added v2.0
+  fixture list; updated E-3 description.
+- `reference-sdk/ts/src/version.ts`: `ECL_VERSION_TARGET` `"1.1"` → `"2.0"`
+  (DECISION-S7/S10 — TS SDK jumped from 1.1 directly to 2.0).
+- `reference-sdk/ts/src/envelopeBuild.ts`: default `envelope_version` and
+  `artifact.schema_version` now `"2.0"` (were `"1.0"`).
+- `reference-sdk/py/src/eidolons_ecl/version.py`: `__version__` `"1.2.0"` →
+  `"2.0.0"`, `ECL_VERSION_TARGET` `"1.2"` → `"2.0"`.
+- `reference-sdk/bash/envelope-build.sh`: default `envelope_version` and
+  `artifact.schema_version` now `"2.0"` (were `"1.0"`).
+- `ECL_VERSION`: `1.2` → `2.0`.
+- `SPEC.md` symlink: re-targeted from `spec/ecl-1.2.md` to `spec/ecl-2.0.md`.
+- `.github/workflows/release.yml`: added `spec/ecl-2.0.md` to release assets.
+- `.github/workflows/conformance.yml`: updated SPEC.md symlink check to v2.0.
+
+### Fixed
+
+- **E-3 latent P1 bug** — `conformance/lib/envelope.sh` previously only
+  accepted `envelope_version: "1.0"`, silently rejecting v1.1 and v1.2
+  envelopes. Fixed: now accepts `1.0`, `1.1`, `1.2`, and `2.0`.
+- **DC-3 closure** — Two `describe.skip`'d shell-out integration tests in
+  `envelopeVerify.test.ts` un-skipped (DECISION-S5). The bash checker
+  already reads `.from.eidolon` correctly; the skip was based on a stale
+  description. Added `hasBashAndJq()` guard for stripped environments.
+
+### Deferred
+
+- **Py SDK `envelope_verify`**: `reference-sdk/py` does not yet ship an
+  `envelope_verify` equivalent. Use `conformance/check.sh` or the TS SDK
+  verifier for Py-side workflows. Tracked as D-04; planned additive in v2.1.
+  FORGE confirmed defer (DECISION-S3).
+- **ISE contract defaults (`default_ise`)**: `handoff-contract.v1.json` does
+  not include a `default_ise` field. No live contract carries one; adding it
+  would expand the schema-bump radius to 19 contract files. Tracked as D-02.
+- **`migrate/backfill.py` and `a2a_bridge/translator.py`** still emit v1.0
+  envelopes (DECISION-S4 — intentional; these tools are migration utilities
+  and their output format is not changing as part of this PR).
+- **I-5 promotion** (`hmac-sha256` MUST at `trust_level=high`) — stays
+  SHOULD-level WARN at v2.0 per DECISION-S8; PROMOTION-CANDIDATE to MUST at
+  v2.1 once HMAC-adoption telemetry from the per-Eidolon vendoring cycle
+  shows ≥3 of 6 Eidolons routinely emitting `hmac-sha256` at high.
+
 ## [1.2.1] — 2026-05-12 — Phase 2.B: migration tool + A2A bridge
 
 ### Added
@@ -282,5 +373,6 @@ None open at v1.1.0. See `docs/drift-register.md` for candidates
 None at v1.0.0. Drifts will be enumerated as `D-1`, `D-2`, … as they are
 discovered against live Eidolon emit behaviour during the warn-only window.
 
-[Unreleased]: https://github.com/Rynaro/eidolons-ecl/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/Rynaro/eidolons-ecl/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/Rynaro/eidolons-ecl/releases/tag/v2.0.0
 [1.0.0]: https://github.com/Rynaro/eidolons-ecl/releases/tag/v1.0.0

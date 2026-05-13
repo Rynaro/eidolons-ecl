@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v1.0.0/schemas/envelope.v1.json",
+  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v2.0.0/schemas/envelope.v1.json",
   "title": "ECL envelope v1",
   "description": "Sidecar envelope written next to every emitted Eidolon artefact. Defined by ECL v1.0 §1.",
   "type": "object",

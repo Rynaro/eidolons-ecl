@@ -1,6 +1,6 @@
 # ECL v1.1 — Threat model
 
-**Version:** 1.1.0
+**Version:** 1.1.0 (with v2.0 mitigation extensions)
 **Status:** Stable
 **Scope:** inter-agent surface only
 
@@ -13,10 +13,15 @@ Cursor, opencode, Codex) and the **operator's local environment**;
 threats below cover only the surface where two Eidolons exchange
 envelopes. The conformance checker is the executable counterpart to this
 doc: every mitigation cited here corresponds to a gate ID (`E-`, `C-`,
-`I-`, `T-`, `D-`) that the checker can evaluate against a real envelope.
-New attack vectors discovered in the wild SHOULD be filed as drift-register
-entries (see [`docs/drift-register.md`](drift-register.md)) before the
-threat model itself is amended.
+`I-`, `T-`, `D-`, `S-`) that the checker can evaluate against a real
+envelope. New attack vectors discovered in the wild SHOULD be filed as
+drift-register entries (see [`docs/drift-register.md`](drift-register.md))
+before the threat model itself is amended.
+
+**v2.0 extensions** — Each threat block below carries a **`v2.0 →`**
+bullet enumerating any additional gates the ISE trust hierarchy
+contributes ([`spec/ecl-2.0.md` §6.5](../spec/ecl-2.0.md)). The v1.1
+mitigations remain in force unchanged.
 
 ---
 
@@ -55,6 +60,23 @@ interception point.
   enforces hex-format (I-1), value match (I-3), and the new I-5 SHOULD
   warning when a `trust_level=high` envelope still uses `sha256`. The TS
   `envelopeVerify` SDK mirrors I-5 into its `warnings[]` array.
+
+### v2.0 → ECL v2.0 extension
+
+- **[§6.5.2 `ise.provenance.tool_surface`]** — when emitted, the
+  provenance sub-object records the distinct tool primitives that
+  produced the artefact. An AiTM cannot rewrite the payload **and**
+  the `tool_surface` array without re-computing the integrity tag
+  (already covered by I-1/I-3), but an AiTM that lacks the HMAC key
+  also cannot forge a credible `provenance` block: receivers that
+  cross-check `provenance.methodology_version` against the roster's
+  declared `comm.envelope_version` and `methodology.version` get a
+  second-layer authority check beyond the bare `from.eidolon@version`.
+- **[Conformance gate S-1 (MUST)
+  — `spec/ecl-2.0.md` §6.5.2](../spec/ecl-2.0.md)** — refuses an
+  envelope whose `ise` block is structurally invalid. A rewriter that
+  tries to strip the `provenance` sub-object while leaving `ise`
+  present trips S-1.
 
 ### Residual risk
 
@@ -100,14 +122,30 @@ unconstrained hand-off topology.
   edge-declared-in-roster; an infected agent cannot inject an envelope
   on an undeclared edge without raising C-1 EDGE_UNKNOWN.
 
+### v2.0 → ECL v2.0 extension
+
+- **[§6.5.3 `ise.receiver_authorization`]** — receivers MUST NOT
+  auto-route, auto-merge, or auto-deploy when the corresponding
+  authorization flag is `false`. An infected emitter that propagates
+  a `COMMIT` performative still cannot **chain** its blast radius
+  if downstream contracts emit `receiver_authorization.auto_merge=false`
+  by default — the host LLM is contractually blocked from following the
+  next hop without operator confirm.
+- **[Conformance gate S-2 (MUST)
+  — `spec/ecl-2.0.md` §6.5.6](../spec/ecl-2.0.md)** — receiver-side
+  enforcement of `auto_route` / `auto_merge` / `auto_deploy=false`.
+  The TS verifier surfaces `errors: ["S-2: receiver_authorization.X=false; manual confirm required"]`
+  on attempted bypass.
+
 ### Residual risk
 
 ECL constrains **routing**, not natural-language content. A poisoned
 artefact that flows along a perfectly-declared edge under a correctly-
 matched contract will still reach the downstream agent. ECL bounds the
 blast radius (the graph topology) but does not by itself sanitise the
-payload. Payload-level defences (input scrubbing, ISE trust-hierarchy
-fields per Phase 2 S2.3) are deferred.
+payload. Payload-level defences (input scrubbing) remain a host-LLM
+concern; the v2.0 `ise.*` block is a **signalling** layer (claims +
+authorisations), not a sandbox.
 
 ---
 
@@ -146,6 +184,28 @@ discipline.
   shape including the `from` field; C-1 validates the edge declaration
   in the roster; I-5 warns when a high-trust envelope is not
   HMAC-authenticated.
+
+### v2.0 → ECL v2.0 extension
+
+- **[§6.5 ISE trust hierarchy]** — the new `ise.assertion_grade` field
+  (`unverified` / `self-attested` / `validated` / `human-reviewed`)
+  decomposes the prior single-tier `trust_level` answer into a
+  dimensional claim: receivers no longer have only "how cautious?"
+  (`trust_level`) but also "what specific authority is the emitter
+  claiming?" (`ise.assertion_grade`). An attacker that forges
+  `trust_level=high` but cannot credibly claim
+  `assertion_grade=human-reviewed` against the receiver's policy is
+  detected by gate S-3.
+- **[Conformance gate S-3 (SHOULD WARN at v2.0; PROMOTION-CANDIDATE
+  MUST at v2.1) — `spec/ecl-2.0.md` §6.5.5](../spec/ecl-2.0.md)** —
+  emits warning when `constraints.trust_level=high` AND the `ise`
+  block is absent. This surfaces the exact trust-elevation gap that
+  T3 exploits.
+- **[§6.5.7 ISE MUST-NOT-bypass]** — mirrors the §6.3.2 clause:
+  receivers MUST NOT use `ise` to bypass other normative constraints.
+  An attacker that includes a plausible-looking `ise` block to bypass
+  C-1 / E-2 / I-3 cannot do so; ISE fields **grant** permission, they
+  do not **revoke** other gates.
 
 ### Residual risk
 
@@ -193,6 +253,14 @@ many `INFORM` turns.
 - **[Conformance gate T-1]** — bash conformance verifies the trace file
   exists and is well-formed JSONL.
 
+### v2.0 → ECL v2.0 extension
+
+- **[§6.5.2 `ise.provenance.lateral_consults`]** — when present, the
+  array records every sibling-Eidolon consult that informed the
+  artefact. Forensic replay (T-1) gains a second axis: investigators
+  can map the consult graph alongside the thread timeline and identify
+  which lateral consult introduced poisoned framing.
+
 ### Residual risk
 
 ECL provides **forensic replay**, not real-time detection. A poisoning
@@ -236,6 +304,17 @@ attack vehicle.
   deliver which artefact kinds on a given edge; a `code/diff.patch`
   contract on `apivr → vigil` cannot smuggle a `mission.md`-shaped
   artefact past validation.
+
+### v2.0 → ECL v2.0 extension
+
+- **[§6.5.3 `ise.receiver_authorization.auto_deploy / auto_merge`]** —
+  even when an indirect-injection payload reaches the receiver and
+  the host LLM is partially compromised, the receiver's authz-aware
+  path MUST refuse to auto-deploy or auto-merge when the corresponding
+  `receiver_authorization` flag is `false` (gate S-2 is MUST-level).
+  This caps the **blast radius** of a successful T5 injection: the
+  LLM may be convinced; the receiver's filesystem and deploy hooks
+  remain gated on operator confirm.
 
 ### Residual risk
 
@@ -293,9 +372,10 @@ spec cycle that amends both this document and the corresponding gate
 table.
 
 [DECISION] The v1.1 threat-model is **non-normative**: the normative
-mitigations live in [`spec/ecl-1.1.md`](../spec/ecl-1.1.md) §6 and §3.
-This doc summarises and indexes them for an external reviewer; if the
-spec and this doc disagree, the spec wins.
+mitigations live in [`spec/ecl-1.1.md`](../spec/ecl-1.1.md) §6 and §3
+for v1.x, and [`spec/ecl-2.0.md`](../spec/ecl-2.0.md) §6.5 for the v2.0
+ISE extensions. This doc summarises and indexes them for an external
+reviewer; if the spec and this doc disagree, the spec wins.
 
 ---
 
@@ -303,10 +383,15 @@ spec and this doc disagree, the spec wins.
 
 - Threats T1–T5 enumerated in
   [`.spectra/v1.1-spec-bump.md` §S1.3](../.spectra/v1.1-spec-bump.md).
+- v2.0 extensions enumerated in
+  [`.spectra/v2.0-phase2c.md` §S3, §S4](../.spectra/v2.0-phase2c.md).
 - Citations T1, T2 traced to [`spec/ecl-1.0.md` §Citations](../spec/ecl-1.0.md).
 - Citations T3, T4, T5 traced to
   [`harness-roadmap.md` §"Phase 1 — S1.3":148](../../eidolons/.spectra/harness-roadmap.md).
-- Mitigations anchored against [`spec/ecl-1.1.md`](../spec/ecl-1.1.md) §1, §3, §4, §5, §6.
+- Mitigations anchored against [`spec/ecl-1.1.md`](../spec/ecl-1.1.md)
+  §1, §3, §4, §5, §6 (v1.x) and
+  [`spec/ecl-2.0.md`](../spec/ecl-2.0.md) §6.5 (v2.0).
 - Conformance gate IDs anchored against
-  [`conformance/README.md`](../conformance/README.md) and the v1.1 I-5 splice in
-  `conformance/lib/integrity.sh`.
+  [`conformance/README.md`](../conformance/README.md), the v1.1 I-5
+  splice in `conformance/lib/integrity.sh`, and the v2.0 S-1/S-2/S-3
+  gates in `conformance/lib/ise.sh`.

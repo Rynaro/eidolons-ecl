@@ -1,0 +1,51 @@
+{
+  "envelope_version": "1.2",
+  "message_id": "b7f1c2e3-4d5a-4b6c-9e7f-0a1b2c3d4e5f",
+  "thread_id": "ecl-v2.0-phase2c-s2.3",
+  "parent_id": "atlas-scout-v2.0-phase2c-inform",
+  "from": {
+    "eidolon": "spectra",
+    "version": "4.3.1"
+  },
+  "to": {
+    "eidolon": "apivr",
+    "version": "3.0.5"
+  },
+  "performative": "REQUEST",
+  "edge_origin": "roster",
+  "objective": "Build ECL v2.0.0 per spec at .spectra/v2.0-phase2c.md: 12 schema $id bumps, new schemas/envelope.v2.json with $defs.ise, three new conformance gates (S-1, S-2, S-3), DC-1+DC-3 retirement, TS+bash+py SDK bumps, fixtures+examples+migration doc.",
+  "artifact": {
+    "kind": "spec",
+    "schema_version": "1.2",
+    "path": ".spectra/v2.0-phase2c.md",
+    "sha256": "bdbd50bbeddccddfb40fc1e5b5a3b592e951d8d56dae160d6fe6a32ea1727735",
+    "size_bytes": 35979
+  },
+  "context_delta": {
+    "token_budget": 6000,
+    "tokens_used": 5800,
+    "input_handles": [
+      ".atlas-scout/v2.0-phase2c/scout-report.md",
+      ".atlas-scout/v2.0-phase2c/findings.md",
+      "spec/ecl-1.2.md",
+      "docs/threat-model.md",
+      ".spectra/phase2-scoping.md"
+    ],
+    "summary": "Decision-ready spec closing 8 GAPs + 3 surprise-findings. Three-field ISE subset (assertion_grade MUST, provenance OPT, receiver_authorization OPT); constraints.trust_level retained. Major-bump justified by new receiver semantics (gate S-3 warn-today/MUST-v2.1). 35 numbered handoff tasks across 9 groups; 5 exit criteria. Self-assessment: PASS on all 8 spec-validation gates."
+  },
+  "constraints": {
+    "trust_level": "standard",
+    "deadline_ts": "2026-06-15T00:00:00Z"
+  },
+  "confidence": 0.91,
+  "integrity": {
+    "method": "sha256",
+    "value": "bdbd50bbeddccddfb40fc1e5b5a3b592e951d8d56dae160d6fe6a32ea1727735"
+  },
+  "trace": {
+    "ts": "2026-05-13T00:00:00Z",
+    "host": "claude-code",
+    "model": "claude-opus-4-7",
+    "tier": "standard"
+  }
+}

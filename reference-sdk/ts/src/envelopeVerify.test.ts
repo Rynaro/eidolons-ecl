@@ -15,6 +15,7 @@
  *   - Artifact not found → I-2 failure in failures array.
  */
 
+import { spawnSync } from "node:child_process";
 import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as os from "node:os";
@@ -394,14 +395,25 @@ describe("envelopeVerify — skipShellGates", () => {
 // Shell-out smoke test (skipShellGates: false — requires bash in env)
 // ---------------------------------------------------------------------------
 
-// TODO(ts-sdk): the two shell-out integration tests below depend on the bash
-// conformance/check.sh's exact parsing of envelope.from/to (agentRef object
-// vs slug string). They fail with C-1 EDGE_UNKNOWN on a valid atlas→spectra
-// envelope because the bash check reads `from` as a string but the envelope
-// emits an `agentRef` object. The TS-native gate phase (E-/I- via ajv) is
-// fully proven by the other 13 tests in this suite. Skipping for now;
-// follow-up in a separate PR to align fixture shape with bash checker.
-describe.skip("envelopeVerify — shell-out phase (pending bash-check interop fix)", () => {
+// DC-3 closure (DECISION-S5 / v2.0.0): conformance/lib/handoff-graph.sh already
+// reads `.from.eidolon` (line 70) — the slug-string vs agentRef drift is resolved
+// on the bash side. Un-skipped as part of the v2.0 phase2c work.
+//
+// Note: these tests require bash + jq to be available (provided by the dev container
+// Dockerfile.dev). They skip gracefully when either tool is absent — run via
+// `make test` (docker compose) to exercise the full suite.
+describe("envelopeVerify — shell-out phase", () => {
+  /** Returns true when bash + jq are available on the PATH. */
+  function hasBashAndJq(): boolean {
+    try {
+      const b = spawnSync("bash", ["--version"], { stdio: "ignore" });
+      const j = spawnSync("jq", ["--version"], { stdio: "ignore" });
+      return b.status === 0 && j.status === 0;
+    } catch {
+      return false;
+    }
+  }
+
   it(
     "skipShellGates: false invokes bash and returns results for a valid envelope",
     { timeout: 30_000 },
@@ -411,17 +423,17 @@ describe.skip("envelopeVerify — shell-out phase (pending bash-check interop fi
       // The envelope's from/to must match the atlas→spectra contract exactly.
       // Use the valid envelope from beforeAll (which uses atlas→spectra).
 
-      // Check bash is available; skip this test gracefully in environments
-      // where the container is not running.
+      // Check bash + jq are available; skip gracefully in environments
+      // where the dev container is not running.
       const checkScript = (() => {
         const dir = repoRoot;
         const candidate = path.join(dir, "conformance", "check.sh");
         return fs.existsSync(candidate) ? candidate : null;
       })();
 
-      if (!checkScript) {
+      if (!checkScript || !hasBashAndJq()) {
         // Skip gracefully; parent CI runs make check inside the container.
-        console.warn("conformance/check.sh not found; skipping shell-out smoke test.");
+        console.warn("conformance/check.sh or bash/jq not found; skipping shell-out smoke test.");
         return;
       }
 
@@ -461,8 +473,8 @@ describe.skip("envelopeVerify — shell-out phase (pending bash-check interop fi
     fs.writeFileSync(modPath, `${JSON.stringify(modified, null, 2)}\n`, "utf8");
 
     const checkScript = path.join(repoRoot, "conformance", "check.sh");
-    if (!fs.existsSync(checkScript)) {
-      console.warn("conformance/check.sh not found; skipping C-gate shell-out test.");
+    if (!fs.existsSync(checkScript) || !hasBashAndJq()) {
+      console.warn("conformance/check.sh or bash/jq not found; skipping C-gate shell-out test.");
       return;
     }
 
@@ -651,5 +663,111 @@ describe("envelopeVerify — explicit artifact override", () => {
     // Same bytes → integrity should pass.
     const i3fail = result.failures.find((f) => f.gate === "I-3");
     expect(i3fail).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S-3 (ECL v2.0 §6.5.5) — ISE RECOMMENDED at trust_level=high
+// ---------------------------------------------------------------------------
+
+describe("envelopeVerify — S-3 (ISE recommended at high trust)", () => {
+  /** Build an envelope with the given trust level, optional ISE block. */
+  async function buildEnvelopeWithIse(
+    trustLevel: "low" | "standard" | "high",
+    ise?: {
+      assertion_grade: "unverified" | "self-attested" | "validated" | "human-reviewed";
+    }
+  ): Promise<string> {
+    const env = await envelopeBuild({
+      artifact: artifactPath,
+      contract: contractPath,
+      performative: "PROPOSE",
+      objective: "S-3 fixture.",
+      ise,
+    });
+    // Force the trust_level on the envelope.
+    env.constraints = { ...env.constraints, trust_level: trustLevel };
+    const suffix = `${trustLevel}-${ise ? "ise" : "no-ise"}`;
+    const envPath = path.join(tmpDir, `s3-${suffix}.envelope.json`);
+    fs.writeFileSync(envPath, `${JSON.stringify(env, null, 2)}\n`, "utf8");
+    return envPath;
+  }
+
+  it("emits S-3 warning when trust_level=high AND ise block absent", async () => {
+    const envPath = await buildEnvelopeWithIse("high", undefined);
+    const result = await envelopeVerify({
+      envelope: envPath,
+      schemas: schemasDir,
+      contracts: contractsDir,
+      skipShellGates: true,
+    });
+    // SHOULD-level warn → ok stays true for E-/I- gates.
+    const s3 = result.warnings.find((w) => w.gate === "S-3");
+    expect(s3).toBeDefined();
+    expect(s3?.message).toMatch(/ISE trust hierarchy/);
+  });
+
+  it("does NOT emit S-3 when trust_level=high AND ise block present", async () => {
+    const envPath = await buildEnvelopeWithIse("high", { assertion_grade: "self-attested" });
+    const result = await envelopeVerify({
+      envelope: envPath,
+      schemas: schemasDir,
+      contracts: contractsDir,
+      skipShellGates: true,
+    });
+    const s3 = result.warnings.find((w) => w.gate === "S-3");
+    expect(s3).toBeUndefined();
+  });
+
+  it("does NOT emit S-3 at trust_level=standard without ise", async () => {
+    const envPath = await buildEnvelopeWithIse("standard", undefined);
+    const result = await envelopeVerify({
+      envelope: envPath,
+      schemas: schemasDir,
+      contracts: contractsDir,
+      skipShellGates: true,
+    });
+    const s3 = result.warnings.find((w) => w.gate === "S-3");
+    expect(s3).toBeUndefined();
+  });
+
+  it("v2.0 envelope with full ISE block validates schema and has no S-3 warning", async () => {
+    const env = await envelopeBuild({
+      artifact: artifactPath,
+      contract: contractPath,
+      performative: "PROPOSE",
+      objective: "Full ISE v2.0 fixture.",
+      ise: {
+        assertion_grade: "validated",
+        provenance: {
+          methodology_version: "spectra-4.3.1",
+          tool_surface: ["Read", "Bash"],
+          lateral_consults: [{ eidolon: "atlas", performative: "REQUEST" }],
+        },
+        receiver_authorization: {
+          auto_route: true,
+          auto_merge: false,
+          auto_deploy: false,
+        },
+      },
+    });
+    env.constraints = { ...env.constraints, trust_level: "high" };
+    const envPath = path.join(tmpDir, "s3-full-ise-v2.envelope.json");
+    fs.writeFileSync(envPath, `${JSON.stringify(env, null, 2)}\n`, "utf8");
+
+    const result = await envelopeVerify({
+      envelope: envPath,
+      schemas: schemasDir,
+      contracts: contractsDir,
+      skipShellGates: true,
+    });
+
+    // Schema validates; no S-3 warning since ise is present.
+    const schemaFailures = result.failures.filter((f) => f.gate.startsWith("E-"));
+    expect(schemaFailures).toHaveLength(0);
+    const s3 = result.warnings.find((w) => w.gate === "S-3");
+    expect(s3).toBeUndefined();
+    // The envelope_version should be 2.0.
+    expect(env.envelope_version).toBe("2.0");
   });
 });

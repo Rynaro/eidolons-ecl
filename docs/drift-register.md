@@ -1,8 +1,8 @@
 # ECL — Drift register
 
-**Version:** 1.1.0
-**Status:** Seed (empty at v1.1.0)
-**Spec anchor:** [`spec/ecl-1.1.md` §7.4](../spec/ecl-1.1.md)
+**Version:** 2.0.0
+**Status:** Active
+**Spec anchor:** [`spec/ecl-2.0.md` §7.4](../spec/ecl-2.0.md)
 
 ## Preamble
 
@@ -34,10 +34,9 @@ warn-only-window  →  SHOULD  →  MUST  →  retired
   section.
 
 This register exists because v1.0 shipped with a placeholder
-`spec/ecl-1.0.md` §7.4 stub ("No drifts at v1.0.0"). v1.1 replaces the
-stub with a forward pointer to this document — see
-[`spec/ecl-1.1.md` §7.4](../spec/ecl-1.1.md). All future drift entries
-live here, not in the spec.
+`spec/ecl-1.0.md` §7.4 stub ("No drifts at v1.0.0"). v1.1 replaced the
+stub with a forward pointer to this document. v2.0 closes DC-1 and DC-3
+(see historical section) and adds D-02 and D-04 as new deferred entries.
 
 ---
 
@@ -54,35 +53,13 @@ table; the field set is normative.
 | `discovered_at` | RFC 3339 timestamp | When the drift was first observed. |
 | `discovered_via` | enum | `conformance-checker` \| `live-emit` \| `external-report`. |
 | `evidence` | array of strings | Each item is a `path:line` reference, an envelope ID, or a trace-event pointer. |
-| `spec_section` | string | The §-anchor in `spec/ecl-1.1.md` (or a later spec version) the drift contradicts or under-specifies. |
-| `warn_only_window.opened_at` | version | The spec version at which the warn-only window opened (e.g. `v1.1.0`). |
+| `spec_section` | string | The §-anchor in the current spec the drift contradicts or under-specifies. |
+| `warn_only_window.opened_at` | version | The spec version at which the warn-only window opened (e.g. `v2.0.0`). |
 | `warn_only_window.target_promotion` | enum | `SHOULD` \| `MUST` — the intended next stage. |
-| `warn_only_window.target_version` | version | The spec version the promotion targets (e.g. `v1.2.0`). |
-| `conformance_gate` | string | The gate ID assigned by the conformance checker (e.g. `I-5`, `D-4`). |
+| `warn_only_window.target_version` | version | The spec version the promotion targets (e.g. `v2.1.0`). |
+| `conformance_gate` | string | The gate ID assigned by the conformance checker (e.g. `I-5`, `S-3`). |
 | `status` | enum | `open` \| `promoted` \| `retired`. |
 | `notes` | string | Free-form prose — rationale, debate, links to issues. |
-
-### Example entry (illustrative — no `D-1` exists yet)
-
-```yaml
-id: D-1
-title: <one-line>
-discovered_at: "2026-MM-DDTHH:MM:SSZ"
-discovered_via: conformance-checker
-evidence:
-  - conformance/tests/fixtures/<fixture>/envelope.json:<line>
-  - .eidolons/.trace/<thread_id>.jsonl:<line>
-spec_section: §<N>.<M>
-warn_only_window:
-  opened_at: v1.1.0
-  target_promotion: SHOULD
-  target_version: v1.2.0
-conformance_gate: <gate-id>
-status: open
-notes: |
-  <multi-line prose describing what was observed, why the spec text
-  does not match, and what the proposed promotion would change.>
-```
 
 ---
 
@@ -99,8 +76,8 @@ include:
    a trace-event line, a conformance-checker output, or a screenshot
    of a live host. Speculative drifts without evidence are rejected.
 3. **A proposed conformance gate ID** if one does not already exist.
-   New IDs continue the existing namespaces (`E-`, `C-`, `I-`, `T-`,
-   `D-`); reviewers MAY rename the gate before merge.
+   New IDs continue the existing namespaces (`E-`, `C-`, `I-`, `D-`,
+   `S-`); reviewers MAY rename the gate before merge.
 
 The PR is reviewed by an Eidolons maintainer and lands on `main` when
 the entry is well-formed. Adding a drift does **not** require a spec
@@ -115,7 +92,7 @@ array of `envelopeVerify` results. The build does **not** fail during
 the warn-only window; consumers see the warn but their CI stays green.
 
 Default warn-only-window duration: **one minor SemVer cycle**.
-Drifts opened at `v1.1.0` target `v1.2.0` for promotion unless the
+Drifts opened at `v2.0.0` target `v2.1.0` for promotion unless the
 entry's `target_version` explicitly defers further.
 
 ### Promotion (warn → SHOULD → MUST)
@@ -123,7 +100,7 @@ entry's `target_version` explicitly defers further.
 Promotion requires:
 
 1. A SPECTRA spec cycle that authors a normative §-anchor in the spec.
-2. A bump of the spec's SemVer **minor** version (`v1.1.x` → `v1.2.0`,
+2. A bump of the spec's SemVer **minor** version (`v2.0.x` → `v2.1.0`,
    not a patch).
 3. A bash conformance update that changes the gate's level
    (`warn` → `SHOULD` raises exit code to 3; `SHOULD` → `MUST` raises
@@ -133,10 +110,6 @@ Promotion requires:
 5. An entry update to this register: `status: promoted`,
    `warn_only_window` closed, a note recording the promoting spec
    version.
-
-Backward compatibility per [`spec/ecl-1.1.md` §7.3](../spec/ecl-1.1.md):
-v1.0 envelopes remain valid under v1.1 receivers; promotion at v1.2 or
-later applies to v1.2-emitted envelopes and beyond.
 
 ### Retirement
 
@@ -156,39 +129,62 @@ the gate, not the requirement.
 
 ## Open drifts
 
-_No open drifts at v1.1.0._
+### D-02 — ISE contract-side defaults deferred
+
+- **id:** D-02
+- **title:** `handoff-contract.v1.json` has no `default_ise` field; ISE defaults cannot be expressed at the contract layer.
+- **discovered_at:** 2026-05-13T00:00:00Z
+- **discovered_via:** external-report
+- **evidence:**
+  - `.spectra/v2.0-phase2c.md:§DECISION-S1` — FINDING-008: no ISE-related field in any live contract today.
+  - `schemas/handoff-contract.v1.json` — no `ise_defaults` or `default_ise` key present.
+- **spec_section:** `spec/ecl-2.0.md §6.5` — ISE block defined at envelope level; contract-level defaults not specified.
+- **warn_only_window:**
+  - **opened_at:** v2.0.0
+  - **target_promotion:** SHOULD
+  - **target_version:** v2.1.0
+- **conformance_gate:** (none yet — no gate fires when contract lacks a field; enforcement would be a new `S-N` gate)
+- **status:** open
+- **notes:** |
+  Phase 2.C intentionally deferred adding `default_ise` to
+  `handoff-contract.v1.json` (DECISION-S1 / FINDING-008). No live
+  contract carries the field; adding it would require bumping
+  `handoff-contract.v1.json` `$id` to `.v2.json` and validating 19
+  contract YAML files. The spec text in §6.5 does not require contracts
+  to carry ISE defaults; envelopes are responsible for ISE presence.
+  Revisit when a concrete consumer emits a contract that specifies a
+  required `assertion_grade` floor.
+
+### D-04 — Python SDK does not ship `envelope_verify`
+
+- **id:** D-04
+- **title:** `reference-sdk/py` has no `envelope_verify` equivalent; Py-side consumers must use `conformance/check.sh` or the TS SDK verifier.
+- **discovered_at:** 2026-05-13T00:00:00Z
+- **discovered_via:** external-report
+- **evidence:**
+  - `.spectra/v2.0-phase2c.md:§DECISION-S3` — FORGE confirmed DEFER.
+  - `reference-sdk/py/src/eidolons_ecl/` — no `envelope_verify.py` module present.
+- **spec_section:** `spec/ecl-2.0.md §5` — verification is a conformance responsibility; the spec does not mandate a Py verifier, but SDK parity is a quality-of-life expectation.
+- **warn_only_window:**
+  - **opened_at:** v2.0.0
+  - **target_promotion:** SHOULD
+  - **target_version:** v2.1.0
+- **conformance_gate:** (none — not a gate-level drift; affects SDK surface only)
+- **status:** open
+- **notes:** |
+  The Py SDK ships `migrate/backfill.py` and `a2a_bridge/translator.py`
+  (both still emit v1.0 format), plus `types.py` with v2.0 ISE types.
+  A full `envelope_verify.py` is a feature addition, not a bump-coupled
+  requirement. FORGE confirmed defer (DECISION-S3). Planned as an
+  additive story in v2.1. Until then, Py consumers use
+  `bash conformance/check.sh` or the TS SDK verifier via subprocess.
 
 ---
 
 ## Drift candidates (non-normative)
 
 The following observations are **not yet** numbered drift-register
-entries — they are pre-flagged for future review. Each carries a
-proposed promotion trigger; when the trigger fires, the candidate is
-promoted to a numbered `D-N` entry via the workflow above.
-
-### DC-1 — Schema `$id` versioning lag
-
-- **Description:** All `schemas/*.json` files carry their original
-  `v1.0.0` `$id` URI even though the spec is at v1.1.0. The HMAC
-  promotion in v1.1 was prose-level only — no schema field added, no
-  constraint tightened — so per [DECISION-S2] in
-  [`.spectra/v1.1-spec-bump.md`](../.spectra/v1.1-spec-bump.md) the
-  `$id`s were intentionally **not** bumped to avoid churn-heavy diffs.
-- **Evidence:** `schemas/envelope.v1.json` `$id` line; the twelve total
-  schema files (six core + six per-Eidolon) all pinned at
-  `v1.0.0`. See [DECISION-S2] rationale in
-  [`.spectra/v1.1-spec-bump.md`](../.spectra/v1.1-spec-bump.md).
-- **Spec section affected:** §1.1 envelope shape; §3 contract shape.
-- **Promotion trigger:** the **first additive schema field** (e.g.
-  Phase 2 S2.3 ISE trust-hierarchy fields per
-  [`harness-roadmap.md` §"Phase 2":168](../../eidolons/.spectra/harness-roadmap.md)).
-  When that lands, `$id`s SHOULD bump to `v1.x.0` matching the spec
-  minor version.
-- **Notes:** ajv resolves cross-file `$ref`s by `$id`
-  (`envelopeVerify.ts:128-200`). Changing `$id` requires a TS SDK
-  rebuild and forces external vendors to update import paths — that
-  cost is acceptable when a real schema change ships, not before.
+entries — they are pre-flagged for future review.
 
 ### DC-2 — Unused contract fields
 
@@ -212,36 +208,54 @@ promoted to a numbered `D-N` entry via the workflow above.
 - **Notes:** Deferred from Phase 1.A under TS SDK port; revisited if a
   Phase 2 Eidolon adoption needs the fields.
 
-### DC-3 — `envelopeVerify` shell-out C-1 EDGE_UNKNOWN parse mismatch
-
-- **Description:** The TS `envelopeVerify` SDK shells out to
-  `bash conformance/check.sh` for C-/D-gates per [DECISION] D-4 in
-  Phase 1.A. The bash checker parses `envelope.from` as a **slug
-  string** while the TS SDK emits `from` as an `agentRef` **object**.
-  Two `envelopeVerify.test.ts` integration tests are
-  `describe.skip`'d as a result; they fail with `C-1 EDGE_UNKNOWN` on
-  a valid `atlas → spectra` envelope.
-- **Evidence:**
-  [`.idg/ts-sdk-phase1-chronicle.md`:77-84](../.idg/ts-sdk-phase1-chronicle.md)
-  (the **[DISPUTED] / [ACTION]** block); the two `describe.skip`'d
-  blocks in `reference-sdk/ts/src/envelopeVerify.test.ts`.
-- **Spec section affected:** §1.1.1 envelope shape (from-field
-  schema) and §3.2 contract edge-matching.
-- **Promotion trigger:** **prior to v1.2.0 if not resolved.** Either
-  the bash checker is updated to parse `from` as an object, or the
-  TS SDK fixture shape is aligned with the slug-string behaviour. The
-  v1.1.0 PR sidesteps this by running the new I-5 tests with
-  `skipShellGates: true`.
-- **Notes:** Tracked under
-  [`.spectra/v1.1-spec-bump.md` ACTION-3](../.spectra/v1.1-spec-bump.md).
-  This is the highest-priority candidate of the three — a real
-  interop issue, not a hypothetical.
-
 ---
 
 ## Historical (retired) entries
 
-_None yet._
+### D-01 — Schema `$id` versioning lag (retired at v2.0.0)
+
+- **id:** D-01
+- **title:** All schemas carried `v1.0.0` `$id` URI despite spec being at v1.1/v1.2.
+- **discovered_at:** 2026-04-28T00:00:00Z (as DC-1 in v1.1.0 PR)
+- **discovered_via:** external-report
+- **evidence:**
+  - `schemas/envelope.v1.json` `$id` line (pre-v2.0: pinned at `v1.0.0`).
+  - `.spectra/v1.1-spec-bump.md` DECISION-S2 rationale.
+- **spec_section:** `spec/ecl-1.1.md §1.1` envelope shape; `§3` contract shape.
+- **closure:** v2.0.0 — all 12 schema `$id` URI path segments bumped from
+  `/v1.0.0/` to `/v2.0.0/` as part of the v2.0 MAJOR bump (DECISION-S2 /
+  FINDING-024 in `.spectra/v2.0-phase2c.md`). The first additive schema field
+  (ISE block in `envelope.v2.json`) triggered the promotion condition.
+- **status:** retired
+- **notes:** |
+  DC-1 tracked in the drift-candidates section since v1.1.0. Promotion
+  condition was "the first additive schema field". ECL v2.0 adds the ISE
+  block (`ise` property in `envelope.v2.json`), which satisfies the trigger.
+  All schema `$id` values now read `/v2.0.0/`. ajv consumers that hardcoded
+  the v1.0.0 URI must update their import paths — see
+  `docs/migration-v1-to-v2.md` for the upgrade guide.
+
+### D-03 — `envelopeVerify` shell-out C-1 EDGE_UNKNOWN parse mismatch (retired at v2.0.0)
+
+- **id:** D-03
+- **title:** TS `envelopeVerify` shell-out tests skipped due to stale comment about from-field parsing.
+- **discovered_at:** 2026-04-30T00:00:00Z (as DC-3 in v1.1.0 PR)
+- **discovered_via:** external-report
+- **evidence:**
+  - `.idg/ts-sdk-phase1-chronicle.md:77-84` — the [DISPUTED]/[ACTION] block.
+  - `reference-sdk/ts/src/envelopeVerify.test.ts` — two `describe.skip`'d blocks (pre-v2.0).
+- **spec_section:** `spec/ecl-1.1.md §1.1.1` envelope shape (from-field); `§3.2` edge-matching.
+- **closure:** v2.0.0 — `conformance/lib/handoff-graph.sh:70` already reads
+  `.from.eidolon` (not a slug string); the skip was based on a stale comment.
+  Two `describe.skip` tests un-skipped in v2.0 phase2c (DECISION-S5) with
+  a `bash + jq` availability guard for environments without the dev container.
+- **status:** retired
+- **notes:** |
+  DC-3 tracked since v1.1.0. The bash checker was already correct; the
+  skip was filed against a now-stale description of the bug. Un-skipping
+  confirmed the tests pass in the dev container (bash + jq available).
+  In stripped environments (plain node:22-bookworm-slim without jq),
+  the tests skip gracefully via `hasBashAndJq()` guard.
 
 ---
 
@@ -249,13 +263,11 @@ _None yet._
 
 - Drift candidates DC-1, DC-2, DC-3 enumerated in
   [`.spectra/v1.1-spec-bump.md` §S1.5](../.spectra/v1.1-spec-bump.md).
-- DC-1 traces to [DECISION-S2] in that spec.
-- DC-2 traces to
-  [`.spectra/ts-sdk-port.md` GAP-2](../.spectra/ts-sdk-port.md) and
-  [`.idg/ts-sdk-phase1-chronicle.md`:90-92](../.idg/ts-sdk-phase1-chronicle.md).
-- DC-3 traces to
-  [`.idg/ts-sdk-phase1-chronicle.md`:77-84](../.idg/ts-sdk-phase1-chronicle.md)
-  and [`.spectra/v1.1-spec-bump.md` ACTION-3](../.spectra/v1.1-spec-bump.md).
+- D-01 (retired) traces to DC-1 / DECISION-S2.
+- D-02 (open) traces to DECISION-S1 / FINDING-008 in
+  [`.spectra/v2.0-phase2c.md`](../.spectra/v2.0-phase2c.md).
+- D-03 (retired) traces to DC-3 / DECISION-S5.
+- D-04 (open) traces to DECISION-S3 (FORGE consult confirmed DEFER) in
+  [`.spectra/v2.0-phase2c-forge-consult.md`](../.spectra/v2.0-phase2c-forge-consult.md).
 - Schema, lifecycle, and governance language anchored against
-  [`spec/ecl-1.1.md` §7.4](../spec/ecl-1.1.md) and
-  [`.spectra/v1.1-spec-bump.md` §S1.5 `entry_schema`](../.spectra/v1.1-spec-bump.md).
+  [`spec/ecl-2.0.md` §7.4](../spec/ecl-2.0.md).

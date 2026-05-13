@@ -1,0 +1,56 @@
+{
+  "envelope_version": "1.0",
+  "message_id": "1e112383-cdf7-4100-87b0-386654bb0c05",
+  "thread_id": "1e112383-cdf7-4100-87b0-386654bb0c05",
+  "parent_id": null,
+  "from": { "eidolon": "atlas", "version": "1.5.1" },
+  "to": { "eidolon": "spectra", "version": "n/a" },
+  "performative": "INFORM",
+  "edge_origin": "implicit",
+  "objective": "Decision-ready inventory of every eidolons-ecl surface that must change to ship ECL v2.0.0 (Phase 2.C, S2.3 ISE trust-hierarchy).",
+  "artifact": {
+    "kind": "scout-report",
+    "schema_version": "1.0",
+    "path": "scout-report.md",
+    "sha256": "0728806eab7d73ca554c77a8b43b8e9bdb4abd257d8e48997490bb4759637369",
+    "size_bytes": 9374
+  },
+  "context_delta": {
+    "token_budget": 4000,
+    "tokens_used": 2343,
+    "input_handles": [
+      ".atlas-scout/v2.0-phase2c/mission.md",
+      ".atlas-scout/v2.0-phase2c/map.md",
+      ".atlas-scout/v2.0-phase2c/findings.md",
+      ".atlas-scout/v2.0-phase2c/fold.md",
+      ".spectra/phase2-scoping.md",
+      ".spectra/v1.1-spec-bump.md",
+      "docs/drift-register.md",
+      "spec/ecl-1.2.md",
+      "CHANGELOG.md"
+    ],
+    "summary": "Phase 2.C is envelope-only. One new schema file (envelope.v2.json), spec text additions (§6.5 + §1.1.1 regex + §7.3), and a coordinated $id bump across all 12 schemas (closes DC-1). Matched SDK updates in bash (4 sites), TS (5 sites incl. latent v1.1 lag at version.ts:11), Py (3 sites; no verifier exists today). 19 contracts already declare trust_level; none carry ISE. Bash E-3 gate at envelope.sh:38-40 is latent-stale (rejects v1.1/v1.2 despite README claims) and must be fixed AND expanded. Migrate + a2a_bridge emit v1.0 by design — SPECTRA decision required. DC-2 untouched; DC-3 overdue, natural piggyback. 30 FINDING-XXX entries with path:line evidence. Eight GAP entries handed to SPECTRA."
+  },
+  "constraints": { "trust_level": "standard" },
+  "expected_response": {
+    "performative": "PROPOSE",
+    "shape_hint": "spec.md + spec.yaml proposing v2.0.0 PR layout, gap resolutions, and ISE field design."
+  },
+  "confidence": 0.9,
+  "assumptions": [
+    "Nexus harness-roadmap.md not present in checkout at /Users/henrique/workspace/oss/agents/eidolons/.spectra/ — used eidolons-ecl/.spectra/phase2-scoping.md as the surrogate authoritative source.",
+    "Phase 2.C scope is envelope-only per .spectra/phase2-scoping.md:210; contract-schema bump is GAP-A.",
+    "ISE field design is explicitly SPECTRA-owned; not proposed here.",
+    "DC-3 closure is recommended but not strictly required for the v2.0 PR."
+  ],
+  "integrity": {
+    "method": "sha256",
+    "value": "0728806eab7d73ca554c77a8b43b8e9bdb4abd257d8e48997490bb4759637369"
+  },
+  "trace": {
+    "ts": "2026-05-13T10:09:24Z",
+    "host": "claude-code",
+    "model": "claude-opus-4-7",
+    "tier": "standard"
+  }
+}

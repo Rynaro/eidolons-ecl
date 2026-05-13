@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v1.0.0/schemas/context-delta.v1.json",
+  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v2.0.0/schemas/context-delta.v1.json",
   "title": "ECL context-delta v1",
   "description": "The context_delta object embedded in an ECL envelope. Defined by ECL v1.0 §4.",
   "type": "object",

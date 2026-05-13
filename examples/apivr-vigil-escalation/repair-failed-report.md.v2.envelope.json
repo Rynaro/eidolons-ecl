@@ -1,0 +1,56 @@
+{
+  "envelope_version": "2.0",
+  "message_id": "01942c7f-5e6f-7e04-9c5d-6hi5fcG7i1e6",
+  "thread_id": "3954d776-ee1a-423d-9d07-5b7c57d05a55",
+  "parent_id": "c569860b-c34e-4e5a-8607-bd4f655fa299",
+  "from": {
+    "eidolon": "apivr",
+    "version": "3.0.5"
+  },
+  "to": {
+    "eidolon": "vigil",
+    "version": "1.0.3"
+  },
+  "performative": "ESCALATE",
+  "edge_origin": "roster",
+  "objective": "Flaky roster-fetch test (v2.0 with ISE); 3-failure threshold reached.",
+  "artifact": {
+    "kind": "repair-failed-report",
+    "schema_version": "2.0",
+    "path": "repair-failed-report.md",
+    "sha256": "905ae605ed173f4c3e4ea8c6642623aa80951dca763b3cd7b0c94a4e445b7a8d",
+    "size_bytes": 1124
+  },
+  "context_delta": {
+    "token_budget": 4000,
+    "tokens_used": 410,
+    "input_handles": [],
+    "summary": "Three Reflect attempts on flaky-network-test category; same flake persists under retry budget +2, jittered backoff, and fetch-timeout pin. Sandbox authority granted."
+  },
+  "constraints": {
+    "trust_level": "high"
+  },
+  "ise": {
+    "assertion_grade": "validated",
+    "provenance": {
+      "methodology_version": "apivr-3.0.5",
+      "tool_surface": ["Bash", "Read", "Edit"]
+    },
+    "receiver_authorization": {
+      "auto_route": true,
+      "auto_merge": false,
+      "auto_deploy": false
+    }
+  },
+  "confidence": 0.7,
+  "integrity": {
+    "method": "hmac-sha256",
+    "value": "905ae605ed173f4c3e4ea8c6642623aa80951dca763b3cd7b0c94a4e445b7a8d"
+  },
+  "trace": {
+    "ts": "2026-05-13T10:00:00Z",
+    "host": "claude-code",
+    "model": "claude-sonnet-4-6",
+    "tier": "standard"
+  }
+}

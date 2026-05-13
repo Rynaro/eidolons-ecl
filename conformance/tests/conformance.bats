@@ -82,6 +82,42 @@ setup() {
   [ "$ec" = "2" ]
 }
 
+@test "conformant-ise-v2: exits 0 (all gates pass)" {
+  run bash "$CHECK" "$FIXTURES/conformant-ise-v2"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Result: OK (exit 0)"* ]]
+}
+
+@test "conformant-ise-v2: S-1 ise_block_shape passes" {
+  run bash "$CHECK" "$FIXTURES/conformant-ise-v2"
+  [[ "$output" == *"[OK]   S-1 MUST ise_block_shape"* ]]
+}
+
+@test "conformant-ise-v2: I-3 integrity_match passes" {
+  run bash "$CHECK" "$FIXTURES/conformant-ise-v2"
+  [[ "$output" == *"[OK]   I-3 MUST integrity_match"* ]]
+}
+
+@test "ise-missing-hierarchy: exits 2 (S-1 fails)" {
+  run bash "$CHECK" "$FIXTURES/ise-missing-hierarchy"
+  [ "$status" -eq 2 ]
+}
+
+@test "ise-missing-hierarchy: S-1 ise_block_shape fails" {
+  run bash "$CHECK" "$FIXTURES/ise-missing-hierarchy"
+  [[ "$output" == *"[FAIL] S-1 MUST ise_block_shape"* ]]
+}
+
+@test "v1-on-v2-compat: exits 0 (E-3.compat INFO emitted)" {
+  run bash "$CHECK" "$FIXTURES/v1-on-v2-compat"
+  [ "$status" -eq 0 ]
+}
+
+@test "v1-on-v2-compat: E-3.compat INFO emitted for v1.x envelope" {
+  run bash "$CHECK" "$FIXTURES/v1-on-v2-compat"
+  [[ "$output" == *"E-3.compat INFO v1x_accepted_under_v2_receiver"* ]]
+}
+
 @test "--help prints usage and exits 0" {
   run bash "$CHECK" --help
   [ "$status" -eq 0 ]

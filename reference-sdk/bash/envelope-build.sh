@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # envelope-build.sh — reference SDK helper.
-# Build a v1.0 ECL envelope JSON from an artifact + a contract.
+# Build a v2.0 ECL envelope JSON from an artifact + a contract.
 #
 # Required flags:
 #   --artifact PATH       Payload file to wrap.
 #   --contract PATH       Contract YAML for this edge.
 #   --performative STR    One of REQUEST|INFORM|PROPOSE|CRITIQUE|DECIDE|DELEGATE|ACKNOWLEDGE|ESCALATE|RESUME|REFUSE.
-#   --objective STR       One-sentence goal (≤ 240 chars).
+#   --objective STR       One-sentence goal (<=240 chars).
 #
 # Optional flags:
 #   --message-id UUID
@@ -27,6 +27,11 @@
 #   --tier STR            standard|trance. Default: 'standard'.
 #   --integrity-method M  sha256|hmac-sha256. Default: sha256.
 #                         hmac-sha256 requires $ECL_HMAC_KEY in env.
+#   --ise JSON            Optional ISE trust-hierarchy block (ECL v2.0 §6.5).
+#                         Must be a valid JSON object with at minimum
+#                         {"assertion_grade":"<grade>"}. When absent, the
+#                         ise field is omitted (ISE is optional at v2.0).
+#                         Example: --ise '{"assertion_grade":"self-attested"}'
 #
 # Output: envelope JSON on stdout.
 # Exit codes: 0 on success; 1 on bad usage; 2 on integrity computation failure.
@@ -52,6 +57,7 @@ HOST="${ECL_HOST:-raw}"
 MODEL="${ECL_MODEL:-unknown}"
 TIER="standard"
 INTEGRITY_METHOD="sha256"
+ISE_JSON=""
 
 usage() {
   sed -n '2,/^$/p' "$0" | sed 's/^# \{0,1\}//'
@@ -78,6 +84,7 @@ while [ $# -gt 0 ]; do
     --model)               MODEL="$2"; shift 2 ;;
     --tier)                TIER="$2"; shift 2 ;;
     --integrity-method)    INTEGRITY_METHOD="$2"; shift 2 ;;
+    --ise)                 ISE_JSON="$2"; shift 2 ;;
     -h|--help)             usage; exit 0 ;;
     *)
       echo "Unknown option: $1" >&2
@@ -186,60 +193,133 @@ else
   PARENT_JSON="\"$PARENT_ID\""
 fi
 
+# Optional ISE block: validate JSON and prepare argjson arg.
+ISE_ARG=""
+if [ -n "$ISE_JSON" ]; then
+  if ! printf '%s' "$ISE_JSON" | jq -e . >/dev/null 2>&1; then
+    echo "--ise value is not valid JSON" >&2; exit 1
+  fi
+  ISE_ARG="$ISE_JSON"
+fi
+
 # Emit envelope. Use jq -n with --arg for safe escaping.
-jq -n \
-  --arg envelope_version "1.0" \
-  --arg message_id       "$MESSAGE_ID" \
-  --arg thread_id        "$THREAD_ID" \
-  --argjson parent_id    "$PARENT_JSON" \
-  --arg from_eidolon     "$FROM" \
-  --arg from_version     "$FROM_VERSION" \
-  --arg to_eidolon       "$TO" \
-  --arg to_version       "$TO_VERSION" \
-  --arg performative     "$PERFORMATIVE" \
-  --arg edge_origin      "$EDGE_ORIGIN" \
-  --arg objective        "$OBJECTIVE" \
-  --arg artifact_kind    "$KIND" \
-  --arg schema_version   "1.0" \
-  --arg artifact_path    "$(basename "$ARTIFACT")" \
-  --arg sha256           "$INTEGRITY_VALUE" \
-  --argjson size_bytes   "$SIZE_BYTES" \
-  --argjson token_budget "$TOKEN_BUDGET" \
-  --argjson tokens_used  "$TOKENS_USED" \
-  --arg summary          "$SUMMARY" \
-  --arg trust_level      "$TRUST_LEVEL" \
-  --argjson confidence   "$CONFIDENCE" \
-  --arg integrity_method "$INTEGRITY_METHOD" \
-  --arg integrity_value  "$INTEGRITY_VALUE" \
-  --arg ts               "$TS" \
-  --arg host             "$HOST" \
-  --arg model            "$MODEL" \
-  --arg tier             "$TIER" \
-  '{
-    envelope_version: $envelope_version,
-    message_id: $message_id,
-    thread_id: $thread_id,
-    parent_id: $parent_id,
-    from: { eidolon: $from_eidolon, version: $from_version },
-    to:   { eidolon: $to_eidolon,   version: $to_version },
-    performative: $performative,
-    edge_origin:  $edge_origin,
-    objective:    $objective,
-    artifact: {
-      kind: $artifact_kind,
-      schema_version: $schema_version,
-      path: $artifact_path,
-      sha256: $sha256,
-      size_bytes: $size_bytes
-    },
-    context_delta: {
-      token_budget: $token_budget,
-      tokens_used:  $tokens_used,
-      input_handles: [],
-      summary: $summary
-    },
-    constraints: { trust_level: $trust_level },
-    confidence: $confidence,
-    integrity: { method: $integrity_method, value: $integrity_value },
-    trace: { ts: $ts, host: $host, model: $model, tier: $tier }
-  }'
+# envelope_version and schema_version default to "2.0" (ECL v2.0 §1.1.1).
+# The ise block is inserted when --ise was provided; omitted otherwise
+# (ISE is OPTIONAL at v2.0 per §6.5).
+if [ -n "$ISE_ARG" ]; then
+  jq -n \
+    --arg envelope_version "2.0" \
+    --arg message_id       "$MESSAGE_ID" \
+    --arg thread_id        "$THREAD_ID" \
+    --argjson parent_id    "$PARENT_JSON" \
+    --arg from_eidolon     "$FROM" \
+    --arg from_version     "$FROM_VERSION" \
+    --arg to_eidolon       "$TO" \
+    --arg to_version       "$TO_VERSION" \
+    --arg performative     "$PERFORMATIVE" \
+    --arg edge_origin      "$EDGE_ORIGIN" \
+    --arg objective        "$OBJECTIVE" \
+    --arg artifact_kind    "$KIND" \
+    --arg schema_version   "2.0" \
+    --arg artifact_path    "$(basename "$ARTIFACT")" \
+    --arg sha256           "$INTEGRITY_VALUE" \
+    --argjson size_bytes   "$SIZE_BYTES" \
+    --argjson token_budget "$TOKEN_BUDGET" \
+    --argjson tokens_used  "$TOKENS_USED" \
+    --arg summary          "$SUMMARY" \
+    --arg trust_level      "$TRUST_LEVEL" \
+    --argjson confidence   "$CONFIDENCE" \
+    --arg integrity_method "$INTEGRITY_METHOD" \
+    --arg integrity_value  "$INTEGRITY_VALUE" \
+    --arg ts               "$TS" \
+    --arg host             "$HOST" \
+    --arg model            "$MODEL" \
+    --arg tier             "$TIER" \
+    --argjson ise          "$ISE_ARG" \
+    '{
+      envelope_version: $envelope_version,
+      message_id: $message_id,
+      thread_id: $thread_id,
+      parent_id: $parent_id,
+      from: { eidolon: $from_eidolon, version: $from_version },
+      to:   { eidolon: $to_eidolon,   version: $to_version },
+      performative: $performative,
+      edge_origin:  $edge_origin,
+      objective:    $objective,
+      artifact: {
+        kind: $artifact_kind,
+        schema_version: $schema_version,
+        path: $artifact_path,
+        sha256: $sha256,
+        size_bytes: $size_bytes
+      },
+      context_delta: {
+        token_budget: $token_budget,
+        tokens_used:  $tokens_used,
+        input_handles: [],
+        summary: $summary
+      },
+      constraints: { trust_level: $trust_level },
+      ise: $ise,
+      confidence: $confidence,
+      integrity: { method: $integrity_method, value: $integrity_value },
+      trace: { ts: $ts, host: $host, model: $model, tier: $tier }
+    }'
+else
+  jq -n \
+    --arg envelope_version "2.0" \
+    --arg message_id       "$MESSAGE_ID" \
+    --arg thread_id        "$THREAD_ID" \
+    --argjson parent_id    "$PARENT_JSON" \
+    --arg from_eidolon     "$FROM" \
+    --arg from_version     "$FROM_VERSION" \
+    --arg to_eidolon       "$TO" \
+    --arg to_version       "$TO_VERSION" \
+    --arg performative     "$PERFORMATIVE" \
+    --arg edge_origin      "$EDGE_ORIGIN" \
+    --arg objective        "$OBJECTIVE" \
+    --arg artifact_kind    "$KIND" \
+    --arg schema_version   "2.0" \
+    --arg artifact_path    "$(basename "$ARTIFACT")" \
+    --arg sha256           "$INTEGRITY_VALUE" \
+    --argjson size_bytes   "$SIZE_BYTES" \
+    --argjson token_budget "$TOKEN_BUDGET" \
+    --argjson tokens_used  "$TOKENS_USED" \
+    --arg summary          "$SUMMARY" \
+    --arg trust_level      "$TRUST_LEVEL" \
+    --argjson confidence   "$CONFIDENCE" \
+    --arg integrity_method "$INTEGRITY_METHOD" \
+    --arg integrity_value  "$INTEGRITY_VALUE" \
+    --arg ts               "$TS" \
+    --arg host             "$HOST" \
+    --arg model            "$MODEL" \
+    --arg tier             "$TIER" \
+    '{
+      envelope_version: $envelope_version,
+      message_id: $message_id,
+      thread_id: $thread_id,
+      parent_id: $parent_id,
+      from: { eidolon: $from_eidolon, version: $from_version },
+      to:   { eidolon: $to_eidolon,   version: $to_version },
+      performative: $performative,
+      edge_origin:  $edge_origin,
+      objective:    $objective,
+      artifact: {
+        kind: $artifact_kind,
+        schema_version: $schema_version,
+        path: $artifact_path,
+        sha256: $sha256,
+        size_bytes: $size_bytes
+      },
+      context_delta: {
+        token_budget: $token_budget,
+        tokens_used:  $tokens_used,
+        input_handles: [],
+        summary: $summary
+      },
+      constraints: { trust_level: $trust_level },
+      confidence: $confidence,
+      integrity: { method: $integrity_method, value: $integrity_value },
+      trace: { ts: $ts, host: $host, model: $model, tier: $tier }
+    }'
+fi

@@ -102,7 +102,7 @@ describe("envelopeBuild — core shape", () => {
       objective: "Hand off scout report.",
     });
 
-    expect(env.envelope_version).toBe("1.0");
+    expect(env.envelope_version).toBe("2.0");
     expect(env.performative).toBe("PROPOSE");
     expect(env.objective).toBe("Hand off scout report.");
     expect(env.from).toEqual({ eidolon: "atlas", version: "0.0.0" });
@@ -110,7 +110,7 @@ describe("envelopeBuild — core shape", () => {
     expect(env.edge_origin).toBe("roster");
     expect(env.parent_id).toBeNull();
     expect(env.artifact.kind).toBe("scout-report");
-    expect(env.artifact.schema_version).toBe("1.0");
+    expect(env.artifact.schema_version).toBe("2.0");
     expect(env.artifact.path).toBe("fixture.md");
     expect(env.artifact.size_bytes).toBe(Buffer.byteLength(FIXTURE_CONTENT));
     expect(env.constraints).toEqual({ trust_level: "standard" });

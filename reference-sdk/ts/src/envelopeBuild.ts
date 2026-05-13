@@ -1,10 +1,17 @@
 /**
  * envelopeBuild — TypeScript port of reference-sdk/bash/envelope-build.sh.
  *
- * Builds a v1.0 ECL envelope from an artifact file and a contract YAML.
+ * Builds a v2.0 ECL envelope from an artifact file and a contract YAML.
  * Returns the typed Envelope object; does NOT write to stdout or disk
  * (the bash helper prints to stdout; TS callers receive the object directly;
  * handoffEmit handles the sidecar write — Story S4).
+ *
+ * v2.0 changes:
+ * - Default `envelope_version` is now `"2.0"` (was `"1.0"`).
+ * - Default `artifact.schema_version` is now `"2.0"` (was `"1.0"`).
+ * - Optional `ise` parameter adds ISE trust-hierarchy block (ECL v2.0 §6.5).
+ *   When `ise` is supplied, it is included in the envelope; when absent the
+ *   envelope remains conformant (ISE is OPTIONAL at v2.0).
  *
  * Bash parity notes:
  * - SHA-256 computed over raw artifact bytes (no transformation), matching
@@ -12,7 +19,6 @@
  * - `artifact.sha256` and `integrity.value` are both set to this digest,
  *   matching bash lines 205 and 213 (ATLAS F-7.3).
  * - `artifact.path` = `path.basename(artifactPath)` — matches bash `:204`.
- * - `artifact.schema_version` is hardcoded to `"1.0"` — matches bash `:203`.
  * - `context_delta.token_budget` = resolved from contract or 4000 default.
  * - Key order in the output object matches the bash `jq -n` builder exactly
  *   (envelope-build.sh:218-245) to satisfy G-S2-Bash-Parity.
@@ -33,6 +39,7 @@ import type {
   ContextDelta,
   Envelope,
   IntegrityMethod,
+  IseBlock,
   Performative,
   Tier,
   TrustLevel,
@@ -80,6 +87,12 @@ export interface EnvelopeBuildOptions {
   model?: string;
   tier?: Tier;
   integrityMethod?: IntegrityMethod;
+  /**
+   * Optional ISE trust-hierarchy block (ECL v2.0 §6.5). When supplied,
+   * the envelope is emitted at `envelope_version: "2.0"` with the ISE block.
+   * When absent the envelope is also emitted at "2.0" (ISE is optional).
+   */
+  ise?: IseBlock;
 }
 
 function rfc3339Now(): string {
@@ -205,7 +218,7 @@ export async function envelopeBuild(opts: EnvelopeBuildOptions): Promise<Envelop
   // context_delta schema uses `token_budget`; types.ts (S1) has `token_budget_max`.
   // Cast pending S3 reconciliation.
   const envelope: Envelope = {
-    envelope_version: "1.0",
+    envelope_version: "2.0",
     message_id: messageId,
     thread_id: threadId,
     parent_id: parentId,
@@ -216,7 +229,7 @@ export async function envelopeBuild(opts: EnvelopeBuildOptions): Promise<Envelop
     objective: opts.objective,
     artifact: {
       kind,
-      schema_version: "1.0",
+      schema_version: "2.0",
       path: path.basename(opts.artifact),
       sha256: integrityValue,
       size_bytes: sizeBytes,
@@ -228,6 +241,7 @@ export async function envelopeBuild(opts: EnvelopeBuildOptions): Promise<Envelop
       summary,
     } as unknown as ContextDelta,
     constraints: { trust_level: trustLevel },
+    ...(opts.ise !== undefined ? { ise: opts.ise } : {}),
     confidence,
     integrity: { method: integrityMethod, value: integrityValue },
     trace: { ts, host, model, tier },

@@ -1,6 +1,14 @@
 # Schemas
 
-JSON Schema 2020-12 definitions backing ECL v1.0.
+JSON Schema 2020-12 definitions backing ECL v2.0 (and v1.x via §7.3 compat window).
+
+## v2.0 schemas
+
+| File | Spec section | Purpose |
+|---|---|---|
+| `envelope.v2.json` | §1, §6.5 | The sidecar envelope at v2.0. Adds the optional `ise` trust-hierarchy block and widens `envelope_version` pattern to `^(1\.[012]\|2\.0)(\.\d+)?$`. |
+
+## v1.x schemas (retained per §7.3 compatibility window)
 
 | File | Spec section | Purpose |
 |---|---|---|
@@ -11,6 +19,10 @@ JSON Schema 2020-12 definitions backing ECL v1.0.
 | `handoff-event.v1.json` | §5 | One trace event line in `.eidolons/.trace/<thread_id>.jsonl`. |
 | `per-eidolon/_base-profile.v1.json` | §3.1 | Shared frontmatter base. |
 | `per-eidolon/<kind>.v1.json` | §3.1 | Kind-specific frontmatter profile. |
+
+All schema `$id` URI path segments were bumped from `/v1.0.0/` to `/v2.0.0/` at v2.0.
+File names are intentionally unchanged (`*.v1.json` filenames remain) — the `$id` path
+segment is the versioned identifier that ajv resolves, not the filename.
 
 ## Local validation
 

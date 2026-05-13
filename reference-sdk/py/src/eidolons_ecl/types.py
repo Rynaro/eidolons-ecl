@@ -1,13 +1,14 @@
-"""Hand-derived TypedDicts mirroring ECL v1.x JSON schemas.
+"""Hand-derived TypedDicts mirroring ECL v2.0 JSON schemas.
 
 Shapes are derived from:
-  - schemas/envelope.v1.json
+  - schemas/envelope.v2.json (adds ISE block, ECL v2.0 §6.5)
+  - schemas/envelope.v1.json (retained for v1.x compat, §7.3)
   - schemas/handoff-event.v1.json
   - schemas/performative.v1.json (enum values)
   - schemas/handoff-contract.v1.json
 
 This file is intentionally kept in sync with the schemas manually for
-ECL spec v1.2. Code generation is deferred to a future story; manual
+ECL spec v2.0. Code generation is deferred to a future story; manual
 derivation is cheap and reviewable at this spec version.
 """
 
@@ -49,6 +50,52 @@ Tier = Literal["standard", "trance"]
 
 #: Integrity method. ECL §6.1.
 IntegrityMethod = Literal["sha256", "hmac-sha256"]
+
+# ---------------------------------------------------------------------------
+# ISE trust-hierarchy — envelope.v2.json $defs/ise (ECL v2.0 §6.5)
+# ---------------------------------------------------------------------------
+
+#: Emitter's claim about how the artefact was produced. ECL v2.0 §6.5.2.
+AssertionGrade = Literal["unverified", "self-attested", "validated", "human-reviewed"]
+
+
+class _LateralConsult(TypedDict):
+    eidolon: str
+    performative: str
+
+
+class IseProvenance(TypedDict):
+    """``ise.provenance`` — how the artefact was derived. ECL v2.0 §6.5.3."""
+
+    #: Eidolon methodology + semver, e.g. "spectra-4.3.1".
+    methodology_version: str
+    #: Distinct tool primitives invoked (<=32 items).
+    tool_surface: NotRequired[list[str]]
+    #: Sibling-Eidolon consults (<=8 items).
+    lateral_consults: NotRequired[list[_LateralConsult]]
+
+
+class IseReceiverAuthorization(TypedDict):
+    """``ise.receiver_authorization`` — what the receiver may do. ECL v2.0 §6.5.4."""
+
+    #: Receiver MAY hand off to next contracted edge without operator confirm. Default true.
+    auto_route: NotRequired[bool]
+    #: Receiver MAY merge into mainline without operator confirm. Default false.
+    auto_merge: NotRequired[bool]
+    #: Receiver MAY deploy/publish without operator confirm. Default false.
+    auto_deploy: NotRequired[bool]
+
+
+class IseBlock(TypedDict):
+    """ISE trust-hierarchy block. Optional at v2.0. ECL v2.0 §6.5.
+
+    When present, ``assertion_grade`` is required.
+    """
+
+    assertion_grade: AssertionGrade
+    provenance: NotRequired[IseProvenance]
+    receiver_authorization: NotRequired[IseReceiverAuthorization]
+
 
 # ---------------------------------------------------------------------------
 # Agent reference — envelope.v1.json $defs/agentRef
@@ -137,14 +184,17 @@ class TraceBlock(TypedDict):
 
 
 class Envelope(TypedDict):
-    """Full ECL envelope v1. Required fields match ``required`` in the schema.
+    """Full ECL envelope v2. Required fields match ``required`` in the schema.
 
     Optional fields use ``NotRequired``. Vendor extension fields (x_*) are
     permitted by the schema (patternProperties) but are not typed here;
     consumers can use ``cast`` or direct dict access if needed.
+
+    v1.x envelopes (without ``ise``) remain valid under the v2.0 §7.3
+    compatibility window (through 2027-05-13).
     """
 
-    #: ECL spec version (^1\\.0(\\.\\d+)?$).
+    #: ECL spec version (^(1\\.[012]|2\\.0)(\\.\\d+)?$).
     envelope_version: str
     #: Globally unique message ID. UUIDv7 RECOMMENDED.
     message_id: str
@@ -162,6 +212,8 @@ class Envelope(TypedDict):
     artifact: ArtifactBlock
     context_delta: NotRequired[ContextDelta]
     constraints: NotRequired[ConstraintsBlock]
+    #: ISE trust-hierarchy block. Optional at v2.0. ECL v2.0 §6.5.
+    ise: NotRequired[IseBlock]
     expected_response: NotRequired[ExpectedResponseBlock]
     #: Sender self-assessed confidence [0, 1].
     confidence: NotRequired[float]
