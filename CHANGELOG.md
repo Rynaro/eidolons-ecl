@@ -44,6 +44,12 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
 - `schemas/*.json` (all 12 files): `$id` URI path segment `/v1.0.0/` →
   `/v2.0.0/`. Resolves drift candidate DC-1 (D-01 retired). See
   `docs/migration-v1-to-v2.md` for import-path update guidance.
+- `schemas/README.md`: enumerates the new `envelope.v2.json` row under a v2.0
+  schema section; adds the previously-missing `handoff-event.v1.json` row to
+  the v1.x table (FINDING-030); documents the `$id` segment bump
+  (`/v1.0.0/` → `/v2.0.0/`) and clarifies that `*.v1.json` filenames are
+  unchanged — the versioned identifier is the `$id` URI path, not the file
+  name.
 - `conformance/check.sh`: version `1.0.0` → `2.0.0`; default target version
   `1.0` → `2.0`; added `v2.0`/`2.x` target cases; sources `lib/ise.sh`.
 - `conformance/lib/envelope.sh`: E-3 regex now accepts
@@ -86,6 +92,10 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
 - **`migrate/backfill.py` and `a2a_bridge/translator.py`** still emit v1.0
   envelopes (DECISION-S4 — intentional; these tools are migration utilities
   and their output format is not changing as part of this PR).
+- **I-5 promotion** (`hmac-sha256` MUST at `trust_level=high`) — stays
+  SHOULD-level WARN at v2.0 per DECISION-S8; PROMOTION-CANDIDATE to MUST at
+  v2.1 once HMAC-adoption telemetry from the per-Eidolon vendoring cycle
+  shows ≥3 of 6 Eidolons routinely emitting `hmac-sha256` at high.
 
 ## [1.2.1] — 2026-05-12 — Phase 2.B: migration tool + A2A bridge
 
@@ -363,5 +373,6 @@ None open at v1.1.0. See `docs/drift-register.md` for candidates
 None at v1.0.0. Drifts will be enumerated as `D-1`, `D-2`, … as they are
 discovered against live Eidolon emit behaviour during the warn-only window.
 
-[Unreleased]: https://github.com/Rynaro/eidolons-ecl/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/Rynaro/eidolons-ecl/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/Rynaro/eidolons-ecl/releases/tag/v2.0.0
 [1.0.0]: https://github.com/Rynaro/eidolons-ecl/releases/tag/v1.0.0
