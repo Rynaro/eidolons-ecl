@@ -115,7 +115,7 @@ setup() {
 
 @test "v1-on-v2-compat: E-3.compat INFO emitted for v1.x envelope" {
   run bash "$CHECK" "$FIXTURES/v1-on-v2-compat"
-  [[ "$output" == *"[INFO] E-3.compat"* ]]
+  [[ "$output" == *"E-3.compat INFO v1x_accepted_under_v2_receiver"* ]]
 }
 
 @test "--help prints usage and exits 0" {
