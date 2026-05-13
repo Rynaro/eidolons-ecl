@@ -5,7 +5,7 @@
  *   G-S1-Test: this file must pass for `make test` to exit 0.
  *
  * Verifies:
- *   1. ECL_VERSION_TARGET equals "1.0".
+ *   1. ECL_VERSION_TARGET equals "2.0".
  *   2. envelopeBuild (S2) is exported as a function — throws USAGE for missing args.
  *   3. traceTail (S5) is exported and returns an AsyncIterable.
  *   4. envelopeVerify (S3) is exported as a function — throws USAGE for missing envelope.
@@ -22,8 +22,8 @@ import {
 } from "../index.js";
 
 describe("ECL_VERSION_TARGET", () => {
-  it('equals "1.1"', () => {
-    expect(ECL_VERSION_TARGET).toBe("1.1");
+  it('equals "2.0"', () => {
+    expect(ECL_VERSION_TARGET).toBe("2.0");
   });
 });
 

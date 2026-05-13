@@ -111,6 +111,7 @@ export interface VerifyResult {
 function coreSchemaFiles(schemasDir: string): string[] {
   return [
     path.join(schemasDir, "envelope.v1.json"),
+    path.join(schemasDir, "envelope.v2.json"),
     path.join(schemasDir, "performative.v1.json"),
     path.join(schemasDir, "context-delta.v1.json"),
     path.join(schemasDir, "handoff-contract.v1.json"),
@@ -119,10 +120,27 @@ function coreSchemaFiles(schemasDir: string): string[] {
   ];
 }
 
+/**
+ * Resolve the appropriate envelope schema based on envelope_version.
+ * v2.x envelopes validate against envelope.v2.json (ISE-aware);
+ * v1.x envelopes validate against envelope.v1.json (compat window).
+ */
+function selectEnvelopeSchemaId(
+  envelopeSchemaIdV1: string,
+  envelopeSchemaIdV2: string,
+  envelopeVersion: string
+): string {
+  if (/^1\./.test(envelopeVersion)) {
+    return envelopeSchemaIdV1;
+  }
+  return envelopeSchemaIdV2;
+}
+
 /** Build and return an Ajv2020 instance with all schemas pre-loaded. */
 function buildAjv(schemasDir: string): {
   ajv: Ajv2020;
-  envelopeSchemaId: string;
+  envelopeSchemaIdV1: string;
+  envelopeSchemaIdV2: string;
 } {
   // strict: false — needed for the if/then pattern in handoff-contract.v1.json
   // (F-2.6, D-1). allowMatchingProperties accommodates the notes-property
@@ -130,13 +148,16 @@ function buildAjv(schemasDir: string): {
   const ajv = new Ajv2020({ strict: false, allErrors: true });
   addFormats(ajv);
 
-  let envelopeSchemaId = "";
+  let envelopeSchemaIdV1 = "";
+  let envelopeSchemaIdV2 = "";
 
   for (const schemaFile of coreSchemaFiles(schemasDir)) {
     let raw: string;
     try {
       raw = fs.readFileSync(schemaFile, "utf8");
     } catch (err) {
+      // envelope.v2.json may not exist in older installs; skip gracefully.
+      if (schemaFile.includes("envelope.v2.json")) continue;
       throw new EclError({
         code: "IO_FAILED",
         message: `Cannot read schema file: ${schemaFile}`,
@@ -165,8 +186,12 @@ function buildAjv(schemasDir: string): {
       ajv.addSchema(schema);
     }
 
-    if (typeof schema.$id === "string" && (schema.$id as string).includes("envelope.v1.json")) {
-      envelopeSchemaId = schema.$id as string;
+    const schemaId = schema.$id as string;
+    if (typeof schemaId === "string" && schemaId.includes("envelope.v1.json")) {
+      envelopeSchemaIdV1 = schemaId;
+    }
+    if (typeof schemaId === "string" && schemaId.includes("envelope.v2.json")) {
+      envelopeSchemaIdV2 = schemaId;
     }
   }
 
@@ -191,14 +216,19 @@ function buildAjv(schemasDir: string): {
     }
   }
 
-  if (!envelopeSchemaId) {
+  if (!envelopeSchemaIdV1) {
     throw new EclError({
       code: "USAGE",
       message: `envelope.v1.json not found in schemas directory: ${schemasDir}`,
     });
   }
 
-  return { ajv, envelopeSchemaId };
+  // If envelope.v2.json was not found, fall back to v1 schema.
+  if (!envelopeSchemaIdV2) {
+    envelopeSchemaIdV2 = envelopeSchemaIdV1;
+  }
+
+  return { ajv, envelopeSchemaIdV1, envelopeSchemaIdV2 };
 }
 
 // ---------------------------------------------------------------------------
@@ -523,9 +553,10 @@ export async function envelopeVerify(opts: EnvelopeVerifyOptions): Promise<Verif
   // --- E- gates (schema validation) ----------------------------------------
 
   let ajv: Ajv2020;
-  let envelopeSchemaId: string;
+  let envelopeSchemaIdV1: string;
+  let envelopeSchemaIdV2: string;
   try {
-    ({ ajv, envelopeSchemaId } = buildAjv(schemasDir));
+    ({ ajv, envelopeSchemaIdV1, envelopeSchemaIdV2 } = buildAjv(schemasDir));
   } catch (err) {
     // Schema loading failure is a hard error (can't validate without schemas).
     throw err instanceof EclError
@@ -533,11 +564,20 @@ export async function envelopeVerify(opts: EnvelopeVerifyOptions): Promise<Verif
       : new EclError({ code: "IO_FAILED", message: "Schema bundle load failed", cause: err });
   }
 
-  const validate = ajv.getSchema(envelopeSchemaId);
+  // Route v1.x envelopes to envelope.v1.json; v2.x to envelope.v2.json (§7.3).
+  const envelopeVersion =
+    ((envelopeJson as Record<string, unknown>)?.envelope_version as string) ?? "";
+  const selectedSchemaId = selectEnvelopeSchemaId(
+    envelopeSchemaIdV1,
+    envelopeSchemaIdV2,
+    envelopeVersion
+  );
+
+  const validate = ajv.getSchema(selectedSchemaId);
   if (!validate) {
     throw new EclError({
       code: "IO_FAILED",
-      message: `Compiled validator not found for schema $id: ${envelopeSchemaId}`,
+      message: `Compiled validator not found for schema $id: ${selectedSchemaId}`,
     });
   }
 
@@ -663,15 +703,28 @@ export async function envelopeVerify(opts: EnvelopeVerifyOptions): Promise<Verif
           });
         }
 
-        // I-5 (SHOULD, ECL v1.1 §6.2.6): warn when trust_level=high AND
+        // I-5 (SHOULD, ECL v2.0 §6.2.6 / §6.4): warn when trust_level=high AND
         // integrity.method=sha256. RECOMMENDED is hmac-sha256 at high trust.
         // SHOULD-level warn — does NOT fail conformance.
+        // DECISION-S8: stays SHOULD; PROMOTION-CANDIDATE to MUST at v2.1.
         const trustLevel = envelope.constraints?.trust_level;
         if (trustLevel === "high" && method === "sha256") {
           warnings.push({
             gate: "I-5",
             message:
-              "trust_level=high + integrity.method=sha256 — RECOMMENDED hmac-sha256 (ECL v1.1 §6.4)",
+              "trust_level=high + integrity.method=sha256 — RECOMMENDED hmac-sha256 (ECL v2.0 §6.4)",
+          });
+        }
+
+        // S-3 (SHOULD, ECL v2.0 §6.5.5): warn when trust_level=high AND ise absent.
+        // PROMOTION-CANDIDATE to MUST at v2.1.
+        const isePresent =
+          envelope && typeof envelope === "object" && "ise" in envelope && envelope.ise != null;
+        if (trustLevel === "high" && !isePresent) {
+          warnings.push({
+            gate: "S-3",
+            message:
+              "trust_level=high without ise block — RECOMMENDED to include ISE trust hierarchy (ECL v2.0 §6.5.5)",
           });
         }
       }
@@ -756,6 +809,9 @@ function deriveEGate(err: { instancePath: string; keyword: string; message?: str
 
   // E-8: trace.tier enum mismatch.
   if (p.includes("/trace/tier")) return "E-8";
+
+  // S-1: ise block shape violation (assertion_grade required/enum; ECL v2.0 §6.5).
+  if (p.startsWith("/ise")) return "S-1";
 
   // Generic schema violation.
   return "E-9";

@@ -1,14 +1,15 @@
 /**
- * Hand-authored TypeScript types derived from ECL v1.0 JSON schemas.
+ * Hand-authored TypeScript types derived from ECL v2.0 JSON schemas.
  *
  * Shapes are derived from:
- *   - schemas/envelope.v1.json
+ *   - schemas/envelope.v2.json (adds ISE block)
+ *   - schemas/envelope.v1.json (retained for v1.x compat)
  *   - schemas/per-eidolon/_base-profile.v1.json
  *   - schemas/handoff-event.v1.json
  *   - schemas/performative.v1.json (enum values)
  *
  * This file is intentionally kept in sync with the schemas manually for
- * ECL spec v1.0. Code generation is deferred to a future story; manual
+ * ECL spec v2.0. Code generation is deferred to a future story; manual
  * derivation is cheap and reviewable at this spec version.
  */
 
@@ -62,6 +63,43 @@ export type Tier = "standard" | "trance";
 
 /** Integrity method. ECL §6.1. */
 export type IntegrityMethod = "sha256" | "hmac-sha256";
+
+// ---------------------------------------------------------------------------
+// ISE trust-hierarchy — envelope.v2.json $defs/ise (ECL v2.0 §6.5)
+// ---------------------------------------------------------------------------
+
+/** Emitter's claim about how the artefact was produced. ECL v2.0 §6.5.2. */
+export type AssertionGrade = "unverified" | "self-attested" | "validated" | "human-reviewed";
+
+/** `ise.provenance` — how the artefact was derived. */
+export interface IseProvenance {
+  /** Eidolon methodology + semver, e.g. "spectra-4.3.1". */
+  methodology_version: string;
+  /** Distinct tool primitives invoked (≤32 items). */
+  tool_surface?: string[];
+  /** Sibling-Eidolon consults (≤8 items). */
+  lateral_consults?: Array<{ eidolon: string; performative: string }>;
+}
+
+/** `ise.receiver_authorization` — what the receiver may do. */
+export interface IseReceiverAuthorization {
+  /** Receiver MAY hand off to next contracted edge without operator confirm. Default true. */
+  auto_route?: boolean;
+  /** Receiver MAY merge into mainline without operator confirm. Default false. */
+  auto_merge?: boolean;
+  /** Receiver MAY deploy/publish without operator confirm. Default false. */
+  auto_deploy?: boolean;
+}
+
+/**
+ * ISE trust-hierarchy block. Optional at v2.0. When present, `assertion_grade`
+ * is required. See ECL v2.0 §6.5.
+ */
+export interface IseBlock {
+  assertion_grade: AssertionGrade;
+  provenance?: IseProvenance;
+  receiver_authorization?: IseReceiverAuthorization;
+}
 
 // ---------------------------------------------------------------------------
 // Envelope sub-objects
@@ -125,15 +163,17 @@ export interface TraceBlock {
 // ---------------------------------------------------------------------------
 
 /**
- * Full ECL envelope v1. Required fields match `required` in the schema.
+ * Full ECL envelope v2. Required fields match `required` in the schema.
  * Optional fields are typed accordingly.
+ *
+ * v1.x envelopes (without `ise`) remain valid under v2.0 (§7.3 compat window).
  *
  * Vendor extension fields (x_*) are permitted by the schema
  * (patternProperties) but are not typed here; consumers can use an
  * intersection type if needed.
  */
 export interface Envelope {
-  /** ECL spec version (^1\.0(\.\d+)?$). */
+  /** ECL spec version (^(1\.[012]|2\.0)(\.\d+)?$). */
   envelope_version: string;
   /** Globally unique message ID. UUIDv7 RECOMMENDED. */
   message_id: string;
@@ -151,6 +191,8 @@ export interface Envelope {
   artifact: ArtifactBlock;
   context_delta?: ContextDelta;
   constraints?: ConstraintsBlock;
+  /** ISE trust-hierarchy block. Optional at v2.0. ECL v2.0 §6.5. */
+  ise?: IseBlock;
   expected_response?: ExpectedResponseBlock;
   /** Sender self-assessed confidence [0, 1]. */
   confidence?: number;
