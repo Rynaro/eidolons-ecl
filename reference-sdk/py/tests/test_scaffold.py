@@ -24,12 +24,12 @@ from eidolons_ecl.version import __version__
 # ---------------------------------------------------------------------------
 
 
-def test_ecl_version_target_equals_1_2() -> None:
-    assert ECL_VERSION_TARGET == "1.2"
+def test_ecl_version_target_equals_2_0() -> None:
+    assert ECL_VERSION_TARGET == "2.0"
 
 
 def test_version_is_semver() -> None:
-    assert __version__ == "1.2.0"
+    assert __version__ == "2.0.0"
     # Structural sanity: must parse as MAJOR.MINOR.PATCH
     assert re.fullmatch(r"\d+\.\d+\.\d+", __version__) is not None
 
