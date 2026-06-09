@@ -22,6 +22,7 @@ by each Eidolon's own repository and validated by their own toolchain.
 | `repair-failed-report.v1.json` | APIVR-Δ | VIGIL | apivr→vigil |
 | `root-cause-report.v1.json` | VIGIL | APIVR-Δ, SPECTRA, IDG | vigil→apivr, vigil→spectra, vigil→idg |
 | `reasoning-report.v1.json` | FORGE | any | *→forge / forge→* |
+| `edit-proposal.v1.json` | KUPO | SPECTRA, VIGIL, FORGE, APIVR-Δ | kupo→spectra/vigil/forge/apivr |
 
 ## Adding a profile
 

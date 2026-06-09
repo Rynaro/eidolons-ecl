@@ -66,6 +66,33 @@ from `performatives_allowed`): `PROPOSE`, `DECIDE`, `DELEGATE`,
 `RESUME`. Rationale per performative is captured in each contract's
 `notes:` field and in Junction spec §5.7.
 
+## Edges for the Kupo executor
+
+Kupo (the low-effort `executor` Eidolon, shipped in the nexus roster at v1.0.0)
+is a pure downstream worker: any planner/coder Eidolon (or a human) `DELEGATE`s a
+localized, verifier-backed micro-task to it, and Kupo returns a verified
+`edit-proposal` via `PROPOSE` for the parent to apply — it never writes the real
+tree and never routes work onward.
+
+| File | From | To | Edge origin | Primary artefact |
+|---|---|---|---|---|
+| `spectra-to-kupo.yaml` | spectra | kupo | roster | spec |
+| `vigil-to-kupo.yaml` | vigil | kupo | roster | root-cause-report |
+| `forge-to-kupo.yaml` | forge | kupo | roster | reasoning-report |
+| `apivr-to-kupo.yaml` | apivr | kupo | roster | apivr-completion-report |
+| `atlas-to-kupo.yaml` | atlas | kupo | roster | scout-report |
+| `human-to-kupo.yaml` | human | kupo | implicit | prompt |
+| `kupo-to-spectra.yaml` | kupo | spectra | roster | edit-proposal |
+| `kupo-to-vigil.yaml` | kupo | vigil | roster | edit-proposal |
+| `kupo-to-forge.yaml` | kupo | forge | roster | edit-proposal |
+| `kupo-to-apivr.yaml` | kupo | apivr | roster | edit-proposal |
+| `kupo-to-atlas.yaml` | kupo | atlas | roster | edit-proposal (INFORM/ESCALATE only — no PROPOSE to a read-only scout) |
+
+Inbound edges allow `DELEGATE, INFORM, ACKNOWLEDGE`; outbound allow `PROPOSE,
+INFORM, ESCALATE, REFUSE, ACKNOWLEDGE, RESUME` (Kupo never emits `DELEGATE,
+DECIDE, CRITIQUE, REQUEST` — worker, never router). The `vivi↔kupo` edges are
+deferred until the Vivi succession lands.
+
 ## Edges deferred to later v1.0.x patch releases
 
 Edges declared in `roster/index.yaml` but not yet exercised; emission on

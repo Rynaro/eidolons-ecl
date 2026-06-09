@@ -8,6 +8,7 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Kupo executor edges (11 contracts) + the `edit-proposal` profile.** Per-edge contracts for Kupo (the low-effort `executor` Eidolon, shipped in the nexus roster at v1.0.0): inbound `DELEGATE` from `spectra/vigil/forge/apivr/atlas` + `human` `REQUEST`; outbound `kupo→spectra/vigil/forge/apivr` (`PROPOSE` a verified `edit-proposal`) + `kupo→atlas` (`INFORM`/`ESCALATE` only — no PROPOSE to a read-only scout). New per-Eidolon profile `schemas/per-eidolon/edit-proposal.v1.json` (allOf-extends `_base-profile`; pins `eidolon: kupo`, `kind: edit-proposal`; requires a green `verifier_result`). All 11 validate against `handoff-contract.v1.json`. The `vivi↔kupo` edges are deferred until the Vivi succession ships.
 - Six new contract files under `contracts/` enumerating every
   `human → <eidolon>` edge for the shipped roster:
   - `human-to-atlas.yaml`, `human-to-spectra.yaml`, `human-to-apivr.yaml`,

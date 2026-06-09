@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v2.0.0/schemas/per-eidolon/edit-proposal.v1.json",
+  "title": "ECL edit-proposal profile v1",
+  "description": "Kupo-emitted verified edit-proposal, wrapped by an ECL envelope. Validates the YAML frontmatter only; the richer body schema (search/replace blocks, verification, sandbox) is owned by Kupo's own repo (Rynaro/Kupo schemas/kupo-edit-proposal.v1.json) and MUST be a strict subset of this profile.",
+  "allOf": [
+    { "$ref": "_base-profile.v1.json" },
+    {
+      "type": "object",
+      "required": ["verifier", "verifier_result"],
+      "properties": {
+        "kind": { "const": "edit-proposal" },
+        "eidolon": { "const": "kupo" },
+        "verifier": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The NAMED external verifier that proved the edit GREEN (e.g. 'pytest tests/x.py::y', 'tsc --noEmit', 'ruff check src/')."
+        },
+        "verifier_class": {
+          "enum": ["test", "typecheck", "lint", "compile", "diff", "schema-validate"],
+          "description": "Class of the named external verifier."
+        },
+        "verifier_result": {
+          "const": "green",
+          "description": "Kupo emits PROPOSE only after a green external signal (pre-completion gate). An edit-proposal is verified by construction."
+        },
+        "target_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2,
+          "description": "Number of files the proposal edits — KEEP scope is <= 2 files."
+        }
+      }
+    }
+  ]
+}
