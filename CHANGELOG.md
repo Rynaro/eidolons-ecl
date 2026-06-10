@@ -6,32 +6,13 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [2.1.0] - 2026-06-10
+## [2.0.2] - 2026-06-10
 
 ### Added
 
-- **Kupo executor edges (11 contracts) + the `edit-proposal` profile.** Per-edge contracts for Kupo (the low-effort `executor` Eidolon, shipped in the nexus roster at v1.0.0): inbound `DELEGATE` from `spectra/vigil/forge/apivr/atlas` + `human` `REQUEST`; outbound `kupo→spectra/vigil/forge/apivr` (`PROPOSE` a verified `edit-proposal`) + `kupo→atlas` (`INFORM`/`ESCALATE` only — no PROPOSE to a read-only scout). New per-Eidolon profile `schemas/per-eidolon/edit-proposal.v1.json` (allOf-extends `_base-profile`; pins `eidolon: kupo`, `kind: edit-proposal`; requires a green `verifier_result`). All 11 validate against `handoff-contract.v1.json`.
-- Six new contract files under `contracts/` enumerating every
-  `human → <eidolon>` edge for the shipped roster:
-  - `human-to-atlas.yaml`, `human-to-spectra.yaml`, `human-to-apivr.yaml`,
-    `human-to-idg.yaml`, `human-to-forge.yaml`, `human-to-vigil.yaml`.
-  - Allowed human-origin performatives: `REQUEST`, `INFORM`,
-    `CRITIQUE`, `REFUSE`, `ACKNOWLEDGE`, `ESCALATE`.
-  - Forbidden (enforced by absence from `performatives_allowed`):
-    `PROPOSE`, `DECIDE`, `DELEGATE`, `RESUME`. Per-performative
-    rationale is recorded in each contract's `notes:` field and in
-    Junction spec §5.7 (`human-to-atlas.yaml` carries the canonical
-    rationale; the other five reference it).
-  - `artifacts[0].kind: prompt`, `schema_ref:
-    ../schemas/per-eidolon/_base-profile.v1.json` — the base profile
-    is reused as the body shape; consumers may extend with a
-    `prompt.v1.json` profile in a later additive PR if needed.
-- `contracts/README.md` — new "Human-origin edges (additive)" section
-  enumerates the six files alongside the existing v1.0 / v1.0.1
-  tables.
 - **Vivi succession edges (10 contracts) + vivi-completion-report profile.**
   Closes the deferred `vivi↔kupo` item noted in the Kupo executor batch
-  above. Vivi (loop-native default coder, A→P→I→V→Δ/R cycle, `Rynaro/Vivi`
+  (v2.0.1). Vivi (loop-native default coder, A→P→I→V→Δ/R cycle, `Rynaro/Vivi`
   v1.1.2) succeeds APIVR-Δ as the default coder seat in the nexus roster.
   - **Inbound (6):** `atlas-to-vivi.yaml` (scout-report), `spectra-to-vivi.yaml`
     (spec), `forge-to-vivi.yaml` (reasoning-report), `vigil-to-vivi.yaml`
@@ -54,17 +35,33 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
       envelope `from.eidolon`); same body shape as `repair-failed-report.v1.json`
       (which pins `eidolon: apivr`); adds `loop_iterations_used`.
   - All 10 validate against `schemas/handoff-contract.v1.json`.
-  - `contracts/README.md` updated with the new "Vivi succession edges (v2.1.0)"
+  - `contracts/README.md` updated with the new "Vivi succession edges (v2.0.2)"
     section enumerating inbound and outbound tables.
   - `schemas/per-eidolon/README.md` updated with the two new profiles.
 
-### Notes
+## [2.0.1] - 2026-06-09
 
-- **Backward compatible** — pure additive patch. No schema changes to
-  existing files, no envelope-format changes, no changes to existing contracts.
-  `ECL_VERSION` stays at `2.0` (the version file declares `MAJOR.MINOR`, which
-  tracks the ECL wire-format spec version, not the contract-set version;
-  contract additions are additive to v2.0 and do not alter the spec).
+### Added
+
+- **Kupo executor edges (11 contracts) + the `edit-proposal` profile.** Per-edge contracts for Kupo (the low-effort `executor` Eidolon, shipped in the nexus roster at v1.0.0): inbound `DELEGATE` from `spectra/vigil/forge/apivr/atlas` + `human` `REQUEST`; outbound `kupo→spectra/vigil/forge/apivr` (`PROPOSE` a verified `edit-proposal`) + `kupo→atlas` (`INFORM`/`ESCALATE` only — no PROPOSE to a read-only scout). New per-Eidolon profile `schemas/per-eidolon/edit-proposal.v1.json` (allOf-extends `_base-profile`; pins `eidolon: kupo`, `kind: edit-proposal`; requires a green `verifier_result`). All 11 validate against `handoff-contract.v1.json`.
+- Six new contract files under `contracts/` enumerating every
+  `human → <eidolon>` edge for the shipped roster:
+  - `human-to-atlas.yaml`, `human-to-spectra.yaml`, `human-to-apivr.yaml`,
+    `human-to-idg.yaml`, `human-to-forge.yaml`, `human-to-vigil.yaml`.
+  - Allowed human-origin performatives: `REQUEST`, `INFORM`,
+    `CRITIQUE`, `REFUSE`, `ACKNOWLEDGE`, `ESCALATE`.
+  - Forbidden (enforced by absence from `performatives_allowed`):
+    `PROPOSE`, `DECIDE`, `DELEGATE`, `RESUME`. Per-performative
+    rationale is recorded in each contract's `notes:` field and in
+    Junction spec §5.7 (`human-to-atlas.yaml` carries the canonical
+    rationale; the other five reference it).
+  - `artifacts[0].kind: prompt`, `schema_ref:
+    ../schemas/per-eidolon/_base-profile.v1.json` — the base profile
+    is reused as the body shape; consumers may extend with a
+    `prompt.v1.json` profile in a later additive PR if needed.
+- `contracts/README.md` — new "Human-origin edges (additive)" section
+  enumerates the six files alongside the existing v1.0 / v1.0.1
+  tables.
 
 ## [2.0.0] — 2026-05-13 — Phase 2.C: ISE trust-hierarchy, v2.0 MAJOR
 

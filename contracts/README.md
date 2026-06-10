@@ -92,7 +92,7 @@ Inbound edges allow `DELEGATE, INFORM, ACKNOWLEDGE`; outbound allow `PROPOSE,
 INFORM, ESCALATE, REFUSE, ACKNOWLEDGE, RESUME` (Kupo never emits `DELEGATE,
 DECIDE, CRITIQUE, REQUEST` — worker, never router).
 
-## Vivi succession edges (v2.1.0)
+## Vivi succession edges (v2.0.2)
 
 Vivi (the loop-native default coder, A→P→I→V→Δ/R cycle) succeeds APIVR-Δ as
 the default coder seat. It inherits APIVR-Δ's validated discipline spine and
