@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v2.1.0/schemas/per-eidolon/vivi-completion-report.v1.json",
+  "title": "ECL vivi-completion-report profile v1",
+  "description": "Vivi emits when the A→P→I→V→Δ/R cycle is complete; consumed by IDG. Mirrors apivr-completion-report.v1.json with eidolon: vivi and kind: vivi-completion-report.",
+  "allOf": [
+    { "$ref": "_base-profile.v1.json" },
+    {
+      "type": "object",
+      "required": ["files_changed_count", "tests_run", "tests_passed"],
+      "properties": {
+        "kind":    { "const": "vivi-completion-report" },
+        "eidolon": { "const": "vivi" },
+        "files_changed_count": { "type": "integer", "minimum": 0 },
+        "tests_run":           { "type": "integer", "minimum": 0 },
+        "tests_passed":        { "type": "integer", "minimum": 0 },
+        "deltas_count":        { "type": "integer", "minimum": 0 },
+        "escalations_count":   { "type": "integer", "minimum": 0 },
+        "loop_iterations":     {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of closed edit-run-test loop iterations Vivi executed in the V phase."
+        },
+        "tracks_count":        {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of parallel tracks if TRANCE G4 was used (default 1 for single-track runs)."
+        }
+      }
+    }
+  ]
+}

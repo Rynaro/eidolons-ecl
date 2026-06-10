@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v2.1.0/schemas/per-eidolon/vivi-repair-failed-report.v1.json",
+  "title": "ECL vivi-repair-failed-report profile v1",
+  "description": "Vivi emits on the 3-failure threshold (I-5: Bounded recovery); consumed by VIGIL. Same structure as repair-failed-report.v1.json but pins eidolon: vivi. The kind stays 'repair-failed-report' — the shared kind is intentional; the emitter is distinguished by the envelope from.eidolon field.",
+  "allOf": [
+    { "$ref": "_base-profile.v1.json" },
+    {
+      "type": "object",
+      "required": ["failure_category", "attempts", "last_test_command"],
+      "properties": {
+        "kind":    { "const": "repair-failed-report" },
+        "eidolon": { "const": "vivi" },
+        "failure_category": {
+          "type": "string",
+          "description": "Vivi failure taxonomy slug (e.g. 'flaky-test', 'env-mismatch', 'integration-error')."
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 3,
+          "description": "MUST be >= 3 to trigger escalation per Vivi I-5 (Bounded recovery)."
+        },
+        "last_test_command": { "type": "string" },
+        "loop_iterations_used": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total closed-loop iterations consumed across all attempts for this failure category."
+        },
+        "trace_artifact_paths": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  ]
+}
