@@ -6,9 +6,11 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-06-10
+
 ### Added
 
-- **Kupo executor edges (11 contracts) + the `edit-proposal` profile.** Per-edge contracts for Kupo (the low-effort `executor` Eidolon, shipped in the nexus roster at v1.0.0): inbound `DELEGATE` from `spectra/vigil/forge/apivr/atlas` + `human` `REQUEST`; outbound `kupo→spectra/vigil/forge/apivr` (`PROPOSE` a verified `edit-proposal`) + `kupo→atlas` (`INFORM`/`ESCALATE` only — no PROPOSE to a read-only scout). New per-Eidolon profile `schemas/per-eidolon/edit-proposal.v1.json` (allOf-extends `_base-profile`; pins `eidolon: kupo`, `kind: edit-proposal`; requires a green `verifier_result`). All 11 validate against `handoff-contract.v1.json`. The `vivi↔kupo` edges are deferred until the Vivi succession ships.
+- **Kupo executor edges (11 contracts) + the `edit-proposal` profile.** Per-edge contracts for Kupo (the low-effort `executor` Eidolon, shipped in the nexus roster at v1.0.0): inbound `DELEGATE` from `spectra/vigil/forge/apivr/atlas` + `human` `REQUEST`; outbound `kupo→spectra/vigil/forge/apivr` (`PROPOSE` a verified `edit-proposal`) + `kupo→atlas` (`INFORM`/`ESCALATE` only — no PROPOSE to a read-only scout). New per-Eidolon profile `schemas/per-eidolon/edit-proposal.v1.json` (allOf-extends `_base-profile`; pins `eidolon: kupo`, `kind: edit-proposal`; requires a green `verifier_result`). All 11 validate against `handoff-contract.v1.json`.
 - Six new contract files under `contracts/` enumerating every
   `human → <eidolon>` edge for the shipped roster:
   - `human-to-atlas.yaml`, `human-to-spectra.yaml`, `human-to-apivr.yaml`,
@@ -27,21 +29,42 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
 - `contracts/README.md` — new "Human-origin edges (additive)" section
   enumerates the six files alongside the existing v1.0 / v1.0.1
   tables.
+- **Vivi succession edges (10 contracts) + vivi-completion-report profile.**
+  Closes the deferred `vivi↔kupo` item noted in the Kupo executor batch
+  above. Vivi (loop-native default coder, A→P→I→V→Δ/R cycle, `Rynaro/Vivi`
+  v1.1.2) succeeds APIVR-Δ as the default coder seat in the nexus roster.
+  - **Inbound (6):** `atlas-to-vivi.yaml` (scout-report), `spectra-to-vivi.yaml`
+    (spec), `forge-to-vivi.yaml` (reasoning-report), `vigil-to-vivi.yaml`
+    (root-cause-report), `human-to-vivi.yaml` (prompt), `kupo-to-vivi.yaml`
+    (edit-proposal). Each mirrors the corresponding `*-to-apivr` contract with
+    `to: vivi` and Vivi-specific notes.
+  - **Outbound (4):** `vivi-to-idg.yaml` (vivi-completion-report),
+    `vivi-to-forge.yaml` (reasoning-request), `vivi-to-vigil.yaml`
+    (repair-failed-report), `vivi-to-kupo.yaml` (vivi-completion-report,
+    delegation context). Each mirrors the corresponding `apivr-to-*` contract
+    with `from: vivi` and Vivi-specific notes.
+  - **New profiles:**
+    - `schemas/per-eidolon/vivi-completion-report.v1.json` — emitted at
+      Implement/Verify exit; pins `eidolon: vivi`, `kind: vivi-completion-report`;
+      allOf-extends `_base-profile`; adds `loop_iterations` (V-phase closed-loop
+      count) and `tracks_count` (TRANCE G4 parallel tracks, default 1).
+    - `schemas/per-eidolon/vivi-repair-failed-report.v1.json` — emitted on the
+      3-failure threshold (I-5: Bounded recovery); pins `eidolon: vivi`,
+      `kind: repair-failed-report` (shared kind, emitter distinguished by
+      envelope `from.eidolon`); same body shape as `repair-failed-report.v1.json`
+      (which pins `eidolon: apivr`); adds `loop_iterations_used`.
+  - All 10 validate against `schemas/handoff-contract.v1.json`.
+  - `contracts/README.md` updated with the new "Vivi succession edges (v2.1.0)"
+    section enumerating inbound and outbound tables.
+  - `schemas/per-eidolon/README.md` updated with the two new profiles.
 
 ### Notes
 
-- **Backward compatible** — pure additive patch. No schema changes,
-  no envelope-format changes, no changes to existing 18 contracts.
-  `ECL_VERSION` stays at `2.0` (the version file declares
-  `MAJOR.MINOR`).
-- Unblocks Junction's release gate G-S9 (human-edge contracts upstream)
-  per the harness spec at `eidolons/.spectra/plans/2026-05-13-ecl-harness.md`.
-  Once these contracts ship, Junction drops its vendored
-  `internal/contracts/human-to-*.yaml` copies and reads from this
-  upstream.
-- All 24 contracts validate against `schemas/handoff-contract.v1.json`;
-  bats conformance suite (24 tests) green; both worked-example chains
-  green.
+- **Backward compatible** — pure additive patch. No schema changes to
+  existing files, no envelope-format changes, no changes to existing contracts.
+  `ECL_VERSION` stays at `2.0` (the version file declares `MAJOR.MINOR`, which
+  tracks the ECL wire-format spec version, not the contract-set version;
+  contract additions are additive to v2.0 and do not alter the spec).
 
 ## [2.0.0] — 2026-05-13 — Phase 2.C: ISE trust-hierarchy, v2.0 MAJOR
 

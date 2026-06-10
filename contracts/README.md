@@ -90,8 +90,41 @@ tree and never routes work onward.
 
 Inbound edges allow `DELEGATE, INFORM, ACKNOWLEDGE`; outbound allow `PROPOSE,
 INFORM, ESCALATE, REFUSE, ACKNOWLEDGE, RESUME` (Kupo never emits `DELEGATE,
-DECIDE, CRITIQUE, REQUEST` — worker, never router). The `vivi↔kupo` edges are
-deferred until the Vivi succession lands.
+DECIDE, CRITIQUE, REQUEST` — worker, never router).
+
+## Vivi succession edges (v2.1.0)
+
+Vivi (the loop-native default coder, A→P→I→V→Δ/R cycle) succeeds APIVR-Δ as
+the default coder seat. It inherits APIVR-Δ's validated discipline spine and
+adds a closed, autonomous, bounded edit-run-test loop as the core of its Verify
+phase. These 10 contracts mirror the corresponding apivr edges with `to: vivi`
+or `from: vivi`, notes rewritten for Vivi's methodology, and the vivi-specific
+artifact profiles. Closes the deferred `vivi↔kupo` item noted in the Kupo
+executor release above.
+
+### Inbound (6)
+
+| File | From | To | Edge origin | Primary artefact |
+|---|---|---|---|---|
+| `atlas-to-vivi.yaml`   | atlas   | vivi | roster | scout-report |
+| `spectra-to-vivi.yaml` | spectra | vivi | roster | spec |
+| `forge-to-vivi.yaml`   | forge   | vivi | roster | reasoning-report |
+| `vigil-to-vivi.yaml`   | vigil   | vivi | roster | root-cause-report |
+| `human-to-vivi.yaml`   | human   | vivi | roster | prompt |
+| `kupo-to-vivi.yaml`    | kupo    | vivi | roster | edit-proposal |
+
+### Outbound (4)
+
+| File | From | To | Edge origin | Primary artefact |
+|---|---|---|---|---|
+| `vivi-to-idg.yaml`   | vivi | idg   | roster | vivi-completion-report |
+| `vivi-to-forge.yaml` | vivi | forge | roster | reasoning-request |
+| `vivi-to-vigil.yaml` | vivi | vigil | roster | repair-failed-report |
+| `vivi-to-kupo.yaml`  | vivi | kupo  | roster | vivi-completion-report (delegation context) |
+
+New per-Eidolon profiles added for this batch:
+- `schemas/per-eidolon/vivi-completion-report.v1.json` — emitted at Implement/Verify exit; pins `eidolon: vivi`, `kind: vivi-completion-report`; extends `_base-profile`; adds `loop_iterations` and `tracks_count` fields.
+- `schemas/per-eidolon/vivi-repair-failed-report.v1.json` — emitted on 3-failure threshold (I-5); pins `eidolon: vivi`, `kind: repair-failed-report`; same body shape as `repair-failed-report.v1.json` (which pins `eidolon: apivr`); adds `loop_iterations_used`.
 
 ## Edges deferred to later v1.0.x patch releases
 
