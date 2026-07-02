@@ -26,14 +26,14 @@ emitting tool is not an Eidolon at all.
 These are the only places where EIIS and ECL touch:
 
 1. **`ECL_VERSION` file at the Eidolon repo root.** Mirrors EIIS's
-   `EIIS_VERSION` pattern. ECL §7.2 makes this SHOULD-level for v1.0.
-   v1.1 may promote to MUST.
+   `EIIS_VERSION` pattern. SHOULD-level under ECL §7.2. Since EIIS v1.4
+   (§3.7.1), a declared `ECL_VERSION` is additionally copied verbatim to
+   the install target with `role: "ecl-version"`.
 2. **`install.manifest.json` MAY include an `ecl_version_emitted`
    field.** Optional metadata so the nexus can detect which Eidolons
-   are emitting ECL envelopes. Not required by EIIS v1.1.
-3. **`eidolons sync` warns on mismatch.** Nexus integration (separate
-   PR after ECL v1.0 lands) reads both `EIIS_VERSION` and
-   `ECL_VERSION` and reports drift.
+   are emitting ECL envelopes. Still optional as of EIIS v1.4.
+3. **`eidolons sync` warns on mismatch.** Nexus integration reads both
+   `EIIS_VERSION` and `ECL_VERSION` and reports drift.
 
 ## Drift register
 
@@ -50,9 +50,10 @@ specific version of the other. Recommended pairings:
 
 | EIIS | ECL | Status |
 |---|---|---|
-| 1.1 | 1.0 | Recommended (current) |
-| 1.0 | 1.0 | Supported (v1.0 EIIS Eidolons MAY emit ECL envelopes) |
-| 1.2+ | 1.x | Forward-compatible (additive) |
+| 1.4 | 2.0 | Recommended (current) |
+| 1.2–1.3 | 1.x–2.0 | Supported (EIIS §4.6 ECL composition clause available from 1.2) |
+| 1.0–1.1 | 1.0 | Supported (v1.0 EIIS Eidolons MAY emit ECL envelopes) |
+| 1.5+ | 2.x | Forward-compatible (additive) |
 
 A breaking change in either standard requires a MAJOR bump in that
 standard alone; the other is unaffected.

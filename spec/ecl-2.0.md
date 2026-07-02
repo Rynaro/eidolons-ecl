@@ -614,10 +614,10 @@ inside the block. The four valid values are:
 | `human-reviewed` | Operator signed off on the artefact. |
 
 §6.5.3 — **SHOULD**: when `constraints.trust_level=high` AND the envelope
-crosses a mutating-performative edge (`COMMIT`, `REJECT`), the emitter
+crosses a mutating-performative edge (`DECIDE`, `REFUSE`), the emitter
 SHOULD set `ise.assertion_grade ∈ {validated, human-reviewed}`.
 
-#### §6.5.2 — Provenance sub-object
+#### `ise.provenance` sub-object
 
 `ise.provenance` is OPTIONAL inside the block. When present, it describes
 how the artefact was derived:
@@ -626,9 +626,9 @@ how the artefact was derived:
 |---|---|---|
 | `methodology_version` | yes | Eidolon methodology + semver, e.g. `"spectra-4.3.1"`. Pattern: `^[a-z][a-z0-9-]*-\d+\.\d+\.\d+$`. |
 | `tool_surface` | no | Array of distinct tool primitives invoked (≤32 items). |
-| `lateral_consults` | no | Array of sibling-Eidolon consults (≤8 items), each with `eidolon` and `performative`. |
+| `lateral_consults` | no | Array of sibling-Eidolon consults (≤8 items), each with `eidolon` and `performative`. The `performative` is drawn from the same closed ten-member set as §2.1 — lateral consults do not get a separate vocabulary. |
 
-#### §6.5.3 — Receiver-authorization sub-object
+#### `ise.receiver_authorization` sub-object
 
 `ise.receiver_authorization` is OPTIONAL inside the block. Default values
 apply when absent. Receivers MUST NOT take an action whose corresponding

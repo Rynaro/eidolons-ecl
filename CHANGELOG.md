@@ -6,6 +6,30 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- **`lateral_consults.performative` now draws from the closed §2.1 set.** The
+  v2.0 schema shipped a ten-member FIPA-style enum (`QUERY`, `INFORM-RESULT`,
+  `COMMIT`, `REJECT`, `ACK`, `CANCEL`, `SUBSCRIBE`, …) inside
+  `ise.provenance.lateral_consults` — a second performative vocabulary that
+  contradicted the P0 "closed set of exactly ten, no extensions without a spec
+  revision". The schema now `$ref`s `performative.v1.json#/$defs/performative`
+  (the same single source of truth the envelope-level `performative` uses),
+  and spec §6.5.2's provenance table says so explicitly. No known emitter used
+  the FIPA-only values; the only in-tree fixture records `REQUEST`, which is
+  valid under both vocabularies.
+- Spec §6.5.3 illustrated "mutating-performative edge" with `COMMIT`/`REJECT`,
+  neither of which exists in the closed set; the example now reads
+  `DECIDE`/`REFUSE`.
+- Resolved the §6.5 numbering collision: the field-definition subsections
+  formerly headed "§6.5.2 — Provenance sub-object" and "§6.5.3 —
+  Receiver-authorization sub-object" collided with normative paragraphs
+  §6.5.2/§6.5.3 under "Emitter rules". The field subsections are now titled
+  by field path (`ise.provenance`, `ise.receiver_authorization`); no normative
+  paragraph was renumbered, so external citations of §6.5.1–§6.5.7 stay valid.
+- `docs/relationship-to-eiis.md` recommended-pairing table claimed EIIS 1.1 /
+  ECL 1.0 as current; updated for EIIS 1.4 / ECL 2.0 (including the EIIS §3.7.1
+  `ECL_VERSION` install-target copy that landed in EIIS v1.4).
+
 ## [2.0.2] - 2026-06-10
 
 ### Added
