@@ -233,7 +233,10 @@
                 "required": ["eidolon", "performative"],
                 "properties": {
                   "eidolon": { "type": "string" },
-                  "performative": { "type": "string", "enum": ["INFORM","REQUEST","QUERY","INFORM-RESULT","INFORM-FAILURE","COMMIT","REJECT","ACK","CANCEL","SUBSCRIBE"] }
+                  "performative": {
+                    "$ref": "performative.v1.json#/$defs/performative",
+                    "description": "Performative of the consult, from the same closed ten-member set as §2.1 — lateral consults do not get a separate vocabulary (P0: no extensions without a spec revision)."
+                  }
                 }
               },
               "maxItems": 8,
