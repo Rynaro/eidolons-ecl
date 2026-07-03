@@ -118,6 +118,81 @@ setup() {
   [[ "$output" == *"E-3.compat INFO v1x_accepted_under_v2_receiver"* ]]
 }
 
+# --- ECL v2.1 (Draft) gates: I-5/S-3 promoted to MUST, new S-4 ---------------
+
+@test "conformant-ise-v2.1: exits 0 (all v2.1 gates pass)" {
+  run bash "$CHECK" "$FIXTURES/conformant-ise-v2.1"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Result: OK (exit 0)"* ]]
+}
+
+@test "conformant-ise-v2.1: S-4 ise_verification_shape passes (MUST)" {
+  run bash "$CHECK" "$FIXTURES/conformant-ise-v2.1"
+  [[ "$output" == *"[OK]   S-4 MUST ise_verification_shape"* ]]
+}
+
+@test "conformant-ise-v2.1: S-3 is MUST-level and passes at v2.1" {
+  run bash "$CHECK" "$FIXTURES/conformant-ise-v2.1"
+  [[ "$output" == *"[OK]   S-3 MUST ise_required_at_high"* ]]
+}
+
+@test "conformant-ise-v2.1: I-5 is MUST-level and passes at v2.1" {
+  run bash "$CHECK" "$FIXTURES/conformant-ise-v2.1"
+  [[ "$output" == *"[OK]   I-5 MUST hmac_recommended_at_high_trust"* ]]
+}
+
+@test "ise-verification-invalid-v2.1: exits 2 (S-4 fails)" {
+  run bash "$CHECK" "$FIXTURES/ise-verification-invalid-v2.1"
+  [ "$status" -eq 2 ]
+}
+
+@test "ise-verification-invalid-v2.1: S-4 ise_verification_shape fails on unknown transcript_access" {
+  run bash "$CHECK" "$FIXTURES/ise-verification-invalid-v2.1"
+  [[ "$output" == *"[FAIL] S-4 MUST ise_verification_shape"* ]]
+  [[ "$output" == *"transcript_access invalid"* ]]
+}
+
+@test "high-trust-no-ise-v2.1: exits 2 (S-3 and I-5 promoted to MUST)" {
+  run bash "$CHECK" "$FIXTURES/high-trust-no-ise-v2.1"
+  [ "$status" -eq 2 ]
+}
+
+@test "high-trust-no-ise-v2.1: S-3 fails at MUST level (v2.1 promotion)" {
+  run bash "$CHECK" "$FIXTURES/high-trust-no-ise-v2.1"
+  [[ "$output" == *"[FAIL] S-3 MUST ise_required_at_high"* ]]
+}
+
+@test "high-trust-no-ise-v2.1: I-5 fails at MUST level (v2.1 promotion)" {
+  run bash "$CHECK" "$FIXTURES/high-trust-no-ise-v2.1"
+  [[ "$output" == *"[FAIL] I-5 MUST hmac_recommended_at_high_trust"* ]]
+}
+
+@test "high-trust-sha256-v2 (regression): 2.0 envelope still only WARNS (exit 4)" {
+  run bash "$CHECK" "$FIXTURES/high-trust-sha256-v2"
+  [ "$status" -eq 4 ]
+  [[ "$output" == *"Result: WARN"* ]]
+}
+
+@test "high-trust-sha256-v2 (regression): I-5 stays SHOULD/WARN at v2.0" {
+  run bash "$CHECK" "$FIXTURES/high-trust-sha256-v2"
+  [[ "$output" == *"[WARN] I-5 SHOULD hmac_recommended_at_high_trust"* ]]
+}
+
+@test "high-trust-sha256-v2 (regression): S-3 stays SHOULD/WARN at v2.0" {
+  run bash "$CHECK" "$FIXTURES/high-trust-sha256-v2"
+  [[ "$output" == *"[WARN] S-3 SHOULD ise_required_at_high"* ]]
+}
+
+@test "conformant-high-trust-v2.1: high-trust hmac hand-off passes (exit 0)" {
+  command -v openssl >/dev/null 2>&1 || skip "openssl required for HMAC verification"
+  export ECL_HMAC_KEY="ecl-test-key-2.1"
+  run bash "$CHECK" "$FIXTURES/conformant-high-trust-v2.1"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"[OK]   I-5 MUST hmac_recommended_at_high_trust"* ]]
+  [[ "$output" == *"[OK]   S-3 MUST ise_required_at_high"* ]]
+  [[ "$output" == *"[OK]   S-4 MUST ise_verification_shape"* ]]
+}
+
 @test "--help prints usage and exits 0" {
   run bash "$CHECK" --help
   [ "$status" -eq 0 ]

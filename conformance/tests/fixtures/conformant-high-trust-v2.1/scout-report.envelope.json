@@ -1,0 +1,54 @@
+{
+  "envelope_version": "2.1",
+  "message_id": "01942d10-0002-7e04-9c5d-2df1b8c3e702",
+  "thread_id":  "01942d10-0002-7e04-9c5d-2df1b8c3e702",
+  "parent_id":  null,
+  "from": { "eidolon": "atlas",   "version": "1.5.1"  },
+  "to":   { "eidolon": "spectra", "version": "4.3.1" },
+  "performative": "PROPOSE",
+  "edge_origin": "roster",
+  "objective": "High-trust hand-off of scout-report; hmac-sha256 + ise required at ECL v2.1.",
+  "artifact": {
+    "kind": "scout-report",
+    "schema_version": "2.0",
+    "path": "scout-report.md",
+    "sha256": "5f17ef59d338816b5bbacf73a447c3066cd73ae73c7ba95853138f0909e690fb",
+    "size_bytes": 370
+  },
+  "context_delta": {
+    "token_budget": 4000,
+    "tokens_used": 130,
+    "input_handles": ["mission.md"],
+    "summary": "High-trust production-change hand-off; hmac-sha256 integrity and an ise block are MUST at v2.1."
+  },
+  "constraints": { "trust_level": "high" },
+  "ise": {
+    "assertion_grade": "human-reviewed",
+    "provenance": {
+      "methodology_version": "atlas-1.5.1",
+      "tool_surface": ["read", "grep", "bash"],
+      "lateral_consults": []
+    },
+    "receiver_authorization": {
+      "auto_route": true,
+      "auto_merge": false,
+      "auto_deploy": false
+    },
+    "verification": {
+      "fresh_context": true,
+      "checker": "vigil",
+      "transcript_access": "none"
+    }
+  },
+  "confidence": 0.97,
+  "integrity": {
+    "method": "hmac-sha256",
+    "value": "305335375ca47958b67fc1a749aaeb6cfc154120f6e56a343858ce0441806b53"
+  },
+  "trace": {
+    "ts": "2026-07-02T10:05:00Z",
+    "host": "claude-code",
+    "model": "claude-opus-4-8",
+    "tier": "standard"
+  }
+}

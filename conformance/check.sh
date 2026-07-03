@@ -135,9 +135,10 @@ case "$TARGET_VERSION" in
   1.0|1.0.*|1)   : "v1.0 baseline" ;;
   1.*)           : "v1.x; running v1.x gates" ;;
   2.0|2.0.*|2)   : "v2.0; running v2.0 gates including ISE" ;;
-  2.*)           : "future 2.x; running v2.0 gates" ;;
+  2.1|2.1.*)     : "v2.1 (Draft); per-envelope gates promote I-5/S-3 to MUST and add S-4 for 2.1 envelopes" ;;
+  2.*)           : "future 2.x; running v2.x gates" ;;
   *)
-    echo "Unsupported --target-version: $TARGET_VERSION (this checker knows 1.x and 2.0)" >&2
+    echo "Unsupported --target-version: $TARGET_VERSION (this checker knows 1.x, 2.0, 2.1)" >&2
     exit 1
     ;;
 esac

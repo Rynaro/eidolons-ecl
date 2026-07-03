@@ -1,10 +1,19 @@
 # ECL — Eidolons Communication Layer
 
-**Version:** 2.0
-**Status:** Stable
-**Published:** 2026-05-13
+**Version:** 2.1
+**Status:** Draft (adoption-gated)
+**Published:** — (Draft; see gate note below)
+**Supersedes-when-cut:** 2.0 (which remains the governing Published spec until the gate is met)
 **Editors:** Rynaro and the Eidolons contributors
 **License:** Apache-2.0
+
+> **Adoption gate.** 2.1 is cut to Published when ≥ 3 of the shipped Eidolons
+> emit the ISE block (the §6.5.5 / §6.2.6 promotion precondition recorded in
+> 2.0). Until then 2.0 remains the governing Published spec. While this
+> document is Draft, `ECL_VERSION` stays `2.0` and `SPEC.md` continues to
+> resolve to `spec/ecl-2.0.md`; the conformance checker already recognises
+> `envelope_version: "2.1"` and applies the v2.1 gates to any envelope that
+> declares it (§1.1.1), so emitters MAY adopt 2.1 ahead of the cut.
 
 ## Normative keywords
 
@@ -18,16 +27,38 @@ they appear in all capitals, as shown here.
 
 ## Status of this document
 
-This is ECL v2.0, introducing the ISE (Intent, Source, and Entitlement)
-trust-hierarchy fields. ECL formalises how Eidolons exchange artefacts:
-the envelope wrapper that travels alongside every emitted artefact, the
-performative vocabulary that declares intent, the hand-off contracts that
-define what each directed edge in the Eidolons hand-off graph permits, the
-context-delta discipline that keeps the working-set bounded, the trace event
-format for audit lineage, and the integrity tags that defend the message
-layer against agent-in-the-middle and prompt-infection attacks.
+This is ECL v2.1, a **Draft (adoption-gated)** minor revision of v2.0. It
+carries v2.0 forward unchanged except for three deltas, all of which sharpen
+the ISE (Intent, Source, and Entitlement) trust hierarchy introduced at v2.0:
 
-ECL is **opt-in** for v1.0. Eidolons that do not emit ECL envelopes remain
+1. The two `[PROMOTION-CANDIDATE]` clauses recorded in v2.0 — gate **I-5**
+   (`hmac-sha256` at `trust_level=high`, §6.2.6) and gate **S-3**
+   (`ise` block required at `trust_level=high`, §6.5.5) — are **promoted from
+   SHOULD to MUST**. At v2.1 the conformance checker **fails** (rather than
+   warns) on these two conditions for envelopes that declare
+   `envelope_version: "2.1"`.
+2. A new OPTIONAL `ise.verification` sub-block (§6.5.8) records the
+   verify-attestation seam — who re-checked the artefact, from a fresh
+   context, with what transcript access. When present, its **shape is MUST**
+   (gate **S-4**). ECL only shape-checks it; the MUST-level pairing with
+   `assertion_grade` is owned by ESL (see §6.5.8).
+3. `envelope_version` acceptance is widened to `2.1` (§1.1.1).
+
+Because 2.1 is Draft and adoption-gated (see the header note), **2.0 remains
+the governing Published spec** and `ECL_VERSION` stays `2.0` until the gate is
+met. v2.0 envelopes are byte-identically conformant under a v2.1 verifier — the
+promoted gates and S-4 apply only to envelopes that declare
+`envelope_version: "2.1"`.
+
+ECL formalises how Eidolons exchange artefacts: the envelope wrapper that
+travels alongside every emitted artefact, the performative vocabulary that
+declares intent, the hand-off contracts that define what each directed edge in
+the Eidolons hand-off graph permits, the context-delta discipline that keeps
+the working-set bounded, the trace event format for audit lineage, and the
+integrity tags that defend the message layer against agent-in-the-middle and
+prompt-infection attacks.
+
+ECL is **opt-in**. Eidolons that do not emit ECL envelopes remain
 EIIS-conformant and continue to interoperate as before. Eidolons that DO
 emit envelopes MUST satisfy this specification. The roster registry tracks
 each Eidolon's declared `comm.envelope_version`; the nexus warns on
@@ -94,8 +125,11 @@ A v1.0 envelope is a JSON object with the following REQUIRED fields:
 | `trace` | object | `{ts, host, model, tier}`. See [§5](#5--trace-and-audit). |
 
 §1.1.1 — **MUST**: `envelope_version` SHALL match the regular expression
-`^(1\.[012]|2\.0)(\.\d+)?$` for ECL v2.0 conformance. v1.0, v1.1, and
-v1.2 envelopes are accepted under v2.0 conformance (backward-compatible per §7.3).
+`^(1\.[012]|2\.[01])(\.\d+)?$` for ECL v2.1 conformance. v1.0, v1.1, v1.2,
+and v2.0 envelopes are accepted under v2.1 conformance (backward-compatible
+per §7.3); v2.0 envelopes are treated byte-identically to a v2.0 verifier
+(the v2.1 gate promotions in §6.2.6 and §6.5.5 and the S-4 gate in §6.5.8
+apply only when `envelope_version` matches `^2\.1(\.\d+)?$`).
 
 §1.1.2 — **MUST**: every required field above is present and non-null
 (except `parent_id`, which MAY be null).
@@ -121,16 +155,17 @@ recompute and verify before acting on the payload.
 | `expected_response` | object | `{performative, shape_hint?}`. What the sender expects back. |
 | `confidence` | number | 0 ≤ x ≤ 1. The sender's self-assessed confidence in the payload. |
 | `assumptions` | array of string | Material assumptions the receiver should know. |
-| `ise` | object | ISE trust-hierarchy block. See [§6.5](#65--ise-trust-hierarchy). Optional at v2.0. |
+| `ise` | object | ISE trust-hierarchy block. See [§6.5](#65--ise-trust-hierarchy). OPTIONAL. Gains an OPTIONAL `ise.verification` sub-block at v2.1 (§6.5.8). |
 
 §1.2.1 — **SHOULD**: emitters SHOULD populate `edge_origin`. Conformance
 checkers MAY warn (exit 4) when omitted; v1.1 may promote this to SHOULD.
 
-§1.2.2 — **SHOULD**: when `constraints.trust_level` is `high`,
-`integrity.method` SHOULD be `hmac-sha256` (see [§6.3](#63--trust-levels)
-and [§6.4](#64--hmac-key-lifecycle)). Conformance MAY emit a SHOULD-level
-warning (gate I-5) when `trust_level=high` AND `integrity.method=sha256`
-— see [§6.2.6](#62--constraints).
+§1.2.2 — **MUST**: at v2.1, when `constraints.trust_level` is `high`,
+`integrity.method` SHALL be `hmac-sha256` (see [§6.3](#63--trust-levels)
+and [§6.4](#64--hmac-key-lifecycle)). Conformance SHALL emit a MUST-level
+failure (gate I-5) when `trust_level=high` AND `integrity.method=sha256`
+in a v2.1 envelope — see [§6.2.6](#62--constraints). This was a SHOULD-level
+warning at v2.0.
 
 §1.2.3 — **MAY**: emitters MAY include additional fields not enumerated
 above, namespaced under `x_<vendor>_<field>` (e.g. `x_atlas_memex_ref`).
@@ -139,15 +174,19 @@ Receivers SHALL ignore unknown `x_*` fields.
 §1.2.4 — **MUST NOT**: emitters SHALL NOT introduce non-namespaced
 top-level fields beyond those enumerated in §1.1 and §1.2 without a SemVer
 bump. The `ise` field introduced in v2.0 is explicitly enumerated in §1.2
-and §6.5; it does not require a further bump.
+and §6.5; it does not require a further bump. The `ise.verification`
+sub-block introduced in v2.1 is nested inside the already-enumerated `ise`
+field (not a new top-level field); its addition is an additive minor change
+(§7.1) and is fully described in §6.5.8.
 
 ### §1.3 — Worked example
 
-A canonical v2.0 envelope with ISE (see also `templates/envelope-v2-example.json`):
+A canonical v2.1 envelope with ISE and the new `verification` sub-block (see
+also `templates/envelope-v2-example.json` for the v2.0 form):
 
 ```json
 {
-  "envelope_version": "2.0",
+  "envelope_version": "2.1",
   "message_id": "01926e3a-2c8a-7b04-b3a1-1cf0a7a6d5e1",
   "thread_id":  "01926e3a-2c8a-7b04-b3a1-1cf0a7a6d5e1",
   "parent_id":  null,
@@ -181,6 +220,11 @@ A canonical v2.0 envelope with ISE (see also `templates/envelope-v2-example.json
       "auto_route": true,
       "auto_merge": false,
       "auto_deploy": false
+    },
+    "verification": {
+      "fresh_context": true,
+      "checker": "vigil",
+      "transcript_access": "artifact-only"
     }
   },
   "expected_response": {
@@ -463,8 +507,8 @@ agent. ECL defends at the message layer.
 
 | Method | When to use | Computation |
 |---|---|---|
-| `sha256` | Default for `trust_level ∈ {low, standard}`. Acceptable at `trust_level=high` but conformance emits a SHOULD-level warning (I-5). | Lowercase hex digest of the SHA-256 hash of the payload file's bytes at emit time. |
-| `hmac-sha256` | **RECOMMENDED** for `trust_level = high`; OPTIONAL otherwise. See [§6.4](#64--hmac-key-lifecycle). | Lowercase hex digest of HMAC-SHA-256 of the payload bytes, keyed by a per-thread shared secret supplied via the `ECL_HMAC_KEY` environment variable. |
+| `sha256` | Default for `trust_level ∈ {low, standard}`. At v2.1, `sha256` at `trust_level=high` is a **MUST-level conformance failure** (gate I-5); it remained a SHOULD-level warning at v2.0. | Lowercase hex digest of the SHA-256 hash of the payload file's bytes at emit time. |
+| `hmac-sha256` | **REQUIRED** for `trust_level = high` at v2.1 (gate I-5, MUST); OPTIONAL otherwise. RECOMMENDED for `trust_level=high` at v2.0. See [§6.4](#64--hmac-key-lifecycle). | Lowercase hex digest of HMAC-SHA-256 of the payload bytes, keyed by a per-thread shared secret supplied via the `ECL_HMAC_KEY` environment variable. |
 
 ### §6.2 — Constraints
 
@@ -486,18 +530,23 @@ events SHALL NOT include it.
 §6.2.5 — **MAY**: future minor versions MAY introduce additional methods
 (e.g. `ed25519`); receivers SHALL refuse unknown methods conservatively.
 
-§6.2.6 — **SHOULD**: conformance checkers SHOULD warn (gate I-5, SHOULD
-level — does NOT fail conformance) when an envelope carries
-`constraints.trust_level=high` AND `integrity.method=sha256`. The warning
-message SHOULD reference §6.4 and recommend `hmac-sha256`. Backward
-compatibility: v1.0 envelopes that combine `trust_level=high` and `sha256`
-remain conformant under v2.0; the warning is non-blocking.
+§6.2.6 — **MUST** (v2.1): conformance checkers SHALL **fail** (gate I-5,
+MUST level) when a v2.1 envelope carries `constraints.trust_level=high` AND
+`integrity.method=sha256`. The failure message SHALL reference §6.4 and
+require `hmac-sha256`. This gate was a SHOULD-level warning at v2.0
+(§6.2.6, v2.0). Backward compatibility: v1.x and **v2.0** envelopes that
+combine `trust_level=high` and `sha256` remain conformant — the v2.1 MUST
+applies only when `envelope_version` matches `^2\.1(\.\d+)?$`; for v1.x /
+v2.0 envelopes the checker continues to emit the SHOULD-level, non-blocking
+warning exactly as before.
 
-> [PROMOTION-CANDIDATE] Gate I-5 is SHOULD at v2.0. It is a candidate
-> for promotion to MUST at v2.1, contingent on ≥3 of 6 Eidolons routinely
-> emitting `hmac-sha256` at `trust_level=high` in their v2.0 adoption cycles.
-> Premature promotion within the §7.3 12-month window would break live v1.x
-> emitters that legitimately combine `trust_level=high` + `sha256`.
+> [PROMOTION — REALISED AT v2.1] Gate I-5 was SHOULD at v2.0, flagged as a
+> promotion candidate contingent on ≥ 3 of the shipped Eidolons routinely
+> emitting `hmac-sha256` at `trust_level=high`. v2.1 promotes it to MUST.
+> Because v2.1 is Draft (adoption-gated) and 2.0 remains the governing
+> Published spec, the promotion is scoped strictly to envelopes that declare
+> `envelope_version: "2.1"`; it never retro-tightens live v1.x / v2.0
+> emitters within the §7.3 compatibility window.
 
 ### §6.3 — Trust levels
 
@@ -614,13 +663,21 @@ inside the block. The four valid values are:
 | `human-reviewed` | Operator signed off on the artefact. |
 
 §6.5.3 — **SHOULD**: when `constraints.trust_level=high` AND the envelope
-carries mutation intent on the edge (a `PROPOSE`/`DECIDE` performative), the
-emitter SHOULD set `ise.assertion_grade ∈ {validated, human-reviewed}`.
+carries mutation intent — i.e. a `PROPOSE`/`DECIDE` performative on the
+edge[^mutation] — the emitter SHOULD set
+`ise.assertion_grade ∈ {validated, human-reviewed}`. When the emitter sets
+`ise.assertion_grade = "validated"`, it SHOULD additionally supply an
+`ise.verification` sub-block (§6.5.8).
 
-> **Erratum 2026-07-02:** this clause originally named the edge a
-> "mutating-performative edge (`COMMIT`, `REJECT`)"; `COMMIT` and `REJECT`
-> are not in the closed ten-performative set (§2.1). Corrected in place to the
-> closed-set mutation-carrying performatives `PROPOSE`/`DECIDE` (CHANGELOG 2.0.3).
+[^mutation]: v2.0 named this a "mutating-performative edge (`COMMIT`,
+`REJECT`)". `COMMIT` and `REJECT` are **not** members of the closed
+ten-performative set (§2.1) — that reference was an editorial error. The
+mutation-carrying performatives in the closed set are `PROPOSE` (offers a
+change / spec / plan / edit-proposal for the receiver to act on) and `DECIDE`
+(records the routing or approval that authorises a mutation); both are named
+here because a high-trust hand-off may carry mutation intent under either.
+v2.1 corrects the reference in place without adding any performative, and v2.0
+carries the identical correction as an erratum (2.0 CHANGELOG, 2.0.3).
 
 #### §6.5.2 — Provenance sub-object
 
@@ -651,16 +708,21 @@ flag is `false`.
 (backward-compatibility per §7.3). Gate `E-3.compat` emits an INFO log
 when a v1.x envelope is accepted under a v2.0 verifier.
 
-§6.5.5 — **SHOULD**: receivers SHOULD emit gate `S-3` warning when
-`constraints.trust_level=high` AND `ise` is absent **AND**
-`envelope_version` indicates v2.0 or later. The gate does not apply to
-v1.x envelopes accepted under the §7.3 backward-compatibility window —
-those envelopes pre-date the ISE field and are accepted as-is via §6.5.4.
+§6.5.5 — **MUST** (v2.1): receivers SHALL **fail** gate `S-3` when a v2.1
+envelope carries `constraints.trust_level=high` AND `ise` is absent. For
+v2.0 envelopes the gate remains a SHOULD-level warning (as at §6.5.5, v2.0),
+and it does not apply at all to v1.x envelopes accepted under the §7.3
+backward-compatibility window — those envelopes pre-date the ISE field and
+are accepted as-is via §6.5.4. The MUST applies only when `envelope_version`
+matches `^2\.1(\.\d+)?$`.
 
-> [PROMOTION-CANDIDATE] `S-3` is SHOULD (warn) at v2.0. It is a candidate
-> for promotion to MUST at v2.1 (gate S-3 → MUST). Promotion trigger:
-> once telemetry from the per-Eidolon vendoring cycle (FINDING-026) shows
-> ≥3 of 6 Eidolons routinely emitting `ise` at `trust_level=high`.
+> [PROMOTION — REALISED AT v2.1] `S-3` was SHOULD (warn) at v2.0, a candidate
+> for promotion to MUST once telemetry from the per-Eidolon vendoring cycle
+> (FINDING-026) showed ≥ 3 of the shipped Eidolons routinely emitting `ise`
+> at `trust_level=high`. v2.1 promotes it to MUST. Because v2.1 is Draft
+> (adoption-gated) and 2.0 remains the governing Published spec, the
+> promotion is scoped strictly to `envelope_version: "2.1"` envelopes and
+> never retro-tightens live v1.x / v2.0 emitters.
 
 §6.5.6 — **MUST NOT**: receivers MUST NOT auto-route / auto-merge /
 auto-deploy when the corresponding `ise.receiver_authorization.*` field is
@@ -669,6 +731,44 @@ auto-deploy when the corresponding `ise.receiver_authorization.*` field is
 §6.5.7 — **MUST NOT**: receivers MUST NOT use `ise` to bypass other
 normative constraints (mirrors §6.3.2). ISE fields grant explicit permission;
 they do not revoke or override envelope-level MUST constraints.
+
+#### §6.5.8 — Verification sub-object (v2.1)
+
+`ise.verification` is a new OPTIONAL sub-object introduced at v2.1. It records
+the **verify-attestation seam**: who re-checked the artefact, whether they did
+so from a fresh context, and what access they had to the emitter's transcript.
+It is the ECL-visible footprint of an independent verification pass; it does
+**not** by itself prove that a verification happened.
+
+| Field | Required (when block present) | Description |
+|---|---|---|
+| `fresh_context` | yes | Boolean. `true` iff the checker verified the artefact from a context that did not include the emitter's generating transcript. |
+| `checker` | yes | Slug of the Eidolon (or reserved identity) that performed the verification. MUST match the same slug pattern used for `from.eidolon` / `to.eidolon` (§1.1.3): `^[a-z][a-z0-9-]*$` (this pattern also admits the reserved `human` / `orchestrator`). |
+| `transcript_access` | yes | One of `none` \| `artifact-only`. `none` = the checker saw neither the artefact-generating transcript nor the payload text ahead of verification; `artifact-only` = the checker read only the emitted payload artefact, not the generating transcript. Any other value is REJECTED. |
+
+§6.5.8.1 — **MUST**: when `ise.verification` is present in a v2.1 envelope,
+its shape SHALL conform to the table above (gate **S-4**, MUST level): all
+three fields present; `fresh_context` a boolean; `checker` matching the
+slug pattern; `transcript_access` ∈ {`none`, `artifact-only`}. An unknown
+`transcript_access` value or a missing/ill-typed field is a MUST-level
+failure. The sub-object admits no additional properties.
+
+§6.5.8.2 — **SHOULD**: an emitter that sets `ise.assertion_grade = "validated"`
+SHOULD accompany it with an `ise.verification` sub-block whose `fresh_context`
+is `true` and whose `checker` differs from `from.eidolon`. This is the seam
+that lets a downstream receiver distinguish a self-asserted "validated" from
+one an independent fresh-context checker stands behind.
+
+§6.5.8.3 — **Division of labour (ECL ⟂ ESL).** ECL 2.1 **only shape-checks**
+`ise.verification` (gate S-4). The **MUST-level enforcement** that a
+`validated` assertion is actually *paired* with a fresh-context,
+different-checker verification — i.e. the semantic rule behind §6.5.8.2 —
+belongs to **ESL** (the Eidolons Spec Lifecycle), specifically its maker≠checker
+verify gate (**ESL C8**), **not** to ECL. ECL owns the wire shape of the
+attestation; ESL owns the lifecycle rule that a verify envelope must be signed
+by someone other than its maker. They compose the same way ECL and EIIS compose
+(§8): EIIS governs install layout, ESL governs the spec lifecycle, ECL governs
+the wire format — and none re-declares another's rules.
 
 ---
 
@@ -706,6 +806,13 @@ minor release. v1.1 SHALL accept v1.0 envelopes unchanged.
 The v2.0 conformance checker accepts v1.x envelopes without error and emits a
 non-blocking INFO log (`E-3.compat`): "v1.x envelope accepted under v2.0
 receiver, §7.3 window valid through 2027-05-13."
+
+**v2.1 receivers SHALL accept v2.0 and v1.x envelopes.** v2.1 is an additive
+minor over v2.0 (§7.1): the only normative tightenings — I-5 → MUST (§6.2.6),
+S-3 → MUST (§6.5.5) — and the new S-4 shape gate (§6.5.8) are scoped by
+`envelope_version` to `^2\.1(\.\d+)?$` and therefore never invalidate a
+conformant v2.0 or v1.x envelope. A v2.0 envelope verified under a v2.1
+verifier behaves byte-identically to verification under a v2.0 verifier.
 
 **Asymmetric contract**: v1.x verifiers are NOT required to accept v2.0 envelopes.
 A v2.0 envelope presented to a v1.2 verifier WILL fail gate E-3 (the v1.2 regex

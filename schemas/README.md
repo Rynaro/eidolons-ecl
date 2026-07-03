@@ -1,6 +1,13 @@
 # Schemas
 
-JSON Schema 2020-12 definitions backing ECL v2.0 (and v1.x via §7.3 compat window).
+JSON Schema 2020-12 definitions backing ECL v2.0 (and v1.x via §7.3 compat window),
+plus the ECL v2.1 (Draft) envelope schema.
+
+## v2.1 schemas (Draft, adoption-gated)
+
+| File | Spec section | Purpose |
+|---|---|---|
+| `envelope.v2.1.json` | §1, §6.5.8 | The sidecar envelope at v2.1 (Draft). Carries `envelope.v2.json` forward, adds the optional `ise.verification` sub-block (gate S-4), and widens the `envelope_version` pattern to `^(1\.[012]\|2\.[01])(\.\d+)?$`. `envelope.v2.json` is left untouched; validators pick the schema by `envelope_version`. |
 
 ## v2.0 schemas
 

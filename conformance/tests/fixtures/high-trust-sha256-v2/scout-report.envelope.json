@@ -1,0 +1,36 @@
+{
+  "envelope_version": "2.0",
+  "message_id": "01942d10-0005-7e04-9c5d-2df1b8c3e705",
+  "thread_id":  "01942d10-0005-7e04-9c5d-2df1b8c3e705",
+  "parent_id":  null,
+  "from": { "eidolon": "atlas",   "version": "1.5.1"  },
+  "to":   { "eidolon": "spectra", "version": "4.3.1" },
+  "performative": "PROPOSE",
+  "edge_origin": "roster",
+  "objective": "Regression: v2.0 trust_level=high + sha256 + no ise still only WARNS (I-5, S-3) at exit 4.",
+  "artifact": {
+    "kind": "scout-report",
+    "schema_version": "2.0",
+    "path": "scout-report.md",
+    "sha256": "c8f9083bb0ace75ced87915cf53b616714b2649b617fea331716d91c1db17148",
+    "size_bytes": 373
+  },
+  "context_delta": {
+    "token_budget": 4000,
+    "tokens_used": 70,
+    "input_handles": [],
+    "summary": "v2.0 high-trust regression guard: the v2.1 promotions must not retro-tighten this envelope."
+  },
+  "constraints": { "trust_level": "high" },
+  "confidence": 0.4,
+  "integrity": {
+    "method": "sha256",
+    "value": "c8f9083bb0ace75ced87915cf53b616714b2649b617fea331716d91c1db17148"
+  },
+  "trace": {
+    "ts": "2026-07-02T10:20:00Z",
+    "host": "claude-code",
+    "model": "claude-sonnet-4-6",
+    "tier": "standard"
+  }
+}

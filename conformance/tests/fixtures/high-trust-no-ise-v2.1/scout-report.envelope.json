@@ -1,0 +1,36 @@
+{
+  "envelope_version": "2.1",
+  "message_id": "01942d10-0004-7e04-9c5d-2df1b8c3e704",
+  "thread_id":  "01942d10-0004-7e04-9c5d-2df1b8c3e704",
+  "parent_id":  null,
+  "from": { "eidolon": "atlas",   "version": "1.5.1"  },
+  "to":   { "eidolon": "spectra", "version": "4.3.1" },
+  "performative": "PROPOSE",
+  "edge_origin": "roster",
+  "objective": "Fixture: v2.1 trust_level=high with sha256 and no ise block — fails S-3 and I-5 (both MUST).",
+  "artifact": {
+    "kind": "scout-report",
+    "schema_version": "2.0",
+    "path": "scout-report.md",
+    "sha256": "2bb1309ffdd816c5e22ad79d182543f2ec1506e31d4b4c79cae56e4bfd4ae902",
+    "size_bytes": 359
+  },
+  "context_delta": {
+    "token_budget": 4000,
+    "tokens_used": 70,
+    "input_handles": [],
+    "summary": "v2.1 promotion fixture: high trust without hmac and without ise now fails both gates."
+  },
+  "constraints": { "trust_level": "high" },
+  "confidence": 0.4,
+  "integrity": {
+    "method": "sha256",
+    "value": "2bb1309ffdd816c5e22ad79d182543f2ec1506e31d4b4c79cae56e4bfd4ae902"
+  },
+  "trace": {
+    "ts": "2026-07-02T10:15:00Z",
+    "host": "claude-code",
+    "model": "claude-sonnet-4-6",
+    "tier": "standard"
+  }
+}
