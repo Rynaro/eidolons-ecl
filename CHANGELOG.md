@@ -6,6 +6,91 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.0-draft] — 2026-07-02 — ISE promotions + verification seam (Draft, adoption-gated)
+
+**Status: Draft (adoption-gated). NOT a release.** `ECL_VERSION` stays `2.0`,
+`SPEC.md` continues to resolve to `spec/ecl-2.0.md`, and the conformance
+checker's own `--version` stays `2.0.0`. 2.0 remains the **governing Published
+spec**. 2.1 is cut to Published — at which point `ECL_VERSION` and `SPEC.md`
+flip to 2.1 — only once **≥ 3 of the shipped Eidolons emit the ISE block** (the
+§6.5.5 / §6.2.6 promotion precondition recorded in 2.0). The checker already
+recognises `envelope_version: "2.1"` and applies the v2.1 gates to any envelope
+that declares it, so emitters MAY adopt 2.1 ahead of the cut. All changes below
+are **scoped by `envelope_version`**: v2.0 and v1.x envelopes verify
+byte-identically to before.
+
+### Added
+
+- **`spec/ecl-2.1.md`** — ECL v2.1 spec (Draft). Carries `spec/ecl-2.0.md`
+  forward with three deltas:
+  1. Gates **I-5** (`hmac-sha256` at `trust_level=high`, §6.2.6) and **S-3**
+     (`ise` block at `trust_level=high`, §6.5.5) **promoted SHOULD → MUST**,
+     realising the two `[PROMOTION-CANDIDATE]` clauses recorded in 2.0. The
+     promotion is scoped strictly to `envelope_version: "2.1"` envelopes.
+  2. New OPTIONAL **`ise.verification`** sub-block (§6.5.8): `{ fresh_context:
+     boolean, checker: <eidolon-slug>, transcript_access: none|artifact-only }`.
+     When present its shape is MUST (new gate **S-4**). ECL 2.1 only
+     shape-checks it; the MUST-level pairing of `assertion_grade: "validated"`
+     with a fresh-context, different-`checker` verification is owned by **ESL
+     (C8)**, not ECL — the division of labour is documented explicitly in
+     §6.5.8.3 (mirroring the ECL/EIIS boundary in §8).
+  3. `envelope_version` acceptance widened to `^(1\.[012]|2\.[01])(\.\d+)?$`
+     (§1.1.1).
+- **`schemas/envelope.v2.1.json`** — copy of `envelope.v2.json` plus the
+  `ise.verification` sub-block (`fresh_context` boolean, `checker` slug pattern
+  `^[a-z][a-z0-9-]*$`, `transcript_access` enum `none|artifact-only`, all three
+  required when the sub-block is present, `additionalProperties: false`) and the
+  widened `envelope_version` pattern. `envelope.v2.json` is left untouched.
+- **`conformance/lib/ise.sh`** — S-3 made version-aware (SHOULD/WARN at ≤v2.0,
+  MUST/FAIL at v2.1); new **S-4** `ise_verification_shape` gate (MUST, v2.1
+  only — no-op for ≤v2.0 envelopes so their output stays byte-identical).
+- **`conformance/lib/integrity.sh`** — I-5 made version-aware: MUST/FAIL on
+  `trust_level=high` + `sha256` for v2.1 envelopes; unchanged SHOULD/WARN
+  (byte-identical reason string) for ≤v2.0.
+- **`conformance/lib/envelope.sh`** — E-3 `envelope_version` case accepts
+  `2.1|2.1.*`.
+- **`conformance/check.sh`** — added an explicit `2.1|2.1.*` target-version
+  case (documentation only; gates are driven per-envelope by `envelope_version`,
+  so no `--target-version` change is required to exercise 2.1 envelopes).
+- **Conformance fixtures** (v2.1): `conformant-ise-v2.1/`,
+  `conformant-high-trust-v2.1/` (hmac; the bats test skips if `openssl` is
+  absent), `ise-verification-invalid-v2.1/` (S-4 fail),
+  `high-trust-no-ise-v2.1/` (S-3 + I-5 MUST fail); plus a v2.0 regression
+  fixture `high-trust-sha256-v2/` proving a v2.0 high-trust `sha256` envelope
+  still only WARNS (exit 4). **13 new bats tests** (37 total, all green).
+- `conformance/README.md`, `schemas/README.md` — gate table, version-aware
+  notes, and the new fixtures documented.
+
+### Notes
+
+- **Byte-identical back-compat.** The v2.1 gate promotions and S-4 are gated on
+  `envelope_version` matching `^2\.1(\.\d+)?$`. All pre-existing v2.0 / v1.x
+  fixtures and their bats assertions are unchanged (24/24 prior tests still
+  green). The I-5 SHOULD-level warn reason string was preserved verbatim for
+  ≤v2.0 envelopes.
+- **No new performatives.** The closed ten-performative set is unchanged. See
+  the 2.0.3 erratum below for the §6.5.3 `COMMIT`/`REJECT` correction that this
+  draft also carries.
+- **Reference SDKs (TS/Py) not yet updated for 2.1.** Deferred while 2.1 is
+  Draft; the bash checker is the canonical conformance surface. The TS/Py
+  verifiers continue to target v2.0 and are unaffected (they neither emit nor
+  reject `envelope_version: "2.1"` per this draft's additive contract).
+
+## [2.0.3] — 2026-07-02 — Erratum: §6.5.3 ghost performatives
+
+### Fixed
+
+- **`spec/ecl-2.0.md` §6.5.3 erratum.** The v2.0 emitter-rule clause referenced
+  a "mutating-performative edge (`COMMIT`, `REJECT`)". `COMMIT` and `REJECT` are
+  **not** members of the closed ten-performative set (§2.1: REQUEST, INFORM,
+  PROPOSE, CRITIQUE, DECIDE, DELEGATE, ACKNOWLEDGE, ESCALATE, RESUME, REFUSE).
+  Corrected in place to the closed-set mutation-carrying performatives
+  `PROPOSE`/`DECIDE` (`PROPOSE` offers a change/spec/plan/edit-proposal for the
+  receiver to act on; `DECIDE` records the routing/approval that authorises a
+  mutation), with a one-line "Erratum 2026-07-02" note beside the clause. No
+  performative was added or removed; smallest-possible touch. The same
+  correction is carried into `spec/ecl-2.1.md` with a fuller footnote (§6.5.3).
+
 ## [2.0.2] - 2026-06-10
 
 ### Added

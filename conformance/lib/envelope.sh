@@ -32,9 +32,9 @@ ecl_check_envelope() {
     ecl_record "E-2" "MUST" "ok" "required_fields_present" "" "$env_path"
   fi
 
-  # E-3: envelope_version matches ^(1\.[012]|2\.0)(\.\d+)?$.
-  # Accepts v1.0, v1.1, v1.2 (§7.3 compat window) and v2.0.
-  # Also emits E-3.compat INFO for v1.x under v2.0 verifier.
+  # E-3: envelope_version matches ^(1\.[012]|2\.[01])(\.\d+)?$.
+  # Accepts v1.0, v1.1, v1.2, v2.0 (§7.3 compat window) and v2.1 (Draft).
+  # Also emits E-3.compat INFO for v1.x under v2.x verifier.
   local v
   v="$(jq -r '.envelope_version // ""' "$env_path")"
   case "$v" in
@@ -43,11 +43,11 @@ ecl_check_envelope() {
       ecl_record "E-3.compat" "INFO" "ok" "v1x_accepted_under_v2_receiver" \
         "v1.x envelope accepted under v2.0 receiver, §7.3 window valid through 2027-05-13" "$env_path"
       ;;
-    2.0|2.0.*)
+    2.0|2.0.*|2.1|2.1.*)
       ecl_record "E-3" "MUST" "ok" "envelope_version_supported" "" "$env_path"
       ;;
     *)
-      ecl_record "E-3" "MUST" "fail" "envelope_version_supported" "got: $v (expected 1.0|1.1|1.2|2.0 variant)" "$env_path"
+      ecl_record "E-3" "MUST" "fail" "envelope_version_supported" "got: $v (expected 1.0|1.1|1.2|2.0|2.1 variant)" "$env_path"
       ;;
   esac
 

@@ -1,0 +1,44 @@
+{
+  "envelope_version": "2.1",
+  "message_id": "01942d10-0003-7e04-9c5d-2df1b8c3e703",
+  "thread_id":  "01942d10-0003-7e04-9c5d-2df1b8c3e703",
+  "parent_id":  null,
+  "from": { "eidolon": "atlas",   "version": "1.5.1"  },
+  "to":   { "eidolon": "spectra", "version": "4.3.1" },
+  "performative": "PROPOSE",
+  "edge_origin": "roster",
+  "objective": "Fixture: ise.verification present but transcript_access is an unknown value — fails S-4.",
+  "artifact": {
+    "kind": "scout-report",
+    "schema_version": "2.0",
+    "path": "scout-report.md",
+    "sha256": "0563ed8698425e7c39bc50fce7209e964af0550044295d6f270d786e56f19dab",
+    "size_bytes": 333
+  },
+  "context_delta": {
+    "token_budget": 4000,
+    "tokens_used": 60,
+    "input_handles": [],
+    "summary": "S-4 failure fixture: ise.verification.transcript_access carries an unknown value."
+  },
+  "constraints": { "trust_level": "standard" },
+  "ise": {
+    "assertion_grade": "validated",
+    "verification": {
+      "fresh_context": true,
+      "checker": "vigil",
+      "transcript_access": "full"
+    }
+  },
+  "confidence": 0.5,
+  "integrity": {
+    "method": "sha256",
+    "value": "0563ed8698425e7c39bc50fce7209e964af0550044295d6f270d786e56f19dab"
+  },
+  "trace": {
+    "ts": "2026-07-02T10:10:00Z",
+    "host": "claude-code",
+    "model": "claude-sonnet-4-6",
+    "tier": "standard"
+  }
+}

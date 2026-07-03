@@ -109,17 +109,30 @@ ecl_check_integrity() {
     ecl_record "I-4" "SHOULD" "warn" "size_bytes_match" "declared=$declared_size actual=$actual_size" "$env_path"
   fi
 
-  # I-5 (SHOULD, ECL v1.1 §6.2.6): warn when trust_level=high AND
-  # integrity.method=sha256. RECOMMENDED is hmac-sha256 at high trust.
-  # Backward-compatible: v1.0 envelopes that combine high + sha256 stay
-  # conformant; the warn is non-blocking.
-  local trust_level
+  # I-5 (§6.2.6): trust_level=high SHOULD/MUST use hmac-sha256, not sha256.
+  # Version-aware level (ECL v2.1 promotion):
+  #   - envelope_version 2.1*  → MUST (fail on high+sha256; spec §6.2.6 v2.1).
+  #   - envelope_version ≤2.0  → SHOULD (warn); behaviour byte-identical to v2.0.
+  # Backward-compatible: v1.x and v2.0 envelopes that combine high + sha256 stay
+  # conformant; the warn is non-blocking. The gate name is stable across levels.
+  local trust_level env_version i5_level
+  env_version="$(jq -r '.envelope_version // "0.0"' "$env_path")"
   trust_level="$(jq -r '.constraints.trust_level // "standard"' "$env_path")"
+  case "$env_version" in
+    2.1|2.1.*) i5_level="MUST" ;;
+    *)         i5_level="SHOULD" ;;
+  esac
   if [ "$trust_level" = "high" ] && [ "$method" = "sha256" ]; then
-    ecl_record "I-5" "SHOULD" "warn" "hmac_recommended_at_high_trust" \
-      "trust_level=high + integrity.method=sha256 — RECOMMENDED hmac-sha256 (ECL v1.1 §6.4)" \
-      "$env_path"
+    if [ "$i5_level" = "MUST" ]; then
+      ecl_record "I-5" "MUST" "fail" "hmac_recommended_at_high_trust" \
+        "trust_level=high requires integrity.method=hmac-sha256 at ECL v2.1 (spec §6.2.6); got sha256" \
+        "$env_path"
+    else
+      ecl_record "I-5" "SHOULD" "warn" "hmac_recommended_at_high_trust" \
+        "trust_level=high + integrity.method=sha256 — RECOMMENDED hmac-sha256 (ECL v1.1 §6.4)" \
+        "$env_path"
+    fi
   else
-    ecl_record "I-5" "SHOULD" "ok" "hmac_recommended_at_high_trust" "" "$env_path"
+    ecl_record "I-5" "$i5_level" "ok" "hmac_recommended_at_high_trust" "" "$env_path"
   fi
 }

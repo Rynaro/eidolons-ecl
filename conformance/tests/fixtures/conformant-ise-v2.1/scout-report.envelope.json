@@ -1,0 +1,54 @@
+{
+  "envelope_version": "2.1",
+  "message_id": "01942d10-0001-7e04-9c5d-2df1b8c3e701",
+  "thread_id":  "01942d10-0001-7e04-9c5d-2df1b8c3e701",
+  "parent_id":  null,
+  "from": { "eidolon": "atlas",   "version": "1.5.1"  },
+  "to":   { "eidolon": "spectra", "version": "4.3.1" },
+  "performative": "PROPOSE",
+  "edge_origin": "roster",
+  "objective": "Hand off scout-report on ECL v2.1 verification-seam (S-4) integration.",
+  "artifact": {
+    "kind": "scout-report",
+    "schema_version": "2.0",
+    "path": "scout-report.md",
+    "sha256": "686ceaff26e037a756492b686d3e8c1c091eb48a073db7de2d456637bb1f7cdb",
+    "size_bytes": 376
+  },
+  "context_delta": {
+    "token_budget": 4000,
+    "tokens_used": 120,
+    "input_handles": ["mission.md"],
+    "summary": "v2.1 adds ise.verification (S-4); assertion_grade=validated SHOULD be paired with a fresh-context checker."
+  },
+  "constraints": { "trust_level": "standard" },
+  "ise": {
+    "assertion_grade": "validated",
+    "provenance": {
+      "methodology_version": "atlas-1.5.1",
+      "tool_surface": ["read", "grep"],
+      "lateral_consults": []
+    },
+    "receiver_authorization": {
+      "auto_route": true,
+      "auto_merge": false,
+      "auto_deploy": false
+    },
+    "verification": {
+      "fresh_context": true,
+      "checker": "vigil",
+      "transcript_access": "artifact-only"
+    }
+  },
+  "confidence": 0.94,
+  "integrity": {
+    "method": "sha256",
+    "value": "686ceaff26e037a756492b686d3e8c1c091eb48a073db7de2d456637bb1f7cdb"
+  },
+  "trace": {
+    "ts": "2026-07-02T10:00:00Z",
+    "host": "claude-code",
+    "model": "claude-sonnet-4-6",
+    "tier": "standard"
+  }
+}
