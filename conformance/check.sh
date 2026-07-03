@@ -36,7 +36,7 @@
 set -u
 # We deliberately do not `set -e`; we want to collect every check.
 
-VERSION="2.0.0"
+VERSION="2.1.0"
 
 # -- option parsing --------------------------------------------------------- #
 
