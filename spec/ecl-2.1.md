@@ -1,19 +1,18 @@
 # ECL — Eidolons Communication Layer
 
 **Version:** 2.1
-**Status:** Draft (adoption-gated)
-**Published:** — (Draft; see gate note below)
-**Supersedes-when-cut:** 2.0 (which remains the governing Published spec until the gate is met)
+**Status:** Published (Stable)
+**Published:** 2026-07-03
+**Supersedes:** 2.0 (archived in-tree; §7.3 compatibility window applies)
 **Editors:** Rynaro and the Eidolons contributors
 **License:** Apache-2.0
 
-> **Adoption gate.** 2.1 is cut to Published when ≥ 3 of the shipped Eidolons
-> emit the ISE block (the §6.5.5 / §6.2.6 promotion precondition recorded in
-> 2.0). Until then 2.0 remains the governing Published spec. While this
-> document is Draft, `ECL_VERSION` stays `2.0` and `SPEC.md` continues to
-> resolve to `spec/ecl-2.0.md`; the conformance checker already recognises
-> `envelope_version: "2.1"` and applies the v2.1 gates to any envelope that
-> declares it (§1.1.1), so emitters MAY adopt 2.1 ahead of the cut.
+> **Adoption gate: MET (2026-07-03).** The ≥ 3-adopter precondition (§6.5.5 /
+> §6.2.6 promotion recorded in 2.0) was satisfied eight-fold: all eight shipped
+> Eidolons emit the ISE block as of the v2.0-campaign Wave-3 releases (atlas
+> 1.13.0, spectra 4.11.0, vivi 1.3.0, apivr 3.8.0, idg 1.10.0, forge 1.10.0,
+> vigil 1.8.0, kupo 1.3.0). 2.0 envelopes remain conformant through the §7.3
+> compatibility window; emitters adopt 2.1 by declaring `envelope_version: "2.1"`.
 
 ## Normative keywords
 

@@ -6,7 +6,12 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [2.1.0-draft] — 2026-07-02 — ISE promotions + verification seam (Draft, adoption-gated)
+## [2.1.0] — 2026-07-03 — ISE promotions + verification seam (Published)
+
+> Cut to Published: the adoption gate was met eight-fold (all eight shipped
+> Eidolons emit ISE as of the Wave-3 releases). `ECL_VERSION` → 2.1;
+> `SPEC.md` → `spec/ecl-2.1.md`; checker `VERSION` → 2.1.0. Content below is
+> unchanged from the 2026-07-02 draft.
 
 **Status: Draft (adoption-gated). NOT a release.** `ECL_VERSION` stays `2.0`,
 `SPEC.md` continues to resolve to `spec/ecl-2.0.md`, and the conformance
