@@ -40,9 +40,10 @@ jobs:
             yq eval '.' "$f" >/dev/null
           done
 
-      - name: SPEC.md symlink resolves to spec/ecl-2.0.md
+      - name: SPEC.md symlink resolves to the spec matching ECL_VERSION
         run: |
-          test "$(readlink SPEC.md)" = "spec/ecl-2.0.md"
+          ver="$(tr -d '[:space:]' < ECL_VERSION)"
+          test "$(readlink SPEC.md)" = "spec/ecl-${ver}.md"
 
       - name: ECL_VERSION matches latest spec file
         run: |
