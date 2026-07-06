@@ -6,6 +6,28 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.1] — 2026-07-06 — RAMZA succession contract edges + composition reseat
+
+### Added
+
+- **RAMZA planner-seat contract edges** — nine directed-edge contracts for
+  RAMZA, the mechanized-gate planner that takes the default planner seat from
+  SPECTRA (Vivi-pattern succession; SPECTRA retained as the conservative opt-in
+  fallback): `atlas→ramza`, `ramza→vivi`, `ramza→apivr`, `ramza→forge`,
+  `ramza→kupo`, `forge→ramza`, `human→ramza`, `kupo→ramza`, `vigil→ramza`. They
+  mirror the SPECTRA edge set (same artifact kinds — `scout-report` inbound,
+  `spec` outbound), with the default downstream coder now Vivi. All validate
+  against `schemas/handoff-contract.v1.json`.
+
+### Changed
+
+- **`composition.md.j2` template reseat** — the canonical-pipeline diagram, the
+  numbered walkthrough, the labeled-handoff and consultation examples, and the
+  partial-team configurations now read `ATLAS → RAMZA → Vivi → IDG` (the current
+  default seats), replacing the stale `SPECTRA → APIVR-Δ` pipeline. Regenerating
+  `methodology/composition.md` from this template + the v2.1.1 contracts surfaces
+  the RAMZA and Vivi edges together (the latter previously deferred since v2.0.2).
+
 ## [2.1.0] — 2026-07-03 — ISE promotions + verification seam (Published)
 
 > Cut to Published: the adoption gate was met eight-fold (all eight shipped

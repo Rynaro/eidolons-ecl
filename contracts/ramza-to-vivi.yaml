@@ -1,0 +1,30 @@
+contract_version: "1.0"
+from: ramza
+to: vivi
+edge_origin: roster
+performatives_allowed:
+  - PROPOSE
+  - INFORM
+  - REFUSE
+artifacts:
+  - kind: spec
+    schema_ref: ../schemas/per-eidolon/spec.v1.json
+    required_sections:
+      - stories
+      - validation_gates
+      - agent_hints
+      - given_when_then
+    evidence_anchor_required: false
+context_delta:
+  token_budget_max: 6000
+  required_handles: []
+trust_level: standard
+notes: >
+  RAMZA hands off a decision-ready, gate-frozen specification for Vivi to
+  implement through its closed A→P→I→V→Δ/R loop. Listed in roster:
+  vivi.handoffs.upstream contains ramza. RAMZA emits the spec in dual
+  format (Markdown + YAML/JSON state) per its mechanized methodology — the
+  acceptance criteria are SHA-256 frozen and the envelope.artifact.path
+  points at the Markdown file while the YAML state lives alongside it. This
+  edge mirrors spectra-to-vivi.yaml — RAMZA succeeds SPECTRA as the default
+  planner seat.

@@ -1,0 +1,28 @@
+contract_version: "1.0"
+from: atlas
+to: ramza
+edge_origin: roster
+performatives_allowed:
+  - PROPOSE
+  - INFORM
+  - REFUSE
+artifacts:
+  - kind: scout-report
+    schema_ref: ../schemas/per-eidolon/scout-report.v1.json
+    required_sections:
+      - decision_target
+      - findings
+      - gaps
+      - scope
+    evidence_anchor_required: true
+context_delta:
+  token_budget_max: 4000
+  required_handles:
+    - mission.md
+trust_level: standard
+notes: >
+  ATLAS hands off a finalised scout report for RAMZA to consume during the
+  RS (right-size) and S (scope) phases. Listed in roster:
+  atlas.handoffs.downstream contains ramza. RAMZA is the default planner
+  seat; SPECTRA is retained as the conservative opt-in fallback via
+  atlas-to-spectra.yaml (same artifact kind).
