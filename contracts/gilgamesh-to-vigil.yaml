@@ -1,0 +1,27 @@
+contract_version: "1.0"
+from: gilgamesh
+to: vigil
+edge_origin: emitted-request
+performatives_allowed:
+  - PROPOSE
+  - INFORM
+  - ESCALATE
+artifacts:
+  - kind: handoff-request
+    schema_ref: ../schemas/per-eidolon/handoff-request.v1.json
+    evidence_anchor_required: false
+context_delta:
+  token_budget_max: 3000
+  required_handles: []
+trust_level: standard
+notes: >
+  Gilgamesh PROPOSEs a forensic debug request upward, suggested_specialist:
+  vigil, when a failure resists Gilgamesh's own bounded stopping policy
+  (digest§4 `recover`) or needs root-cause attribution beyond a
+  deliberately-boring worker's remit. This is a request the orchestrator
+  routes, not a dispatch — Gilgamesh has no downstream handoffs of its own
+  (roster: gilgamesh.handoffs.downstream: [], R-007/HC8). edge_origin:
+  emitted-request (not `roster`) reconciles that empty downstream array with
+  this outbound contract's existence (R-050/AC-F05; CRIT-009). ESCALATE is the
+  expected common case here: evidence_of_boundary typically names the
+  stopping-policy `escalate` state (digest§4) that triggered the handoff.

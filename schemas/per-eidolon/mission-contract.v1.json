@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v2.1.0/schemas/per-eidolon/mission-contract.v1.json",
+  "title": "ECL mission-contract profile v1",
+  "description": "Inbound typed mission assignment for a bounded-authority worker (e.g. Gilgamesh, the generalist fallthrough), emitted by either a human or the orchestrator, wrapped by an ECL envelope. Validates the YAML frontmatter only; the richer body (if any) is owned by the receiving Eidolon's own repo and MUST be a strict subset of this profile. Fields mirror the nexus's delegation-contract shape {objective, scope, deliverables, evidence_required, stop_conditions} plus a capability-authority table (ESL change generalist-eidolon, Track E digest§5/§7).",
+  "allOf": [
+    { "$ref": "_base-profile.v1.json" },
+    {
+      "type": "object",
+      "required": [
+        "objective",
+        "scope",
+        "deliverables",
+        "evidence_required",
+        "stop_conditions",
+        "authority"
+      ],
+      "properties": {
+        "kind": { "const": "mission-contract" },
+        "eidolon": {
+          "enum": ["human", "orchestrator"],
+          "description": "Only a human or the orchestrator may originate a mission-contract; a worker never mints one for itself."
+        },
+        "objective": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A single, bounded statement of the mission's goal."
+        },
+        "scope": {
+          "type": "object",
+          "required": ["paths", "mode"],
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Repo-relative paths the worker MAY act within."
+            },
+            "mode": {
+              "enum": ["read-only", "read-write"],
+              "description": "Coarse scope-access mode. The fine-grained per-capability grant lives in `authority`."
+            }
+          },
+          "additionalProperties": false
+        },
+        "deliverables": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "description": "Named artifacts or outcomes the mission is expected to produce."
+        },
+        "evidence_required": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Externalized verification the worker MUST attach before claiming completion (never self-report, digest§4)."
+        },
+        "stop_conditions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "description": "Named conditions under which the bounded loop halts (budget exhaustion, authority boundary, deliverable complete, ...)."
+        },
+        "authority": {
+          "type": "object",
+          "required": ["read", "write", "exec", "network", "secrets", "deploy"],
+          "properties": {
+            "read":    { "type": "boolean" },
+            "write":   { "type": "boolean" },
+            "exec":    { "type": "boolean" },
+            "network": { "type": "boolean" },
+            "secrets": { "type": "boolean" },
+            "deploy":  { "type": "boolean" }
+          },
+          "additionalProperties": false,
+          "description": "The capability-authority table (default + escalation, digest§7). `write` grants a sandboxed/PROPOSE-only edit surface, never the real tree (security.writes_repo: false at the roster level); `deploy` MUST be false for any fallthrough-generalist worker (refuse-set, R-005)."
+        }
+      }
+    }
+  ]
+}

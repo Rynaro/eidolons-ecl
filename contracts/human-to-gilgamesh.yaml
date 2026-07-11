@@ -1,0 +1,33 @@
+contract_version: "1.0"
+from: human
+to: gilgamesh
+edge_origin: implicit
+performatives_allowed:
+  - REQUEST
+  - INFORM
+  - CRITIQUE
+  - REFUSE
+  - ACKNOWLEDGE
+  - ESCALATE
+artifacts:
+  - kind: mission-contract
+    schema_ref: ../schemas/per-eidolon/mission-contract.v1.json
+    evidence_anchor_required: false
+context_delta:
+  token_budget_max: 3000
+  required_handles: []
+trust_level: standard
+notes: >
+  Human-origin edge into Gilgamesh (the bounded-authority, specialist-preferring
+  fallthrough generalist; ESL change generalist-eidolon, roster status
+  in_construction). The originator may REQUEST a bounded mission, INFORM
+  additional context, CRITIQUE a prior proposal for revision, REFUSE a
+  target/framing, ACKNOWLEDGE to close a gate, or ESCALATE a blocker. Humans
+  MUST NOT emit PROPOSE, DECIDE, DELEGATE, or RESUME (PROPOSE collapses to
+  REQUEST; DECIDE is reserved for an evaluator Eidolon; DELEGATE is reserved for
+  Eidolon-origin task binding; RESUME is harness-emitted). edge_origin: implicit
+  — Gilgamesh's roster row declares `handoffs.upstream: [orchestrator]` only
+  (worker dispatched via Dispatch Protocol Step-2(a), R-006); a human MAY still
+  invoke it directly, outside that roster-declared chain, mirroring the
+  human-to-kupo precedent (Kupo is likewise orchestrator-dispatched-only in its
+  own roster row, and its human edge is `implicit` for the same reason).

@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Rynaro/eidolons-ecl/blob/v2.1.0/schemas/per-eidolon/handoff-request.v1.json",
+  "title": "ECL handoff-request profile v1",
+  "description": "Outbound PROPOSE-upward artifact emitted by a worker-never-router Eidolon (e.g. Gilgamesh, the generalist fallthrough) when a subtask crosses its bounded authority/scope and a named specialist should take it instead. This is a request the orchestrator routes, NOT a dispatch (edge_origin: emitted-request, R-050) — the emitter has no downstream handoffs of its own (roster handoffs.downstream: []). Wrapped by an ECL envelope; validates the YAML frontmatter only. Fields mirror mission-contract.v1.json's delegation-contract shape plus the two fields that make the request typed and boundary-evidenced.",
+  "allOf": [
+    { "$ref": "_base-profile.v1.json" },
+    {
+      "type": "object",
+      "required": [
+        "objective",
+        "scope",
+        "deliverables",
+        "evidence_required",
+        "stop_conditions",
+        "suggested_specialist",
+        "evidence_of_boundary"
+      ],
+      "properties": {
+        "kind": { "const": "handoff-request" },
+        "eidolon": {
+          "const": "gilgamesh",
+          "description": "Only a worker-never-router Eidolon emits a handoff-request; v1 has exactly one emitter."
+        },
+        "objective": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A single, bounded statement of the subtask the suggested specialist would own."
+        },
+        "scope": {
+          "type": "object",
+          "required": ["paths", "mode"],
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Repo-relative paths the subtask touches."
+            },
+            "mode": {
+              "enum": ["read-only", "read-write"],
+              "description": "Coarse scope-access mode the suggested specialist would need."
+            }
+          },
+          "additionalProperties": false
+        },
+        "deliverables": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "description": "Named artifacts or outcomes the proposed handoff is expected to produce."
+        },
+        "evidence_required": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Externalized verification the eventual owner MUST attach before the subtask is considered complete."
+        },
+        "stop_conditions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "description": "Named conditions under which the proposed subtask halts."
+        },
+        "suggested_specialist": {
+          "enum": ["atlas", "kupo", "vigil", "idg", "forge"],
+          "description": "The specialist the emitter believes best owns this subtask. The orchestrator decides whether to route it there — the emitter never dispatches (AC-F05)."
+        },
+        "evidence_of_boundary": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Why this subtask crosses the emitter's bounded authority/capability-class scope (e.g. a refuse_verbs hit, an authority-table denial, or a specialist-shaped signal outside the emitter's own methodology). Cite path:line or trace evidence where available."
+        }
+      }
+    }
+  ]
+}

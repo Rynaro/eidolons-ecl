@@ -126,6 +126,85 @@ New per-Eidolon profiles added for this batch:
 - `schemas/per-eidolon/vivi-completion-report.v1.json` — emitted at Implement/Verify exit; pins `eidolon: vivi`, `kind: vivi-completion-report`; extends `_base-profile`; adds `loop_iterations` and `tracks_count` fields.
 - `schemas/per-eidolon/vivi-repair-failed-report.v1.json` — emitted on 3-failure threshold (I-5); pins `eidolon: vivi`, `kind: repair-failed-report`; same body shape as `repair-failed-report.v1.json` (which pins `eidolon: apivr`); adds `loop_iterations_used`.
 
+## Gilgamesh edges (ESL change `generalist-eidolon`, Track F)
+
+Gilgamesh is the bounded-authority, specialist-preferring fallthrough
+generalist (nexus roster status `in_construction`). It is dispatched only
+by the orchestrator (Dispatch Protocol Step-2(a)) and never routes or
+spawns onward (`handoffs.downstream: []` — worker, never router).
+
+### Inbound (2)
+
+| File | From | To | Edge origin | Primary artefact |
+|---|---|---|---|---|
+| `human-to-gilgamesh.yaml`        | human        | gilgamesh | implicit | mission-contract |
+| `orchestrator-to-gilgamesh.yaml` | orchestrator | gilgamesh | roster   | mission-contract |
+
+`orchestrator-to-gilgamesh.yaml` is the first `orchestrator-to-*` contract
+in the corpus. `orchestrator` is a reserved, pattern-matched `from`/`to`
+identity (not a closed enum) per ECL v2.1 §1.1.3, the `handoff-contract.v1.json`
+field description, and conformance gate E-5 — all admit it explicitly.
+
+### Outbound (5) — PROPOSE-upward hand-off requests, not dispatch
+
+Gilgamesh has no downstream handoffs of its own; these five edges are
+requests the orchestrator routes, never direct dispatch. Each therefore
+sets `edge_origin: emitted-request` rather than `roster`, reconciling the
+roster's `handoffs.downstream: []` with the edges' existence (R-050 /
+AC-F05 of ESL change `generalist-eidolon`).
+
+| File | From | To | Edge origin | Primary artefact |
+|---|---|---|---|---|
+| `gilgamesh-to-atlas.yaml` | gilgamesh | atlas | emitted-request | handoff-request |
+| `gilgamesh-to-kupo.yaml`  | gilgamesh | kupo  | emitted-request | handoff-request |
+| `gilgamesh-to-vigil.yaml` | gilgamesh | vigil | emitted-request | handoff-request |
+| `gilgamesh-to-idg.yaml`   | gilgamesh | idg   | emitted-request | handoff-request |
+| `gilgamesh-to-forge.yaml` | gilgamesh | forge | emitted-request | handoff-request |
+
+**Resolved (v2.2):** `emitted-request` is now the fourth member of the
+`edge_origin` enum — additive and backward compatible, the three original
+values (`roster` \| `composition` \| `implicit`) and every contract that
+uses them are unaffected. Updated in lockstep:
+[`../schemas/handoff-contract.v1.json`](../schemas/handoff-contract.v1.json),
+[`../schemas/envelope.v2.json`](../schemas/envelope.v2.json) and
+[`../schemas/envelope.v2.1.json`](../schemas/envelope.v2.1.json) (the
+envelope-level copy of the same field), `spec/ecl-2.1.md` §3.3, and the
+Python reference SDK's `EdgeOrigin` `Literal` type
+(`reference-sdk/py/src/eidolons_ecl/types.py`). `envelope.v1.json` (the
+frozen v1.0-era shape, retained only for the §7.3 backward-compat window)
+is deliberately left untouched — no v1.x emitter uses this value. Rationale
+for the record: the value encodes exactly the semantic ESL change
+`generalist-eidolon` froze (a worker-EMITTED typed request the orchestrator
+routes, vs a roster-DECLARED dispatch edge); ECL owns this field, so ECL
+accommodates it in a versioned revision rather than the nexus spec
+amending around it. All eight Gilgamesh contracts — including the five
+`emitted-request` outbound edges — now validate strictly against
+`handoff-contract.v1.json` (locked in by
+`reference-sdk/py/tests/test_contract_schema.py`), in addition to already
+passing the conformance checker's handoff-graph gates (`C-1`..`C-4` —
+verified against a synthetic `gilgamesh→atlas` envelope) and `compose-gen`.
+
+### Lateral (1)
+
+| File | From | To | Edge origin | Primary artefact |
+|---|---|---|---|---|
+| `forge-to-gilgamesh.yaml` | forge | gilgamesh | roster | reasoning-report |
+
+The reverse of `gilgamesh-to-forge.yaml`: once the orchestrator routes a
+Gilgamesh sub-decision request to FORGE, FORGE's verdict returns directly
+and laterally to the running mission (roster: `gilgamesh.handoffs.lateral`
+contains `forge`). Mirrors `forge-to-apivr.yaml` / `forge-to-vigil.yaml`.
+
+New per-Eidolon profiles added for this batch:
+- `schemas/per-eidolon/mission-contract.v1.json` — inbound typed mission
+  assignment; `eidolon` enum `[human, orchestrator]`; fields `{objective,
+  scope{paths,mode}, deliverables, evidence_required, stop_conditions,
+  authority{read,write,exec,network,secrets,deploy}}`.
+- `schemas/per-eidolon/handoff-request.v1.json` — outbound PROPOSE-upward
+  artifact; pins `eidolon: gilgamesh`; fields `{objective, scope{paths,mode},
+  deliverables, evidence_required, stop_conditions, suggested_specialist,
+  evidence_of_boundary}`.
+
 ## Edges deferred to later v1.0.x patch releases
 
 Edges declared in `roster/index.yaml` but not yet exercised; emission on

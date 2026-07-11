@@ -25,6 +25,8 @@ by each Eidolon's own repository and validated by their own toolchain.
 | `edit-proposal.v1.json` | KUPO | SPECTRA, VIGIL, FORGE, APIVR-Δ, Vivi | kupo→spectra/vigil/forge/apivr/vivi |
 | `vivi-completion-report.v1.json` | Vivi | IDG | vivi→idg, vivi→kupo |
 | `vivi-repair-failed-report.v1.json` | Vivi | VIGIL | vivi→vigil |
+| `mission-contract.v1.json` | human, orchestrator | Gilgamesh | human→gilgamesh, orchestrator→gilgamesh |
+| `handoff-request.v1.json` | Gilgamesh | atlas, kupo, vigil, idg, forge | gilgamesh→{atlas,kupo,vigil,idg,forge} |
 
 ## Adding a profile
 

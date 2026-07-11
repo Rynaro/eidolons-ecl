@@ -47,8 +47,8 @@
       "description": "ECL v2.0 §2."
     },
     "edge_origin": {
-      "enum": ["roster", "composition", "implicit"],
-      "description": "Where the (from, to) edge is declared. ECL v2.0 §3.3."
+      "enum": ["roster", "composition", "implicit", "emitted-request"],
+      "description": "Where the (from, to) edge is declared. ECL v2.0 §3.3. `emitted-request` added v2.2 — a typed request artifact PROPOSEd upward by the sender for the orchestrator to route."
     },
     "objective": {
       "type": "string",

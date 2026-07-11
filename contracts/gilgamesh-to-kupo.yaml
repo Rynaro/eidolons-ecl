@@ -1,0 +1,28 @@
+contract_version: "1.0"
+from: gilgamesh
+to: kupo
+edge_origin: emitted-request
+performatives_allowed:
+  - PROPOSE
+  - INFORM
+  - ESCALATE
+artifacts:
+  - kind: handoff-request
+    schema_ref: ../schemas/per-eidolon/handoff-request.v1.json
+    evidence_anchor_required: false
+context_delta:
+  token_budget_max: 3000
+  required_handles: []
+trust_level: standard
+notes: >
+  Gilgamesh PROPOSEs a verifier-backed micro-patch request upward,
+  suggested_specialist: kupo, when a subtask is localized (<= 2 files),
+  named-verifier-backed work that fits Kupo's KEEP profile better than
+  Gilgamesh's own general-purpose loop. This is a request the orchestrator
+  routes, not a dispatch — Gilgamesh has no downstream handoffs of its own
+  (roster: gilgamesh.handoffs.downstream: [], R-007/HC8). edge_origin:
+  emitted-request (not `roster`) reconciles that empty downstream array with
+  this outbound contract's existence (R-050/AC-F05; CRIT-009). ESCALATE covers
+  the case where evidence_of_boundary names a hard authority-table denial
+  (e.g. `write` beyond Gilgamesh's own sandbox grant) rather than a routine
+  specialist-shaped signal.

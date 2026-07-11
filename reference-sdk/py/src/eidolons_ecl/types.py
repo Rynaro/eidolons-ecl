@@ -39,8 +39,11 @@ Performative = Literal[
 # Supporting literals
 # ---------------------------------------------------------------------------
 
-#: Where the (from, to) edge is declared. ECL §3.3.
-EdgeOrigin = Literal["roster", "composition", "implicit"]
+#: Where the (from, to) edge is declared. ECL §3.3. `emitted-request` added
+#: v2.2 — a typed request artifact PROPOSEd upward by the sender for the
+#: orchestrator to route (distinguishes worker-emitted delegation from
+#: roster-declared dispatch; the sender's roster entry keeps `downstream: []`).
+EdgeOrigin = Literal["roster", "composition", "implicit", "emitted-request"]
 
 #: Envelope trust level. ECL §constraints.trust_level.
 TrustLevel = Literal["low", "standard", "high"]
