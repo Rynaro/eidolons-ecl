@@ -6,6 +6,8 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.2.0] — 2026-07-11 — Gilgamesh edge set + emitted-request edge origin
+
 ### Added
 
 - **`edge_origin: emitted-request`** — the `edge_origin` vocabulary
