@@ -1,0 +1,32 @@
+contract_version: "1.0"
+from: forge
+to: gilgamesh
+edge_origin: roster
+performatives_allowed:
+  - PROPOSE
+  - INFORM
+  - CRITIQUE
+artifacts:
+  - kind: reasoning-report
+    schema_ref: ../schemas/per-eidolon/reasoning-report.v1.json
+    required_sections:
+      - decision
+      - hypotheses_summary
+      - reversal_conditions
+      - alternatives_considered
+    evidence_anchor_required: false
+context_delta:
+  token_budget_max: 3000
+  required_handles: []
+trust_level: standard
+notes: >
+  FORGE returns a reasoning report directly to the running Gilgamesh mission
+  in response to the orchestrator-routed gilgamesh-to-forge sub-decision
+  request. Listed in roster: gilgamesh.handoffs.lateral contains forge; this
+  is the lateral half of the pair (the reverse edge, gilgamesh-to-forge.yaml,
+  is the PROPOSE-upward request half, edge_origin: emitted-request). Mirrors
+  the shape of forge-to-apivr.yaml / forge-to-vigil.yaml: same artifact kind,
+  schema, and required_sections. CRITIQUE is reserved for the REFORGE case
+  where FORGE deliberately reframes the question rather than answering it —
+  e.g. when Gilgamesh's sub-decision request itself looks specialist-shaped
+  enough that FORGE judges the orchestrator should have routed elsewhere.

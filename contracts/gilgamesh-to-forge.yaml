@@ -1,0 +1,32 @@
+contract_version: "1.0"
+from: gilgamesh
+to: forge
+edge_origin: emitted-request
+performatives_allowed:
+  - PROPOSE
+  - INFORM
+  - ESCALATE
+artifacts:
+  - kind: handoff-request
+    schema_ref: ../schemas/per-eidolon/handoff-request.v1.json
+    evidence_anchor_required: false
+context_delta:
+  token_budget_max: 3000
+  required_handles: []
+trust_level: standard
+notes: >
+  Gilgamesh PROPOSEs a sub-decision request upward, suggested_specialist:
+  forge, when ambiguity or a trade-off surfaces mid-mission that exceeds a
+  deliberately-boring worker's remit. Unlike FORGE's usual peer-level
+  reasoning-request lateral consults (e.g. apivr-to-forge.yaml), Gilgamesh
+  cannot consult FORGE directly — it is worker-never-router and has no
+  downstream/lateral dispatch authority of its own outbound side (roster:
+  gilgamesh.handoffs.downstream: [], R-007/HC8) — so this, too, is a
+  handoff-request the orchestrator routes, not a REQUEST/CRITIQUE lateral
+  consult. edge_origin: emitted-request (not `roster`) reconciles the empty
+  downstream array with this outbound contract's existence, and is explicitly
+  named in AC-F05's `{atlas,kupo,vigil,idg,forge}` set (R-050; CRIT-009). Once
+  routed, FORGE's actual verdict returns directly and laterally to the running
+  Gilgamesh mission via the reverse edge, forge-to-gilgamesh.yaml (roster:
+  gilgamesh.handoffs.lateral: [forge]) — the asymmetry is intentional: the
+  *request* is PROPOSE-upward, the *verdict* is a normal lateral reply.
