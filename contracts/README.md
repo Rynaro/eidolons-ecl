@@ -161,20 +161,28 @@ AC-F05 of ESL change `generalist-eidolon`).
 | `gilgamesh-to-idg.yaml`   | gilgamesh | idg   | emitted-request | handoff-request |
 | `gilgamesh-to-forge.yaml` | gilgamesh | forge | emitted-request | handoff-request |
 
-**Known conflict — flagged, not silently resolved:** `emitted-request` is
-**not** currently a member of the closed `edge_origin` enum in
-[`../schemas/handoff-contract.v1.json`](../schemas/handoff-contract.v1.json)
-(`roster` \| `composition` \| `implicit`), nor in `spec/ecl-2.1.md` §3.3
-prose, nor in the Python reference SDK's `EdgeOrigin` `Literal` type
-(`reference-sdk/py/src/eidolons_ecl/types.py`). The five contracts above
-therefore **fail strict JSON-Schema validation** against
-`handoff-contract.v1.json` today, even though they pass the conformance
-checker's handoff-graph gates (`C-1`..`C-4` — verified against a synthetic
-`gilgamesh→atlas` envelope) and `compose-gen` (which treats `edge_origin`
-as an unvalidated string). The value is pinned by ESL change
-`generalist-eidolon` R-050 / AC-F05 as non-negotiable; widening the
-`edge_origin` enum itself is a distinct, maintainer-owned decision this PR
-does not make unilaterally.
+**Resolved (v2.2):** `emitted-request` is now the fourth member of the
+`edge_origin` enum — additive and backward compatible, the three original
+values (`roster` \| `composition` \| `implicit`) and every contract that
+uses them are unaffected. Updated in lockstep:
+[`../schemas/handoff-contract.v1.json`](../schemas/handoff-contract.v1.json),
+[`../schemas/envelope.v2.json`](../schemas/envelope.v2.json) and
+[`../schemas/envelope.v2.1.json`](../schemas/envelope.v2.1.json) (the
+envelope-level copy of the same field), `spec/ecl-2.1.md` §3.3, and the
+Python reference SDK's `EdgeOrigin` `Literal` type
+(`reference-sdk/py/src/eidolons_ecl/types.py`). `envelope.v1.json` (the
+frozen v1.0-era shape, retained only for the §7.3 backward-compat window)
+is deliberately left untouched — no v1.x emitter uses this value. Rationale
+for the record: the value encodes exactly the semantic ESL change
+`generalist-eidolon` froze (a worker-EMITTED typed request the orchestrator
+routes, vs a roster-DECLARED dispatch edge); ECL owns this field, so ECL
+accommodates it in a versioned revision rather than the nexus spec
+amending around it. All eight Gilgamesh contracts — including the five
+`emitted-request` outbound edges — now validate strictly against
+`handoff-contract.v1.json` (locked in by
+`reference-sdk/py/tests/test_contract_schema.py`), in addition to already
+passing the conformance checker's handoff-graph gates (`C-1`..`C-4` —
+verified against a synthetic `gilgamesh→atlas` envelope) and `compose-gen`.
 
 ### Lateral (1)
 

@@ -148,7 +148,7 @@ recompute and verify before acting on the payload.
 
 | Field | Type | Description |
 |---|---|---|
-| `edge_origin` | string | `roster` \| `composition` \| `implicit`. Where the (from, to) edge is declared. |
+| `edge_origin` | string | `roster` \| `composition` \| `implicit` \| `emitted-request`. Where the (from, to) edge is declared. |
 | `context_delta` | object | See [§4](#4--context-delta-discipline). |
 | `constraints` | object | `{deadline_ts?, trust_level?}`. `trust_level` ∈ `low | standard | high`. |
 | `expected_response` | object | `{performative, shape_hint?}`. What the sender expects back. |
@@ -311,7 +311,7 @@ A hand-off contract is a YAML document with the following fields:
 | `contract_version` | yes | `"1.0"` (matches the ECL spec version). |
 | `from` | yes | The sender Eidolon slug (or `orchestrator`, `human`). |
 | `to` | yes | The recipient Eidolon slug (or `orchestrator`, `human`). |
-| `edge_origin` | yes | `roster` \| `composition` \| `implicit`. |
+| `edge_origin` | yes | `roster` \| `composition` \| `implicit` \| `emitted-request`. |
 | `performatives_allowed` | yes | Array of permitted performatives for this edge. |
 | `artifacts` | yes | Array of objects describing each acceptable payload kind. |
 | `context_delta` | no | `{token_budget_max, required_handles[]}`. |
@@ -365,6 +365,11 @@ metadata. Conformance checkers SHALL cross-reference:
 - `implicit` — the contract MUST carry a `notes:` field justifying why the
   edge is not in either authoritative source. Implicit edges SHOULD be
   promoted to one of the other two within the v1.x lifecycle.
+- `emitted-request` — the edge exists as a typed request artifact PROPOSEd
+  upward by the sender for the orchestrator to route; distinguishes
+  worker-emitted delegation from roster-declared dispatch. The sender's
+  roster entry keeps `downstream: []`; the contract documents the request
+  artifact's shape, not a dispatch right. Added at v2.2.
 
 ---
 

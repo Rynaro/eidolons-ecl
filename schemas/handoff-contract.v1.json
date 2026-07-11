@@ -29,8 +29,8 @@
       "description": "Recipient Eidolon slug, or 'orchestrator', 'human'."
     },
     "edge_origin": {
-      "enum": ["roster", "composition", "implicit"],
-      "description": "ECL v1.0 §3.3."
+      "enum": ["roster", "composition", "implicit", "emitted-request"],
+      "description": "ECL v2.1 §3.3. `emitted-request` added v2.2 — a typed request artifact PROPOSEd upward by the sender for the orchestrator to route; the sender's own roster entry keeps `downstream: []`."
     },
     "performatives_allowed": {
       "type": "array",

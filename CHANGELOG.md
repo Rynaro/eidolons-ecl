@@ -8,6 +8,19 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **`edge_origin: emitted-request`** — the `edge_origin` vocabulary
+  (`spec/ecl-2.1.md` §3.3, `schemas/handoff-contract.v1.json`,
+  `schemas/envelope.v2.json`, `schemas/envelope.v2.1.json`, and the Python
+  SDK's `EdgeOrigin` `Literal`) is extended additively with a fourth value:
+  a typed request artifact PROPOSEd upward by the sender for the
+  orchestrator to route, distinguishing worker-emitted delegation from
+  roster-declared dispatch (the sender's own roster entry keeps
+  `downstream: []`). Backward compatible — the three original values
+  (`roster` | `composition` | `implicit`) are unchanged and every existing
+  contract still validates as before. ECL owns this field, so ECL
+  accommodates the new semantic in a versioned revision rather than a
+  downstream spec working around it. `reference-sdk/py/tests/
+  test_contract_schema.py` locks in strict-validation coverage.
 - **Gilgamesh contract edges** (ESL change `generalist-eidolon`, Track F) —
   eight directed-edge contracts for Gilgamesh, the bounded-authority,
   specialist-preferring fallthrough generalist (nexus roster status
@@ -18,20 +31,8 @@ Versioning: [SemVer 2.0](https://semver.org/spec/v2.0.0.html).
   per R-050/AC-F05, reconciling `handoffs.downstream: []`), and one lateral
   reply (`forge→gilgamesh`, mirroring `forge-to-apivr.yaml`). Two new
   per-Eidolon profiles: `schemas/per-eidolon/mission-contract.v1.json`,
-  `schemas/per-eidolon/handoff-request.v1.json`.
-
-### Known issues
-
-- `edge_origin: emitted-request` (pinned by ESL change `generalist-eidolon`
-  R-050/AC-F05 on the five Gilgamesh outbound contracts) is not yet a member
-  of `handoff-contract.v1.json`'s closed `edge_origin` enum (`roster` |
-  `composition` | `implicit`), nor of `spec/ecl-2.1.md` §3.3, nor of the
-  Python SDK's `EdgeOrigin` `Literal`. Those five contracts fail strict
-  JSON-Schema validation against `handoff-contract.v1.json` today, though
-  they pass the conformance checker's handoff-graph gates and `compose-gen`
-  (both treat `edge_origin` as an unvalidated string). Widening the enum is
-  a distinct, maintainer-owned follow-up — see `contracts/README.md`
-  §"Gilgamesh edges".
+  `schemas/per-eidolon/handoff-request.v1.json`. All eight contracts now
+  validate strictly against `handoff-contract.v1.json`.
 
 ## [2.1.1] — 2026-07-06 — RAMZA succession contract edges + composition reseat
 
